@@ -1,0 +1,70 @@
+<html>
+	<head>
+		<script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+		<script src="js/observe.js"></script>
+		<script src="js/esprima.js"></script>
+		<script src="js/circular.js"></script>
+		<script>
+		
+			var Model = {
+				currentpage	: null,
+				menu	: [
+						{ 
+							title	: 'Welcome',
+							link	: 'home'
+						},
+						{
+							title	: 'About',
+							link	: 'about'
+						}
+				], 
+				pages	: {
+					home 		: {
+						title : 'Hello World',
+						content	: 'Hello Good World',
+					},
+					about 		: {
+						title 	: 'About Circular',
+						content	: 'blurb here',
+						url			: 'about.html'
+					}
+				}
+				
+			}
+			
+			var Control = {
+				goto	: function(page) {
+					Model.currentpage=Model.pages[page];
+				}
+			}
+			
+			Control.goto('home');
+			
+			Circular.init();
+			
+		</script>
+	</head>
+	<body cc-context="{{Model.currentpage}}">
+	
+		<ul>
+			<li cc-loop="{{Model.menu}}">
+				<a onclick="Control.goto('#link')">{{#title}}</a> 
+				<span cc-if="{{!@loop.last}}">;</span>
+			</li>
+		</ul>
+		
+		<h1 alt="{{#title}}">{{#title.toUpperCase()}}</h1>
+		
+		<p class="content {{@cc.context.object==Model.pages.home?'home':'other'}}">{{#content}}</p>
+		
+		<p cc-hide="{{!#url}}" cc-load="{{#url}}">Loading..</p>
+		
+		
+		
+		{{console.log(@registry);}}
+		{{@cc.numcycles}}
+		
+		<script>//((@log.log(@cc.context)))</script>
+		
+	</body>
+</html>
