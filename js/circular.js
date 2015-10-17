@@ -1,7 +1,34 @@
+
+function CircularAttribute (def) {
+	this.name 				= '';
+	this.directive		= '';
+	this.original 		= '';
+	this.expression 	= '',
+	this.result 			= undefined;
+	this.value 				= '';
+	
+	this.isBreaking 	= false;
+	this.isChanged		= false;
+	this.isDirty			= false;
+	
+	if (def)  jQuery.extend(true,this,def);
+	
+}
+
+function CircularDirective(def) {
+	this.name = '';
+	this.init	= null;
+	this.css	= '';
+	this.in 	= function(node,attr) { return true; }
+	this.out 	= function(node,attr) { return true; }	
+	if (def) jQuery.extend(true,this,def);
+	if (this.name) Circular.directives.add(this);
+}
+
 var Circular = {
 
 	settings	: {
-		debug		: true
+		
 	},
 	
 	constants	: {
@@ -14,14 +41,10 @@ var Circular = {
 		root shortcuts
 
 		for ease sake, some internals are shortcutted here
-		so you can write @cc.context or @debug.
+		so you can write @cc.context or @debug.write
 		
 	------------------------ */
-	
-	debug	: function() {
-		if (this.settings.debug) this.logger.log(arguments);
-	},
-	
+
 	cc	:	null,		// shortcut to 'Circular.engine'
 	
 	
@@ -62,37 +85,49 @@ var Circular = {
 			//		"node" 			: thenode ,..
 		},
 		
-		registerNode				: function(expr,node) {
-			
-		},
-		updateNode					: function(expr,node) {
-			//
-		},
+		
 		/*
-			attributes have the format {
-				name											- attribute name
-				value											- original value
-				expression		expression 	- parsed from original value
-				result				result			- last generated result
-				string				str					- string version of that result
-				directive			directive		- parsed from attribute name
-				break					boolean			- wether or not execution forced exit from cycle
-			}
+			properties is an ass array
+			keys status, outercontext, innercontext and attributes.
+			
+			attributes is an array of CircularAttributes.
 			the order of the attributes is important, because
 			directive execution may have impact on following attributes
 			
 		*/
 				
-		setAttributes	: function(node,attrs) {
-			$(node).data('cc-attributes',attrs);
+		setProperties	: function(node,props) {
+			props.status.registered=true;
+			$(node).data('cc-properties',props);
+			for (var ac=0; ac<props.attributes.length;ac++) {
+				Circular.watchdog.watch(props.attributes[ac].expression,node,props.attributes[ac].name);
+			}
 		},
-		updateAttributes	: function(node,attrs) {
-			$(node).data('cc-attributes',attrs);
+		updateProperties	: function(node,props) {
+			// this could be more efficient ..
+			var oldprops = $(node).data('cc-properties');
+			for (var ac=0; ac<oldprops.attributes.length;ac++) {
+				Circular.watchdog.unwatch(oldprops.attributes[ac].expression,node,oldprops.attributes[ac].name);
+			}
+			$(node).data('cc-properties',props);
+			for (var ac=0; ac<props.attributes.length;ac++) {
+				Circular.watchdog.watch(props.attributes[ac].expression,node,props.attributes[ac].name);
+			}
 		},
-		getAttributes	: function(node) {
-			var attrs = $(node).data('cc-attributes');
-			if (!attrs) attrs = {};
-			return attrs;
+		getProperties	: function(node) {
+			var props = $(node).data('cc-properties');
+			if (!props) props = {
+				'status'	: {
+					'registered'				: false,
+					'contentChanged'		: true,
+					'attributesChanged'	: true,
+					'attributesDirty'		: true
+				},
+				'outercontext'			: '',
+				'innercontext'			: '',
+				'attributes'	: []
+			};
+			return props;
 		}
 	},
 	
@@ -132,7 +167,7 @@ var Circular = {
 			
 			if (Circular[dir.name]===undefined) {
 				// this is usefull for in templating,
-				// eg use @loop to access the loop processor
+				// eg use @loop to access Circular.directives.processors.loop
 				Circular[dir.name]=this.processors[idx];
 			} else {
 				Circular.logger.warn('@global "'+dir.name+'" is taken: @'+dir.name+' wont work');
@@ -173,46 +208,11 @@ var Circular = {
 
 	watchdog		: {
 		
-		// list of contexts being observed by
-		// object.observe. each context holds
-		// set of expressions
-		contexts	: new WeakMap(),
+		watch	: function (expr,node,attrname) {
+			//var paths = Circular.parser.getPaths(expr);
+		},
+		unwatch	: function (expr,node,attrname) {
 		
-		// list of nodes being observed by
-		// MutationObserver. each node holds
-		// set of expressions
-		nodes	: new WeakMap(),
-	
-		observe		: function(obj,exp) {
-			// if its a dom node, attach a mutationobserver
-			// if its an object, call object.observe
-			// and recurse down to add .__ccparents  
-		},
-		
-		unobserve	: function(obj,exp) {
-			
-		},
-
-		oncontextchange	: function(context) {
-			
-			// for all context expressions of
-			// this context, check the registry
-			// and re-eval all nodes
-			
-			// recurse up. all nodes depending 
-			// on higher contexts may be affected.
-			
-			if (context.__ccparents) {
-				for (var parent in context.__ccparents) {
-					this.oncontextchange(parent);
-				}
-			}
-		},
-		ondomchange	: function(node) {
-			
-			// for all context expressions of
-			// this node, check the registry
-			// and re-eval this node
 		}
 		
 	},
@@ -222,6 +222,133 @@ var Circular = {
 	----------------------- */
 	
 	parser 	: {
+		
+		// requires esprima.
+		// @see http://esprima.org/demo/parse.html
+		
+		outerscope	: 'window',
+		
+		getObservablePaths :	function(expression) {
+			Circular.debug.write('Parser.getPaths',expression);
+			var ast = esprima.parse(expression);
+			if (ast) {
+				Circular.debug.write('Parser.getPaths',ast);
+				var paths = new Array();
+				this.recurseObservablePaths(ast,paths);
+				return paths;
+			} else return false;
+		},
+		
+		recurseObservablePaths	: function(tree,paths,path) {
+		
+			if (!tree || !paths) return false;
+			if (tree.type =='Identifier') {
+
+				// some sort of global
+				Circular.debug.write('Parser.recurseObservablePaths','adding identifier '+tree.name);
+				paths.push({object:this.outerscope,path:tree.name});
+
+			} else if (tree.type =='MemberExpression') {
+			
+				// member expression
+				
+				
+				if (tree.property.type=='Identifier' || tree.property.type=='Literal') {
+				
+					// like foo[bar][24].quz ; the property is 'quz'
+					// dabble down the object to get the path
+					
+					if (tree.property.type=='Identifier') {
+						path = (path)?'.'+tree.property.name+path:'.'+tree.property.name;
+					} else {
+						path = (path)?'['+tree.property.raw+']'+path:'['+tree.property.raw+']';
+					}
+					
+					if (tree.object.type=='Identifier') {
+						
+						// like foo.bar ; were done with this path - push !
+						Circular.debug.write('Parser.recurseObservablePaths','adding path '+tree.object.name+path);
+						
+						if (path.indexOf('.')===0) {
+							paths.push({object:tree.object.name,path:path.substring(1)});
+						} else {
+							paths.push({object:this.outerscope,path:tree.object.name+path});
+						}
+						
+					} else {
+						if (tree.object.type=='MemberExpression') {
+							
+							// like foo.bar.quz ; recurse the object
+							Circular.debug.write('Parser.recurseObservablePaths','recursing member expression ..');
+							this.recurseObservablePaths(tree.object,paths,path);						
+						
+						} else {
+							
+							// like foo(bar).quz ; the object is something weird. 
+							// ignore the property .. but recurse the object
+							this.recurseObservablePaths(tree.object,paths);	
+						
+						}
+					}
+				} else {
+				
+					// the property is some sort of thing itself:
+					
+					if (tree.object.type=='Identifier') {
+						
+						// like foo[bar.quz] - push the object, recurse the property
+						Circular.debug.write('Parser.recurseObservablePaths','adding identifier '+tree.object.name);
+						paths.push({object:this.outerscope,path:tree.object.name});
+						this.recurseObservablePaths(tree.property);	
+						
+					} else {
+					
+						// like foo.bar[quz(raz)] ; recurse both
+						Circular.debug.write('Parser.recurseObservablePaths','recursing member expression ..');
+						this.recurseObservablePaths(tree.object,paths);	
+						this.recurseObservablePaths(tree.property,paths);	
+					
+						
+					}
+					
+				}
+				
+			} else if (tree.type=="CallExpression") {
+			
+				// like foo.bar(quz.baz) ; we only want the arguments
+				this.recurseObservablePaths(tree.arguments,paths);
+				
+			} else if (tree.type=="AssignmentExpression") {
+			
+				// like foo.bar=baz*quz ; we only want the right hand
+				this.recurseObservablePaths(tree.right,paths);
+				
+			} else {
+			
+				// unknown garbage. dig deeper.
+				var props = Object.getOwnPropertyNames(tree);
+				for (var pc=0; pc<props.length; pc++) {
+					var key = props[pc];
+					if (typeof tree[key] == 'object') {
+						if (Array.isArray(tree[key])) {
+							for (var kc=0;kc<tree[key].length;kc++) {
+								Circular.debug.write('Parser.recurseObservablePaths','recursing '+key+':'+kc);
+								this.recurseObservablePaths(tree[key][kc],paths);
+							}
+						} else {
+							Circular.debug.write('Parser.recurseObservablePaths','recursing '+key);
+							this.recurseObservablePaths(tree[key],paths);
+							
+						}
+					} else {
+						Circular.debug.write('Parser.recurseObservablePaths','ignoring '+key);
+					}
+					
+				}
+			}
+			
+		},
+		
 		
 		match	: function(x) {
 			// returns an array of matches or false
@@ -268,7 +395,7 @@ var Circular = {
 					// tell eval that this is a stringthing
 					parsed = '"'+parsed+'"';
 				}
-				Circular.debug("Circular.parser.parse",expr,ctx,parsed);
+				Circular.debug.write("Circular.parser.parse",expr,ctx,parsed);
 				return parsed;
 			} 
 			return '';
@@ -280,7 +407,7 @@ var Circular = {
 		eval	: function(expr) {
 			try {
 					var value = eval(expr);
-					Circular.debug("Circular.parser.eval",expr,value);
+					Circular.debug.write("Circular.parser.eval",expr,value);
 					return value;
 			} catch (err) {
 					Circular.logger.error("Circular.parser.eval",expr,'fail');
@@ -371,51 +498,76 @@ var Circular = {
 						
 					case Node.COMMENT_NODE:
 					
-						this.debug('Circular.engine.recycle ','ignoring comments '.node.nodeType);
+						this.debug('Circular.engine.recycle ','ignoring comments '+node.nodeType);
 						break;
 						
 					default:
 					
-						this.debug('Circular.engine.recycle ','ignoring node type '.node.nodeType);
+						this.debug('Circular.engine.recycle ','ignoring node type '+node.nodeType);
 				}
 	
 		},
 	
-		processElementNode				: function(node,reindex) {
+		processElementNode				: function(node,contextChanged) {
 					
-			var attrs = {};
+			var action = '', recycle = '';
+			var props = Circular.registry.getProperties(node);
 
-			if (reindex) attrs = this.indexAttributes(node);
-			else attrs = Circular.registry.getAttributes(node);
-			
-			if (attrs.length) {
-			
-				if (reindex) Circular.registry.registerNode(this.context,node);
-				else Circular.registry.updateNode(this.context,node);
-				
-				// evaluate and fill out attrs, execute directives
-				// this will return false if one of the directives
-				// return false to interrupt the cycle
-				
-				var descend = this.processAttributesIn(node,attrs);
-
-				if (descend) {
-					this.processChildren(node,reindex);
-				}
-				
-				this.processAttributesOut(node,attrs);
-				
-				// store the result in the registry for the next cycle
-				if (reindex) Circular.registry.setAttributes(node,attrs);
-				else Circular.registry.updateAttributes(node,attrs);
-
+			if (!contextChanged && props.outercontext) {
+				this.setContext(props.outercontext);
 			} else {
-				this.processChildren(node,reindex);
+				props.outercontext = this.context.expression;
+			}
+			
+			if (props.status.attributesChanged || props.status.attributesDirty) {
+				props.attributes = this.indexAttributes(node,props.attributes);
+				props.status.attributesChanged=false;
+				props.status.attributesDirty=false;
+				if (props.attributes.length) {
+				
+					// evaluate and fill out attrs, execute directives
+					// this will return false if one of the directives
+					// return false to interrupt the cycle
+					
+					var recurse = this.processAttributesIn(node,props.attributes);
+
+					if (recurse) {
+						if (props.innercontext.expression!=this.context.expression) {
+							// recurse if the inner context changed.
+							props.innercontext=this.context.expression;
+							this.processChildren(node,true);
+							props.status.contentChanged=false;
+						} else if (props.status.contentChanged) {
+							// or recurse if the inner content changed.
+							props.innercontext=this.context.expression;
+							this.processChildren(node);
+							props.status.contentChanged=false;
+						}
+					}
+					
+					this.processAttributesOut(node,props.attributes);
+					
+					// store the result in the registry for the next cycle
+					if (!props.status.registered) Circular.registry.setProperties(node,props);
+					else Circular.registry.updateProperties(node,props);
+	
+				} else {
+					// there was nothing particular about this node
+					if (props.status.contentChanged) {
+						this.processChildren(node);
+						props.status.contentChanged=false;
+					}
+				}
+			} else {
+				if (props.status.contentChanged) {
+					this.processChildren(node);
+					props.status.contentChanged=false;
+				}
 			}
 			
 		},
 		
-		indexAttributes	: function(node) {
+		indexAttributes	: function(node,regprops) {
 		
 			// this is called if something changed
 			// to the dom, and everything needs to 
@@ -436,51 +588,45 @@ var Circular = {
 			// if the node was registered in a previous
 			// cycle, use the original values from there
 			
-			var attr = {}, exprs = [], dirs = [];
+			var props = [], attrs = [], dirs = [];
 			
 			// see if we have a previous run registered
-			var regattrs = Circular.registry.getAttributes(node);
+			if (!regprops) regprops = [];
 			
 			for(var ac=0; ac<node.attributes.length;ac++) {
-				var template = null;
+				var property = null;
 				var attrname = node.attributes[ac].name;
 				
 				// see if it was registered
-				for (var ri=0;ri<regattrs.length;ri++) {
-					if (regattrs[ri].name==attrname) {
-						template=regattrs[ri];
-						template.registered=true;
+				for (var ri=0;ri<regprops.length;ri++) {
+					if (regprops[ri].name==attrname) {
+						property=regprops[ri];
+						property.registered=true;
 						break;
 					}
 				}
-				if (!template) {
-					template={
-						name				: '',
-						original		: '',
-						expression	: '',
-						result			: undefined,
-						value				: '',
-						directive 	: '',
-						break				: false
-					};
-				}
+				
+				// else, create a new property from this attribute
+				if (!property) property = new CircularAttribute();
+				
 				var diridx = Circular.directives.attr2idx[attrname];
 				if (diridx || diridx===0) {
+					var dirprop = null;
 					var dirname = Circular.directives.processors[diridx].name;
-					if (attr = this.indexDirective(node,attrname,dirname,template)) {
-						dirs[diridx]=attr;
+					if (dirprop = this.indexDirective(node,attrname,dirname,property)) {
+						dirs[diridx]=dirprop;
 					}
 				} else {
-					if (attr = this.indexAttribute(node,attrname,template)) {
-						exprs.push(attr);
+					var attrprop = null;
+					if (attrprop = this.indexAttribute(node,attrname,property)) {
+						attrs.push(attrprop);
 					}
 				}
 			}
 			
-			var attrs = [];
 			// stack these up in the right order:
-			for (var idx in dirs) attrs.push(dirs[idx]);
-			return attrs.concat(exprs);
+			for (var idx in dirs) props.push(dirs[idx]);
+			return props.concat(attrs);
 			
 		},
 		
@@ -581,7 +727,7 @@ var Circular = {
 				if (result!=attr.result) {
 				
 					attr.result = result;
-					Circular.debug('Circular.engine.processAttributeIn','changed',attr.expression,attr.result);
+					Circular.debug.write('Circular.engine.processAttributeIn','changed',attr.expression,attr.result);
 					try {
 						attr.value = attr.result.toString();
 					} catch (x) {
@@ -591,15 +737,16 @@ var Circular = {
 					node.setAttribute(attr.name,attr.value);
 
 					if (attr.directive) {
-						Circular.debug('Circular.engine.processAttributesIn','executing',attr.directive);
-						var func = Circular.directives.processors[Circular.directives.name2idx[attr.directive]].in;
+						Circular.debug.write('Circular.engine.processAttributesIn','executing',attr.directive);
+						var dir = Circular.directives.processors[Circular.directives.name2idx[attr.directive]];
+						var func = dir.in;
 						if (func) {
-							var ok = func(node,attr);
+							var ok = func.call(dir,node,attr);
 							if (ok===false) {
-								attr.break=true;
+								attr.isBreaking=true;
 								break;
 							} else {
-								attr.break=false;
+								attr.isBreaking=false;
 							}
 						}
 					} 
@@ -615,19 +762,18 @@ var Circular = {
 			// loop all directives backwards
 			// starting with the last break, if any
 			for (var dc=0; dc<attrs.length; dc++) {
-				if (attrs[dc].break) {
+				if (attrs[dc].isBreaking) {
 					dc++;
-					// reeval again next time in() is called
-					attrs[dc].break=false;
 					break;
 				}
 			}
 			for (var dc=dc-1; dc>=0; dc--) {
 				if (attrs[dc].directive) {
-					Circular.debug('Circular.engine.processAttributesOut',attrs[dc].directive);
-					var func = Circular.directives.processors[Circular.directives.name2idx[attrs[dc].directive]].out;
+					Circular.debug.write('Circular.engine.processAttributesOut',attrs[dc].directive);
+					var dir = Circular.directives.processors[Circular.directives.name2idx[attrs[dc].directive]];
+					var func = dir.out;
 					if (func) {
-						func(node,attrs[dc]);
+						func.call(dir,node,attrs[dc]);
 					}
 				}
 			}
@@ -656,7 +802,7 @@ var Circular = {
 													
 				if (matches.length==1) {
 					// this is a full match
-					Circular.debug('Circular.engine.processTextNode','replacing content with single span');
+					Circular.debug.write('Circular.engine.processTextNode','replacing content with single span');
 					var span = document.createElement('span');
 					span.setAttribute('id','cc-'+this.genid++);
 					span.setAttribute('cc-content',val);
@@ -667,18 +813,18 @@ var Circular = {
 				} else {
 				
 					// start splitting up nodes
-					Circular.debug('replacing content with text and spans');
+					Circular.debug.write('replacing content with text and spans');
 					
 					var vals = Circular.parser.split(val);
 					for (var vc=0; vc<vals.length;vc++) {
 							if (vals[vc].expression) {
-								Circular.debug('Circular.engine.processTextNode','inserting span '+vals[vc].expression);
+								Circular.debug.write('Circular.engine.processTextNode','inserting span '+vals[vc].expression);
 								var span = document.createElement('span');
 								span.setAttribute('id','cc-'+this.genid++);
 								span.setAttribute('cc-content',vals[vc].expression);
 								nodes.push(span);
 							} else {
-								Circular.debug('Circular.engine.processTextNode','inserting text '+vals[vc].text);
+								Circular.debug.write('Circular.engine.processTextNode','inserting text '+vals[vc].text);
 								nodes.push(document.createTextNode(vals[vc].text));
 							}
 					}
@@ -743,22 +889,48 @@ var Circular = {
 
 
 
-CircularDirective = function(def) {
-	if (def.name) {
-		this.name = def.name;
-		this.init	= def.init?def.init:null;
-		this.css	= def.css?def.css:'';
-		this.in 	= def.in?def.in:function(node,attr) { return true; }
-		this.out 	= def.out?def.out:function(node,attr) { return true; }	
-		Circular.directives.add(this);
-	}
-	
-}
+
 
 // the nop directive
 // <div cc-nop="foo"></div>
 // does nothing
 new CircularDirective({name:'nop'});
+
+// the debug directive
+
+new CircularDirective({
+
+	name			: 'debug',
+	on				: false,
+		
+	in	: function(node,attr) {
+		this.write('dir.debug',node);
+		attr.before = Circular.settings.debug;
+		if (!attr.original || attr.result) {
+			this.on=true;
+			this.write('dir.debug - on');
+		} else {
+			this.write('dir.debug - off');
+			this.on=false;
+		}
+	},
+	
+	out	: function(node,attr) {
+		if (!attr.before) this.write('dir.debug - off');
+		this.on=attr.before;
+		if (attr.before) this.write('dir.debug - on');
+	},
+	
+	toggle: function(on) { this.on=on; },
+	on		: function() { this.toggle(true); },
+	off		: function() { this.toggle(false); },
+	
+	write	: function() {
+		if (this.on) Circular.logger.log(arguments);
+	}
+	
+	
+});
 
 // the context directive
 // before  <div cc-context="{{['a','b','c']}}">{{#2}}</div>
@@ -770,8 +942,8 @@ new CircularDirective({
 	name				: 'context',
 	
 	in	: function(node,attr) {
-		Circular.debug('dir.context','setting context',node,attr.expression);
-		attr.previous = Circular.engine.getContext();
+		Circular.debug.write('dir.context','setting context',node,attr.expression);
+		attr.before = Circular.engine.getContext();
 		Circular.engine.setContext({
 			expression	: attr.expression,
 			object			:	attr.result
@@ -779,8 +951,8 @@ new CircularDirective({
 	},
 	
 	out	: function(node,attr) {
-		Circular.engine.setContext(attr.previous);
-		delete attr.previous;
+		Circular.engine.setContext(attr.before);
+		delete attr.before;
 	}
 		
 });
@@ -798,12 +970,15 @@ new CircularDirective({
 	name	: 'content',
 	
 	in	: function(node,attr) {
-		Circular.debug('dir.content','setting content',node,attr.result);
+		Circular.debug.write('dir.content','setting content',node,attr.result);
 		node.textContent=attr.result;
 	}
 
 		
 });
+
+
+
 
 // the hide directive
 // before  <div cc-hide="{{#foo}}">bar</div>
@@ -816,7 +991,7 @@ new CircularDirective({
 	css		: '.cc-hide { display:none; }',
 	
 	in	: function(node,attr) {
-		Circular.debug('dir.hide',node);
+		Circular.debug.write('dir.hide',node);
 		$(node).toggleClass('cc-hide',attr.result);
 	}
 	
