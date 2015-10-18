@@ -44,7 +44,7 @@
 			
 		</script>
 	</head>
-	<body cc-context="{{Model.currentpage}}">
+	<body cc-debug cc-root cc-context="{{Model.currentpage}}">
 	
 		<ul>
 			<li cc-loop="{{Model.menu}}">
@@ -55,16 +55,14 @@
 		
 		<h1 alt="{{#title}}">{{#title.toUpperCase()}}</h1>
 		
-		<p class="content {{@cc.context.object==Model.pages.home?'home':'other'}}">{{#content}}</p>
+		<p class="content {{@context.current=='home'?'home':'other'}}">{{#content}}</p>
 		
-		<p cc-debug cc-hide="{{!#url}}" cc-include="{{#url}}">Loading..</p>
-		
-		
+		<p cc-hide="{{!#url}}" cc-include="{{#url}}">Loading..</p>
 		
 		{{console.log(@registry);}}
-		{{@cc.numcycles}}
+		{{@engine.counter}}:{{@registry.counter}}
 		
-		<script>//((@log.log(@cc.context)))</script>
+		<script>//((@log.log(@context.current)))</script>
 		
 	</body>
 </html>
