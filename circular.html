@@ -10,23 +10,23 @@
 				currentpage	: null,
 				menu	: [
 						{ 
-							title	: 'Welcome',
-							link	: 'home'
+							title	: 'Hello',
+							link	: 'hello'
 						},
 						{
-							title	: 'About',
-							link	: 'about'
+							title	: 'Goodbye',
+							link	: 'goodbye'
 						}
 				], 
 				pages	: {
-					home 		: {
+					hello 		: {
 						title : 'Hello World',
 						content	: 'Hello Good World',
 					},
-					about 		: {
-						title 	: 'About Circular',
-						content	: 'blurb here',
-						url			: 'about.html'
+					goodbye 		: {
+						title 	: 'Goodbye World',
+						content	: 'Goodbye cruel world',
+						url			: 'goodbye.html'
 					}
 				}
 				
@@ -38,13 +38,13 @@
 				}
 			}
 			
-			Control.goto('home');
+			Control.goto('hello');
 			
 			Circular.init();
 			
 		</script>
 	</head>
-	<body cc-debug cc-root cc-context="{{Model.currentpage}}">
+	<body cc-context="{{Model.currentpage}}">
 	
 		<ul>
 			<li cc-loop="{{Model.menu}}">
@@ -55,12 +55,11 @@
 		
 		<h1 alt="{{#title}}">{{#title.toUpperCase()}}</h1>
 		
-		<p class="content {{@context.current=='home'?'home':'other'}}">{{#content}}</p>
+		<p class="content {{Model.currentpage==Model.pages.home?'home':'other'}}">{{#content}}</p>
 		
 		<p cc-hide="{{!#url}}" cc-include="{{#url}}">Loading..</p>
 		
-		{{console.log(@registry);}}
-		{{@engine.counter}}:{{@registry.counter}}
+		{{@registry.counter}}:{{@registry.counter}}
 		
 		<script>//((@log.log(@context.current)))</script>
 		
