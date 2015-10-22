@@ -390,7 +390,7 @@ new CircularModule({
 		this.processing.nodes.forEach(function(node) { todo.push(node); });
 		if (todo.length) {
 			Circular.debug.write('recycling '+todo.length+' nodes');
-			if (Circular.debug.on) this.report(this.processing);
+			if (Circular.debug.enabled) this.report(this.processing);
 			Circular.engine.recycle(todo,true);
 		}
 		this.processing = {};

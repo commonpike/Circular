@@ -1,19 +1,21 @@
 <html>
 	<head>
-		<script src="../js/circular.core.js"></script>
 		<script src="../../vendor/node_modules/jquery/dist/jquery.min.js"></script>
-		<script src="../js/circular.core.root.js"></script>
-		<script src="../js/circular.core.log.js"></script>
-		<script src="../js/circular.core.debug.js"></script>
 		<script src="../../vendor/node_modules/esprima/esprima.js"></script>
-		<script src="../js/circular.core.parser.js"></script>
-		<script src="../js/circular.core.registry.js"></script>
-		<script src="../js/circular.core.engine.js"></script>
 		<script src="../../vendor/node_modules/observe-js/src/observe.js"></script>
-		<script src="../js/circular.core.watchdog.js"></script>
-		<script src="../js/circular.base.context.js"></script>
-		<script src="../js/circular.base.content.js"></script>
-		<script src="../js/circular.base.hide.js"></script>
+
+		<script src="../js/core/circular.core.00.js"></script>
+		<script src="../js/core/circular.core.01.log.js"></script>
+		<script src="../js/core/circular.core.02.debug.js"></script>
+		<script src="../js/core/circular.core.03.context.js"></script>
+		<script src="../js/core/circular.core.04.root.js"></script>
+		<script src="../js/core/circular.core.05.content.js"></script>
+		<script src="../js/core/circular.core.06.parser.js"></script>
+		<script src="../js/core/circular.core.07.registry.js"></script>
+		<script src="../js/core/circular.core.08.engine.js"></script>
+		<script src="../js/core/circular.core.09.watchdog.js"></script>
+		
+		<script src="../js/base/circular.base.hide.js"></script>
 		
 		<script>
 		
@@ -52,7 +54,7 @@
 			Control.goto('hello');
 			
 			Circular.init({
-				watchdogtimeout:0
+				watchdogtimeout:50
 			});
 			
 		</script>

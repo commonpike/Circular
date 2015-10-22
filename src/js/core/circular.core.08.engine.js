@@ -6,7 +6,7 @@
 new CircularModule({
 
 	name				: 'engine',	
-	requires		: ['log','debug','registry'],
+	requires		: ['root','context','content','log','debug','registry'],
 	config			: {
 		rootcontext		: 'window'
 	},

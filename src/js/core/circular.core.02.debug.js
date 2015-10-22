@@ -8,12 +8,19 @@ new CircularModule({
 	enabled		: false,
 	requires	: ['log'],
 	config		: {
-		debugging	: false,
+		debugging	: false
+	},
+	
+	init	: function() {
+		if (Circular.config.debugging) {
+			this.enabled=true;
+		}
 	},
 	
 	in	: function(attr,node,props) {
 		this.write('mod.debug',node);
 		attr.outer = this.enabled;
+		// cant use parser.boolish here
 		if (!attr.original || attr.result) {
 			this.on();
 		} else {

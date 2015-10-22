@@ -42,18 +42,14 @@ var Circular = {
 				valid = true;
 				
 				if (Circular[mod.name]) {
-					if (Circular.log) {
-						Circular.log.error('Circular.modules.add','mod.'+mod.name+' namespace already taken');
-					}
+					if (Circular.log) Circular.log.error('Circular.modules.add','mod.'+mod.name+' namespace already taken');
 					valid = false;
 				}
 				
 				if (mod.requires) {
 					mod.requires.forEach(function(name) {
 						if (this.name2idx[name]===undefined) {
-							if (Circular.log) {
-								Circular.log.error('Circular.modules.add','mod.'+mod.name+' requires mod.'+name);
-							}
+							if (Circular.log) Circular.log.error('Circular.modules.add','mod.'+mod.name+' requires mod.'+name);
 							valid=false;
 						}
 					},this);
@@ -135,7 +131,7 @@ var Circular = {
 				Circular.log.fatal('Circular mod.engine not found');
 			} else {
 				alert('Circular mod.engine and mod.log not found');
-				this.die();
+				Circular.die();
 			}
 		});
 	},

@@ -214,6 +214,20 @@ new CircularModule({
 				Circular.log.error("Circular.parser.eval",expr,'fail');
 				return Circular.config.evalfail;
 		}
+	},
+	
+	boolish	: function(str) {
+		if (str) {
+			if (str==='no') 		return false;
+			if (str==='off') 		return false;
+			if (str==='false') 	return false;
+			if (str==='0') 			return false;
+			return true;
+		} else {
+			if (str==='') return true;
+			return false;
+		}
 	}
+	
 });
 	
