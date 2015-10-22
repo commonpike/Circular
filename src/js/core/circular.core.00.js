@@ -83,11 +83,11 @@ var Circular = {
 
 		},
 		
-		init	: function() {
+		init	: function(config) {
 			
 			if (Circular.debug) Circular.debug.write('Circular.modules.init');
 			
-			// create a stylesheet, add all css
+			// create a stylesheet, add all css and config
 			var css = '';
 			this.stack.forEach(function(mod) {
 				if (mod.css) css += mod.css;
@@ -102,6 +102,9 @@ var Circular = {
 				// ruff stuff. probs in ie<9
 				styleElement.appendChild(document.createTextNode(css));
 			}
+			
+			// override config before you init
+			$.extend(Circular.config,config);
 			
 			for (var dc=0; dc < this.stack.length; dc++) {
 				if (this.stack[dc].init) {
@@ -123,8 +126,7 @@ var Circular = {
 
 	init 		: function(config) {
 		$(document).ready(function() {
-			Circular.modules.init();
-			$.extend(Circular.config,config);
+			Circular.modules.init(config);
 			if (Circular.engine) {
 				Circular.engine.cycle();	
 			} else if (Circular.log) {
@@ -145,10 +147,13 @@ var Circular = {
 
 function CircularModule(def) {
 	if (def.name) {
-		if (!def.init) 	def.init	= null;
-		if (!def.css)		def.css	= '';
 		if (!def.in)		def.in 	= function(attr,node,props) { return true; }
 		if (!def.out) 	def.out = function(attr,node,props) { return true; }	
 		Circular.modules.add(def);
-	} 
+	} else if (Circular.log) {
+		Circular.log.fatal('CircularModule.name is required');
+	} else {
+		alert('CircularModule.name is required');
+		Circular.die();
+	}
 }

@@ -13,14 +13,14 @@ new CircularModule({
 	
 	init	: function() {
 		if (Circular.config.debugging) {
-			this.enabled=true;
+			this.on();
 		}
 	},
 	
 	in	: function(attr,node,props) {
 		this.write('mod.debug',node);
 		attr.outer = this.enabled;
-		// cant use parser.boolish here
+		// cant use parser.boolish yet
 		if (!attr.original || attr.result) {
 			this.on();
 		} else {

@@ -1,10 +1,11 @@
 <html>
 	<head>
+	
 		<script src="../../vendor/node_modules/jquery/dist/jquery.min.js"></script>
 		<script src="../../vendor/node_modules/esprima/esprima.js"></script>
 		<script src="../../vendor/node_modules/observe-js/src/observe.js"></script>
 
-			<script src="../js/core/circular.core.00.js"></script>
+		<script src="../js/core/circular.core.00.js"></script>
 		<script src="../js/core/circular.core.01.log.js"></script>
 		<script src="../js/core/circular.core.02.debug.js"></script>
 		<script src="../js/core/circular.core.03.context.js"></script>
@@ -21,17 +22,19 @@
 			var Model = {
 				currentpage	:  {
 					title : 'Hello World',
-					content	: 'Hello Good World'
+					content	: 'Hello Good World',
 				}
 			}
 			
 			Circular.init({
-				debugging:true
+				debugging:false
 			});
 			
 		</script>
 	</head>
 	<body cc-context="{{Model.currentpage}}">
-		<h1 cc-content="{{#title}}"></h1>
+		<h1 cc-debug>{{#title}}</h1>
+		La
+		{{#content}}
 	</body>
 </html>

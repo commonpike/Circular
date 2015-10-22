@@ -401,7 +401,7 @@ new CircularModule({
 						
 					}
 					
-					if (Circular.debug.on) {
+					if (Circular.debug.enabled) {
 						if (attr.name.indexOf('cc-')==0) node.setAttribute('cc-'+attr.name.substring(3)+'-debug',attr.original);
 						else node.setAttribute('cc-'+attr.name+'-debug',attr.original);
 					}
@@ -413,7 +413,7 @@ new CircularModule({
 					// so its not an expression (anymore)
 					// ignore it or forget it
 					
-					if (Circular.debug.on) {
+					if (Circular.debug.enabled) {
 						if (attr.name.indexOf('cc-')==0) node.removeAttribute('cc-'+attr.name.substring(3)+'-debug');
 						else node.removeAttribute('cc-'+attr.name+'-debug');
 					}
@@ -547,7 +547,7 @@ new CircularModule({
 			var match, exec, nodes = [];
 			if (matches = Circular.parser.match(val)) {
 													
-				if (matches.length==1) {
+				if (matches.length==1 && matches[0]==val) {
 					// this is a full match
 					//if (!node.parentNode.hasAttribute('cc-content')) {
 					//	node.parentNode.setAttribute('cc-content',val);
@@ -558,7 +558,7 @@ new CircularModule({
 					//} else {
 						Circular.debug.write('Circular.engine.processTextNode','replacing content with single span');
 						var span = document.createElement('span');
-						span.setAttribute('id','cc-'+this.genid++);
+						span.setAttribute('id','cc-engine-'+this.genid++);
 						span.setAttribute('cc-content',val);
 						if (Circular.watchdog) {
 							Circular.watchdog.pass(node.parentNode,'contentchanged');
@@ -581,7 +581,7 @@ new CircularModule({
 							if (vals[vc].expression) {
 								Circular.debug.write('Circular.engine.processTextNode','inserting span '+vals[vc].expression);
 								var span = document.createElement('span');
-								span.setAttribute('id','cc-'+this.genid++);
+								span.setAttribute('id','cc-engine-'+this.genid++);
 								span.setAttribute('cc-content',vals[vc].expression);
 								nodes.push(span);
 							} else {
