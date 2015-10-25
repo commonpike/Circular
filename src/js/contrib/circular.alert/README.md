@@ -10,7 +10,7 @@
 
 *example:* 
 
-``<div cc-alert='foo'>``
+``<div cc-alert='foo'></div>``
 
 *description:*
 
@@ -25,9 +25,10 @@
 
 ----
 
-###@cc-alert.in(attr,node,props)
+###@alert.in(attr,node,props)
 
 *description:*
+
 >processes the attribute on the way in
 	
 *arguments:*
@@ -40,7 +41,9 @@
 
 - undefined
 		
-###@cc-alert.out(attr,node,props)
+----
+
+###@alert.out(attr,node,props)
 
 *description:*
 >processes the attribute on the way out
