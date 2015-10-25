@@ -1,5 +1,7 @@
 #Circular.alert#
 
+*author:* pike; *version:* 1.0; *requires:* Circular
+
 ----
 
 ##attributes##

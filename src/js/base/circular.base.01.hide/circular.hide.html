@@ -1,0 +1,27 @@
+<html>
+	<head>
+		<title>Circular.hide</title>
+		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+		<script src="../../../../dist/js/Circular.min.js"></script>
+		<style type="text/css">
+			body { font-family: sans-serif; }
+		</style>
+		<script>
+		
+			var Model = {
+				hours : (new Date()).getHours()
+			};
+				
+			// check the time every minute
+			setInterval(function() {
+				Model.hours = (new Date()).getHours();
+			},1000*60); 
+			
+		</script>
+	</head>
+	<body cc-root cc-context="Model">
+		<div cc-hide="{{#hours>12}}">Good morning</div> 
+		<div cc-hide="{{#hours<12 || #hours>18}}">Good day</div> 
+		<div cc-hide="{{#hours<18}}">Good evening</div> 
+	</body>
+</html>

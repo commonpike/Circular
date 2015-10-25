@@ -8,12 +8,12 @@ new CircularModule({
 	enabled		: false,
 	requires	: ['log'],
 	config		: {
-		debugging	: false
+		debug	: false
 	},
 	
 	init	: function() {
-		if (Circular.config.debugging) {
-			this.on();
+		if (Circular.config.debug) {
+			this.toggle(true);
 		}
 	},
 	
@@ -29,13 +29,12 @@ new CircularModule({
 		delete attr.outer;
 	},
 	
-	toggle: function(on) 	{ 
-		if (!on) this.write('mod.debug - off');
-		this.enabled=on; 
-		if (on) this.write('mod.debug - on');
+	toggle: function(state) 	{ 
+		if (state===undefined) state = !this.enabled;
+		if (!state) this.write('mod.debug - off');
+		this.enabled=state; 
+		if (state) this.write('mod.debug - on');
 	},
-	on		: function() 		{ this.toggle(true); },
-	off		: function() 		{ this.toggle(false); },
 	
 	write	: function() {
 		if (this.enabled) Circular.log.write(arguments);

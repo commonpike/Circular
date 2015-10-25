@@ -6,7 +6,14 @@ new CircularModule({
 
 	name				: 'context',
 	requires		: ['debug'],
+	config			: {
+		rootcontext		: 'document'
+	},
 	current			: '',
+	
+	init				: function() {
+		this.set(Circular.config.rootcontext);
+	},
 	
 	in	: function(attr,node,props) {
 		Circular.debug.write('mod.context.in','setting context',attr.value);
@@ -14,7 +21,7 @@ new CircularModule({
 		if (!attr.expression || typeof attr.result == "string") {
 			this.set(attr.value);
 		} else {
-			Circular.log.warn('mod.context.in','Context should be a string - using expression instead');
+			Circular.debug.write('mod.context.in','Result is not a string, using expression');
 			this.set(attr.expression);
 		}
 	},

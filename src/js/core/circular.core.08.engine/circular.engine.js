@@ -7,10 +7,6 @@ new CircularModule({
 
 	name				: 'engine',	
 	requires		: ['root','context','content','log','debug','registry'],
-	config			: {
-		rootcontext		: 'window'
-	},
-	
 	counter			: 0,
 	genid				: 0,
 	$queued		: $({}),	
@@ -29,7 +25,6 @@ new CircularModule({
 	
 	cycle				: function() {
 		Circular.debug.write('Circular.engine.cycle ');
-		Circular.context.set(Circular.config.rootcontext);
 		var $root = $('[cc-root]');
 		if (!$root.size()) $root = $('html');
 		this.recycle($root,true);
@@ -180,7 +175,7 @@ new CircularModule({
 		Circular.debug.write('Circular.engine.processElementNode');
 
 		var newcontext = false;
-		
+
 		if (props.flags.contextchanged || props.flags.attrdomchanged || props.flags.attrdatachanged) {
 		
 			this.indexAttributes(node,props);
@@ -271,6 +266,7 @@ new CircularModule({
 			
 		} else {
 		
+
 			// we can ignore the attributes. but
 			
 			var innercontext = Circular.context.get();

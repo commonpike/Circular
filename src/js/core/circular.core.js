@@ -9,7 +9,8 @@ var Circular = {
 	},
 	
 	// status
-	dead	: false,
+	inited	: false,
+	dead		: false,
 	
 
 	/* ----------------------
@@ -70,7 +71,7 @@ var Circular = {
 						Circular.log.warn('@global "'+mod.name+'" is taken: @'+mod.name+' wont work');
 					}
 					
-					if (mod.name=="debug" && Circular.config.debugging) {
+					if (mod.name=="debug" && Circular.config.debug) {
 						Circular.debug.on();
 					}
 					
@@ -125,17 +126,20 @@ var Circular = {
 	----------------------- */
 
 	init 		: function(config) {
-		$(document).ready(function() {
-			Circular.modules.init(config);
-			if (Circular.engine) {
-				Circular.engine.cycle();	
-			} else if (Circular.log) {
-				Circular.log.fatal('Circular mod.engine not found');
-			} else {
-				alert('Circular mod.engine and mod.log not found');
-				Circular.die();
-			}
-		});
+		if (!this.inited) {
+			$(document).ready(function() {
+				Circular.modules.init(config);
+				if (Circular.engine) {
+					Circular.engine.cycle();	
+				} else if (Circular.log) {
+					Circular.log.fatal('Circular mod.engine not found');
+				} else {
+					alert('Circular mod.engine and mod.log not found');
+					Circular.die();
+				}
+			});
+			this.inited = true;
+		} 
 	},
 	
 	die		: function() {
@@ -144,6 +148,11 @@ var Circular = {
 
 
 }
+
+
+$(document).ready(function() {
+	Circular.init();
+});
 
 function CircularModule(def) {
 	if (def.name) {
