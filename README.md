@@ -13,8 +13,9 @@ It uses jQuery for traversing the document, Esprima [http://esprima.org/] for pa
 
 - Include jQuery. 
 - Include Circular. 
-- If needed, include additional modules 
+- If needed, include additional modules
 - Then add a `cc-root` tag somewhere to tell Circular where to cycling:
+
 
 	<html>
 		<head>
