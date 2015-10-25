@@ -18,15 +18,15 @@ It uses jQuery for traversing the document, Esprima [http://esprima.org/] for pa
 
 
 		<html>
-		<head>
-			<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
-			<script src="Circular.min.js"></script>
-			<script src="circular.alert.js"></script>
-		</head>
-		<body cc-root>
-			<div cc-alert="{{new Date()}}">What time is it ?</div> 
-		</body>
-	</html>
+			<head>
+				<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+				<script src="Circular.min.js"></script>
+				<script src="circular.alert.js"></script>
+			</head>
+			<body cc-root>
+				<div cc-alert="{{new Date()}}">What time is it ?</div> 
+			</body>
+		</html>
 
 ----
 
