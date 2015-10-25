@@ -2,9 +2,9 @@
 ##Data binding for the masses##
 
 Circular is a modular library that implements html inline expressions, with data-binding, and custom attributes.
-It was designed for simplicity and extensibility.
+It was designed for simplicity and extensibility. And fun.
 
-It uses jQuery for traversing the document, Esprima [http://esprima.org/] for parsing expressions and Observe.js [https://github.com/polymer/observe-js] for data-binding.
+It uses jQuery [http://jquery.org] for traversing the document, Esprima [http://esprima.org/] for parsing expressions and Observe.js [https://github.com/polymer/observe-js] for data-binding.
 
 > This is very much in alpha state. I don't know how you got here, but hey, I'm still just building this :-)*
 
