@@ -14,10 +14,10 @@ It uses jQuery for traversing the document, Esprima [http://esprima.org/] for pa
 - Include jQuery. 
 - Include Circular. 
 - If needed, include additional modules
-- Then add a `cc-root` tag somewhere to tell Circular where to cycling:
+- Then add a `cc-root` tag somewhere to tell Circular where to cycling
 
 
-	<html>
+		<html>
 		<head>
 			<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
 			<script src="Circular.min.js"></script>
