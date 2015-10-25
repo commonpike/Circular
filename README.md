@@ -5,7 +5,7 @@ Circular is a modular library that implements html inline expressions, with data
 
 It uses jQuery for traversing the document, Esprima [http://esprima.org/] for parsing expressions and Observe.js [https://github.com/polymer/observe-js] for data-binding.
 
-*This is very much in alpha state. I don't know how you got here, but hey, I'm still just building this :-)*
+> This is very much in alpha state. I don't know how you got here, but hey, I'm still just building this :-)*
 
 ----
 
@@ -87,7 +87,7 @@ Everything in Circular is a module. It's really easy to boil your
 own. This code:
 
 	new CircularModule({
-		name			: 'alert',
+		name	: 'alert',
 	  	in	: function(attr,node,props) {
 			  alert('in: '+attr.value)
 		},
@@ -102,9 +102,9 @@ and once while leaving it (`out()`):
 
 	<div cc-alert="{{new Date()}}">What time is it ?</div> 
 
-Additionally, this module is accessible as `Circular.alert` in javascript,
-and hence as `@alert` from circular/html. So
+Additionally, this module would be available as `Circular.alert` in javascript,
+and hence an expression like
 
 	{{@alert.name}}
 	
-is available within your html.
+would print `alert` within your html code.
