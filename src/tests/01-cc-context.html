@@ -4,18 +4,18 @@
 		<script src="../../vendor/node_modules/esprima/esprima.js"></script>
 		<script src="../../vendor/node_modules/observe-js/src/observe.js"></script>
 
-			<script src="../js/core/circular.core.00.js"></script>
-		<script src="../js/core/circular.core.01.log.js"></script>
-		<script src="../js/core/circular.core.02.debug.js"></script>
-		<script src="../js/core/circular.core.03.context.js"></script>
-		<script src="../js/core/circular.core.04.root.js"></script>
-		<script src="../js/core/circular.core.05.content.js"></script>
-		<script src="../js/core/circular.core.06.parser.js"></script>
-		<script src="../js/core/circular.core.07.registry.js"></script>
-		<script src="../js/core/circular.core.08.engine.js"></script>
-		<script src="../js/core/circular.core.09.watchdog.js"></script>
+		<script src="../js/core/circular.core.js"></script>
+		<script src="../js/core/circular.core.01.log/circular.log.js"></script>
+		<script src="../js/core/circular.core.02.debug/circular.debug.js"></script>
+		<script src="../js/core/circular.core.03.context/circular.context.js"></script>
+		<script src="../js/core/circular.core.04.root/circular.root.js"></script>
+		<script src="../js/core/circular.core.05.content/circular.content.js"></script>
+		<script src="../js/core/circular.core.06.parser/circular.parser.js"></script>
+		<script src="../js/core/circular.core.07.registry/circular.registry.js"></script>
+		<script src="../js/core/circular.core.08.engine/circular.engine.js"></script>
+		<script src="../js/core/circular.core.09.watchdog/circular.watchdog.js"></script>
 		
-		<script src="../js/base/circular.base.hide.js"></script>
+		<script src="../js/base/circular.base.01.hide/circular.hide.js"></script>
 		<script>
 		
 			var Model = {
@@ -31,7 +31,7 @@
 			
 		</script>
 	</head>
-	<body cc-context="{{Model.currentpage}}">
+	<body cc-context="Model.currentpage">
 		<h1 cc-content="{{#title}}"></h1>
 	</body>
 </html>
