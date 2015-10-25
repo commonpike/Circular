@@ -1,50 +1,56 @@
-#Circular module: alert
+#Circular.alert#
 
-##attributes
+----
 
-###cc-alert
-###data-cc-alert
+##attributes##
 
-	*example:* ``<div cc-alert='foo'>``
+----
 
-	*description:*
-	while processing, if circular encounters this attribute
-	on the way in, it will alter the value of the attribute
-	
-##functions
+###cc-alert, data-cc-alert
+
+*example:* 
+
+``<div cc-alert='foo'>``
+
+*description:*
+
+> While processing, when circular encounters this attribute
+> it will alert the value of the attribute. That is fairly
+> useless, but the purpose of this module is just to be an
+> example for module builders :-)
+
+----
+
+##methods##
+
+----
 
 ###@cc-alert.in(attr,node,props)
 
-	*description:*
-	processes the attribute on the way in
+*description:*
+>processes the attribute on the way in
 	
-	*arguments:*
+*arguments:*
 	
-		- *attr*
-			information about the current attribute
-		- *node*
-			the current html dom node
-		- *props*
-			circular properties of the current node
+- **attr:** information about the current attribute
+- **node:** the current html dom node
+- **props:** circular properties of the current node
 			
-		
-	*return:*
-	
-		undefined
+*return value:* 
+
+- undefined
 		
 ###@cc-alert.out(attr,node,props)
 
-	*arguments:*
-	processes the attribute on the way out
+*description:*
+>processes the attribute on the way out
 	
-		- *attr*
-			information about the current attribute
-		- *node*
-			the current html dom node
-		- *props*
-			circular properties of the current node
+*arguments:*
+	
+- **attr:** information about the current attribute
+- **node:** the current html dom node
+- **props:** circular properties of the current node
 			
-		
-	*return:*
-	
-		undefined
+*return value:* 
+
+- undefined
