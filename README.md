@@ -11,9 +11,10 @@ for data-binding.
 
 ###Getting started
 
-Include jQuery. Include Circular. Eventually, include the addons you'll use. 
-
-Then add a `cc-root` tag somewhere to tell Circular where to cycling:
+- Include jQuery. 
+- Include Circular. 
+- If needed, include additional modules 
+- Then add a `cc-root` tag somewhere to tell Circular where to cycling:
 
 	<html>
 		<head>
@@ -64,21 +65,21 @@ and its modules:
 
 ###CC Attributes
 
-Circular modules can define attributes that are 'executed' while traversing the 
+Circular modules define attributes that are 'executed' while traversing the 
 document. You've already seen `cc-root` (the root module) and `cc-context` (the
-context module). Other examples are cc-debug, cc-content, and cc-hide. Some
+context module). Other examples are cc-debug, cc-content, cc-hide, etc. Some
 modules are included by default, some are available as addons.
 
 *example:* 
 
-  `<a href="rooms.html" cc-hide="{{#rooms.length<10}}">Rooms for rent</a>
+	<a href="rooms.html" cc-hide="{{#rooms.length<10}}">Rooms for rent</a>
 
-If you dislike the `cc-` style of attributing, you can use `data-cc-`, which
+If you dislike the `cc-` style of attributing, you can use `data-cc-` too, which
 is valid html5.
 
 ###CircularModules
 
-Nearly everything in Circular is a module. It's really easy to boil your
+Everything in Circular is a module. It's really easy to boil your
 own. This code:
 
 	new CircularModule({
@@ -98,4 +99,8 @@ and once while leaving it (`out()`):
 	<div cc-alert="{{new Date()}}">What time is it ?</div> 
 
 Additionally, this module is accessible as `Circular.alert` in javascript,
-and hence as `@alert` from circular/html.
+and hence as `@alert` from circular/html. So
+
+	{{@alert.name}}
+	
+is available within your html.
