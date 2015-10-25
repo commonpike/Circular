@@ -17,15 +17,13 @@ module.exports = function(grunt) {
 			}
 		},
 		concat: {
-			dist : {
-				'dist/js/Circular.js' : [
-					'vendor/node_modules/esprima/esprima.js',
-					'vendor/node_modules/observe-js/src/observe.js',
-					'src/js/core/circular.core.js',
-					'src/js/core/*/*.js',
-					'src/js/base/*/*.js'
-				]
-			}
+			'dist/js/Circular.js' : [
+				'vendor/node_modules/esprima/esprima.js',
+				'vendor/node_modules/observe-js/src/observe.js',
+				'src/js/core/circular.core.js',
+				'src/js/core/*/*.js',
+				'src/js/base/*/*.js'
+			]
 		},
 		uglify: {
 			options: {

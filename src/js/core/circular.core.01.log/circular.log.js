@@ -23,7 +23,7 @@ new CircularModule({
 		console.error.apply(console,arguments);
 	},
 	fatal:	function() {
-		this.error(arguments);
+		console.error.apply(console,arguments);
 		Circular.die();
 	}
 });

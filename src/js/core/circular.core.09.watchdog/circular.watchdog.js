@@ -174,7 +174,7 @@ new CircularModule({
 								var object=null,subpath='';
 								var split = path.indexOf('.');
 								if (split==-1) {
-									Circular.log.error('Circular.watchdog.watchdata','observe cannot be called on the global proxy object',path);
+									Circular.log.warn('Circular.watchdog.watchdata','observe cannot be called on the global proxy object',path);
 								} else {
 									object 	= Circular.parser.eval(path.substring(0,split));
 									subpath = path.substring(split+1)
@@ -195,7 +195,7 @@ new CircularModule({
 												Circular.watchdog.ondatachange(path,newvalue,oldvalue)
 											});
 										} else {
-											Circular.log.error('Circular.watchdog.watchdata','observe cannot be called on the global proxy object',path);
+											Circular.log.warn('Circular.watchdog.watchdata','observe cannot be called on the global proxy object',path);
 										}
 									} else {
 										this.pathobservers[path].properties.push(property);
