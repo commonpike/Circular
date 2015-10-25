@@ -12,18 +12,19 @@ for data-binding.
 ###Getting started
 
 Include jQuery. Include Circular. Eventually, include the addons you'll use. 
-And add a `cc-root` tag somewhere to tell Circular where to cycling:
 
-<html>
-	<head>
-		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
-		<script src="Circular.min.js"></script>
-		<script src="circular.alert.js"></script>
-	</head>
-	<body cc-root>
-		<div cc-alert="{{new Date()}}">What time is it ?</div> 
-	</body>
-</html>
+Then add a `cc-root` tag somewhere to tell Circular where to cycling:
+
+	<html>
+		<head>
+			<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+			<script src="Circular.min.js"></script>
+			<script src="circular.alert.js"></script>
+		</head>
+		<body cc-root>
+			<div cc-alert="{{new Date()}}">What time is it ?</div> 
+		</body>
+	</html>
 
 ###Expressions
 
@@ -46,6 +47,8 @@ Variables involved in the expression will be watched and results will be updated
 The *context* module keeps track of a data-context while traversing the document, 
 allowing you to write relative paths to your data using a hash (#) sign:
 
+*example:* 
+
     <body cc-root cc-context="page">
       <a href="{{#link}}">{{#title}}</a>
     </body>
@@ -53,8 +56,12 @@ allowing you to write relative paths to your data using a hash (#) sign:
 Similarly, the 'at' sign (@), allows you to write relative paths within Circular 
 and its modules:
 
+*example:* 
+
     <span>Version: {{@config.version}}</span>
     
+----
+
 ###CC Attributes
 
 Circular modules can define attributes that are 'executed' while traversing the 
@@ -74,21 +81,21 @@ is valid html5.
 Nearly everything in Circular is a module. It's really easy to boil your
 own. This code:
 
-  new CircularModule({
-	  name			: 'alert',
-	  in	: function(attr,node,props) {
-		  alert('in: '+attr.value)
-	  },
-	  out	: function(attr,node,props) {
-	  	alert('out: '+attr.value)
-	  }	
-  });
+	new CircularModule({
+		name			: 'alert',
+	  	in	: function(attr,node,props) {
+			  alert('in: '+attr.value)
+		},
+	  	out	: function(attr,node,props) {
+	  		alert('out: '+attr.value)
+	  	}	
+  	});
 
 will create support for an attribute `cc-alert` that will alert it's
 value twice while traversing the node: once while entering it (`in()`)
 and once while leaving it (`out()`):
 
-  <div cc-alert="{{new Date()}}">What time is it ?</div> 
+	<div cc-alert="{{new Date()}}">What time is it ?</div> 
 
 Additionally, this module is accessible as `Circular.alert` in javascript,
 and hence as `@alert` from circular/html.
