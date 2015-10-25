@@ -1,6 +1,5 @@
 #jQuery Circular#
 ##Data binding for the masses##
-----
 
 Circular is a modular library that implements html inline expressions, with data-binding, and custom attributes.
 
@@ -8,6 +7,8 @@ It uses jQuery for traversing the document, Esprima[http://esprima.org/] for par
 for data-binding.
 
 *This is very much in alpha state. I don't know how you got here, but hey, I'm still just building this :-)*
+
+----
 
 ###Getting started
 
@@ -26,6 +27,8 @@ for data-binding.
 			<div cc-alert="{{new Date()}}">What time is it ?</div> 
 		</body>
 	</html>
+
+----
 
 ###Expressions
 
@@ -77,7 +80,9 @@ modules are included by default, some are available as addons.
 If you dislike the `cc-` style of attributing, you can use `data-cc-` too, which
 is valid html5.
 
-###CircularModules
+----
+
+###Circular Modules
 
 Everything in Circular is a module. It's really easy to boil your
 own. This code:
