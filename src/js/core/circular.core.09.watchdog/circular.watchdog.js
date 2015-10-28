@@ -258,7 +258,7 @@ new CircularModule({
 		
 		
 		this.timer = setTimeout(function () {
-			Circular.engine.queue(function() {
+			Circular.queue(function() {
 				Circular.watchdog.release();
 			});
 		}, Circular.config.watchdogtimeout);

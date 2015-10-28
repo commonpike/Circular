@@ -7,25 +7,19 @@ new CircularModule({
 
 	name				: 'engine',	
 	requires		: ['root','context','content','log','debug','registry'],
+	config			: { rootselector : '' },
 	counter			: 0,
 	genid				: 0,
-	$queued		: $({}),	
 	
-	queue			: function(func) {
-		Circular.debug.write("Circular.engine.queue",this.$queued.size()+1);
-		// an event queue. if we are digesting the
-		// registry, push events up the queue instead
-		// of running them concurently
-		this.$queued.queue('circular',function(next) {
-			func();
-			next();
-		})
-		this.$queued.dequeue('circular'); 
-	},
 	
 	start				: function() {
 		Circular.debug.write('Circular.engine.start ');
-		var $root = $('[cc-root]');
+		var rootsel = Circular.config.rootselector;
+		if (!rootsel) {
+			rootsel = '['+Circular.config.attrprefix+'root],';
+			rootsel += '['+Circular.config.attrprefix+Circular.config.attrprefix+'root]';
+		}
+		var $root = $(rootsel);
 		if (!$root.size()) $root = $('html');
 		this.recycle($root,true);
 	},
@@ -39,7 +33,7 @@ new CircularModule({
 		if (!nodes) return this.cycle();
 		
 		if (!now) {
-			Circular.engine.queue(function() {
+			Circular.queue(function() {
 				Circular.engine.recycle(nodes,true);
 			});
 			return true;
