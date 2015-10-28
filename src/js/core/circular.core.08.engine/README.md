@@ -23,8 +23,8 @@
 
 *arguments:*
 
-- **rootselector:** (*type:* string, *default:* '[cc-root],[data-cc-root]') 
-jQuery selector for finding the root nodes to start the first cycle with.
+- **rootselector:** (*type:* string, *default:* '[cc-root],[data-cc-root]')\ 
+jQuery selector defining the root nodes to start the first cycle with.
 
 
 ----
