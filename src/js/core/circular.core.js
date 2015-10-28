@@ -12,9 +12,9 @@ var Circular = {
 	},
 	
 	// status
-	inited	: false,
-	dead		: false,
-	
+	inited		: false,
+	dead			: false,
+	$queued		: $({}),	
 
 	/* ----------------------
 		modules 
@@ -180,7 +180,20 @@ var Circular = {
 		
 	},
 
+	/* ----------------------
+		queue 
+	----------------------- */
+	
 
+	
+	queue			: function(func) {
+		Circular.debug.write("Circular.engine.queue",this.$queued.size()+1);
+		this.$queued.queue('circular',function(next) {
+			func(); next();
+		})
+		this.$queued.dequeue('circular'); 
+	},
+	
 	/* ----------------------
 		init 
 	----------------------- */
