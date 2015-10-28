@@ -2,7 +2,7 @@
 
 *description:*
 
-> The engine processes the document. It starts at nodes marked *cc-root*, and cycles down, depth-first, parsing the content looking for expressions, invoking module methods, etcetera. 
+> The engine processes the document. It starts at a few root nodes, and cycles down, depth-first, parsing the content looking for expressions, invoking module methods, etcetera. 
 > It passes all information it finds to @registry, which in turn notifies @watchdog. If the watchdog sees anything change, it notifies @engine again. And hence it's Circular.
 >
 > As these cycles happen, you'd better not touch the document yourself, or you might end up in unpredictable situations. Instead, *@engine.queue* your activities and they will be executed in between cycles, while Circular is sure to be idle.
@@ -10,6 +10,21 @@
 > The engine module provides no attributes and has no config. Most methods are for internal use.
 >
 
+
+----
+
+##config##
+
+----
+
+*example:* 
+
+	Circular.init({rootselector:'.circular-root'})
+
+*arguments:*
+
+- **rootselector:** (*type:* string, *default:* '[cc-root],[data-cc-root]') 
+jQuery selector for finding the root nodes to start the first cycle with.
 
 
 ----
