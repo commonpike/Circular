@@ -45,7 +45,8 @@ The context for processing nodes if no context is set.
 > Set the context to the given string or expression. If the value of this attribute is a string, that string will be taken as context, otherwise, the expression defining the (non-string) value will be used. In other words:
 > 
 > `<div cc-context="foo">` sets the context to the string 'foo'
-> `<div cc-context="{{foo}}">` sets the context to the value of foo if foo is a string. Otherwise, it sets the context to the string 'foo'. 
+>
+> `<div cc-context="{{foo}}">` sets the context to the value of variable foo if that is a string. Otherwise, it sets the context to the string 'foo'. 
 >
 > This allows you manage references in your data. Imagine `a = { b : 'c' }; c = { d : 'e' }`, then `<span cc-context="{{a.b}}">{{#d}}</span>` will print `e`. 
 

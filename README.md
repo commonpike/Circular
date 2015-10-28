@@ -1,21 +1,20 @@
 #jQuery Circular#
 ##Data binding for the masses##
 
-Circular is a modular library that implements html inline expressions, with data-binding, and custom attributes.
-It was designed for simplicity and extensibility. And fun.
+Circular is a modular library that implements {{inline}} javascript expressions, with data-binding, and custom attributes. It was designed for simplicity and extensibility. And fun.
 
-It uses jQuery [http://jquery.org] for traversing the document, Esprima [http://esprima.org/] for parsing expressions and Observe.js [https://github.com/polymer/observe-js] for data-binding.
+It uses [jQuery](http://jquery.org) for traversing the document, [Esprima](http://esprima.org/) for parsing expressions and [Observe.js](https://github.com/polymer/observe-js) for data-binding.
 
-> This is very much in alpha state. I don't know how you got here, but hey, I'm still just building this :-)*
+> This is very much in alpha state. I don't know how you got here, but hey, I'm still just building this :-)
 
 ----
 
 ###Getting started
 
 - Include jQuery. 
-- Include Circular. 
+- Include [Circular](https://github.com/commonpike/Circular/tree/master/dist/js). 
 - If needed, include additional modules
-- Then add a `cc-root` tag somewhere to tell Circular where to cycling
+- Add a `cc-root` tag somewhere to tell Circular where to cycling
 
 
 		<html>
@@ -29,11 +28,13 @@ It uses jQuery [http://jquery.org] for traversing the document, Esprima [http://
 			</body>
 		</html>
 
+Circular will traverse the document, starting at cc-root, depth-first, and evaluate all expressions and execute all custom attributes it finds on its way. The engine will pass what it has found to the registry. The registry passes it on to the watchdog. If anything changes, the watchdog returns those changes to the engine and the cycle starts again.
+
 ----
 
 ###Expressions
 
-Everything written with {{moustaches}} is evaluated with javascript and replaced by its output. 
+Everything written within {{moustaches}} is evaluated with javascript and replaced by its result. 
 Variables involved in the expression will be watched and results will be updated as they change.
 
 *example:* 
@@ -69,14 +70,14 @@ and its modules:
 
 ###CC Attributes
 
-Circular modules define attributes that are 'executed' while traversing the 
+Circular modules define attributes that execute code while Circular is traversing the 
 document. You've already seen `cc-root` (the root module) and `cc-context` (the
 context module). Other examples are cc-debug, cc-content, cc-hide, etc. Some
 modules are included by default, some are available as addons.
 
 *example:* 
 
-	<a href="rooms.html" cc-hide="{{#rooms.length<10}}">Rooms for rent</a>
+	<a href="rooms.html" cc-hide="{{#rooms.length<2}}">Rooms for rent</a>
 
 If you dislike the `cc-` style of attributing, you can use `data-cc-` too, which
 is valid html5.
