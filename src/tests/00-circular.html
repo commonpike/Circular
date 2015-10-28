@@ -56,12 +56,21 @@
 			
 			Circular.init({
 				watchdogtimeout:50,
-				debug:true
+				debug:false
 			});
 			
+			new CircularModule({
+				name				: 'test',
+				priority		: 1,
+				requires		: ['log'],
+				in					: function() {
+					console.info('test');
+				}
+			});
+				
 		</script>
 	</head>
-	<body cc-root cc-context="Control.currentpage">
+	<body cc-root data-cc-context="Control.currentpage">
 	
 		<ul>
 			<li cc-loop="{{Model.menu}}">
@@ -70,7 +79,7 @@
 			</li>
 		</ul>
 		
-		<h1 cc-debug alt="{{#title}}">{{#title.toUpperCase()}}</h1>
+		<h1 cc-debug cc-test alt="{{#title}}">{{#title.toUpperCase()}}</h1>
 		
 		<p class="content {{Control.currentpage==Model.pages.home?'home':'other'}}">
 		

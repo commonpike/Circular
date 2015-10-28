@@ -23,8 +23,8 @@ new CircularModule({
 		this.$queued.dequeue('circular'); 
 	},
 	
-	cycle				: function() {
-		Circular.debug.write('Circular.engine.cycle ');
+	start				: function() {
+		Circular.debug.write('Circular.engine.start ');
 		var $root = $('[cc-root]');
 		if (!$root.size()) $root = $('html');
 		this.recycle($root,true);
@@ -344,8 +344,9 @@ new CircularModule({
 			// else, create a new property from this attribute
 			if (!attr) attr = Circular.registry.newAttribute(attrname);
 			
-			var modidx = Circular.modules.attr2idx[attrname];
-			if (modidx || modidx===0) {
+			var attrcname = Circular.modules.attr2cname[attrname];
+			var modidx = Circular.modules.attr2idx[attrcname];
+			if (modidx!==undefined) {
 				var modname = Circular.modules.stack[modidx].name;
 				if (this.indexModuleAttribute(node,attr,modname)) {
 					mods[modidx]=attr;
@@ -383,6 +384,7 @@ new CircularModule({
 			// is always registered for just being one. 
 			
 			if (!attr.flags.registered) {
+				attr.cname		= Circular.modules.attr2cname[attr.name];
 				var original 	= node.getAttribute(attr.name);
 				attr.module 	= modname;
 				attr.original = original;

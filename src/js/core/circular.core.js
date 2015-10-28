@@ -5,7 +5,10 @@ var Circular = {
 	----------------------- */
 	
 	config	: {
-		version					: '0.0.9'		
+		version				: '0.0.9',
+		autoinit			:	 true,
+		attrprefix		: 'cc-',
+		dataprefix		: 'data-'
 	},
 	
 	// status
@@ -18,6 +21,7 @@ var Circular = {
 	----------------------- */
 	
 	modules : {
+		
 		
 		stack	: [
 			// this is where the circularmodules are stored
@@ -32,6 +36,10 @@ var Circular = {
 			// map module names to modules
 		},
 		
+		attr2cname				: {
+			// normalized attr names
+		},
+		
 		add	: function(mod) {
 		
 			if (Circular.debug) {
@@ -42,9 +50,11 @@ var Circular = {
 
 				valid = true;
 				
-				if (Circular[mod.name]) {
-					if (Circular.log) Circular.log.error('Circular.modules.add','mod.'+mod.name+' namespace already taken');
-					valid = false;
+				if (this.name2idx[mod.name]) {
+					if (!mod.override) {
+						if (Circular.log) Circular.log.error('Circular.modules.add','mod.'+mod.name+' namespace already taken');
+						valid = false;
+					} 
 				}
 				
 				if (mod.requires) {
@@ -57,21 +67,71 @@ var Circular = {
 				}
 				
 				if (valid) {
-					this.stack.push(mod);
-					var idx = this.stack.length-1;
-					this.name2idx[mod.name]=idx;
-					this.attr2idx['cc-'+mod.name]=idx;
-					this.attr2idx['data-cc-'+mod.name]=idx;
+				
+					var idx 			= 0;
+					var replace	= false;
 					
-					if (Circular[mod.name]===undefined) {
-						// this is usefull for in templating,
-						// eg use @loop to access Circular.modules.stack.loop
-						Circular[mod.name]=this.stack[idx];
+					if (this.name2idx[mod.name]) {
+					
+						// we are overriding an old module
+						// remove all the stuff pointing to it
+						
+						var oldidx = this.name2idx[mod.name];
+						for (var attr in this.attr2idx) {
+							if (this.attr2idx[attr]==oldidx) {
+								delete this.attr2idx[attr];
+							}
+						}
+						
+						// by default, use the old index
+						if (!mod.priority) 	{
+							replace	= true;
+							mod.priority = oldidx;
+						}
+					} 
+					
+					if (mod.priority && mod.priority<this.stack.length) {
+						idx = mod.priority;
+						if (replace) {
+							
+							this.stack[idx]=mod;
+						} else {
+							
+							this.stack.splice(idx,0,mod);
+							// rewrite all the higher indexes.
+							for (var attr in this.attr2idx) {
+								if (this.attr2idx[attr]>=idx) {
+									this.attr2idx[attr]++;
+								}
+							}
+							
+							for (var name in this.name2idx) {
+								if (this.name2idx[name]>=idx) {
+									this.name2idx[name]++;
+								}
+							}
+							
+						}
 					} else {
-						Circular.log.warn('@global "'+mod.name+'" is taken: @'+mod.name+' wont work');
+						idx = this.stack.length;
+						this.stack.push(mod);
+					} 
+				
+					
+					this.name2idx[mod.name]=idx;
+					
+					for (var ac=0; ac<mod.attributes.length;ac++) {
+						var attrname = mod.attributes[ac];
+						this.attr2idx[attrname]=idx;
+						this.attr2idx[attrname]=idx;
+						this.attr2cname[attrname]=attrname;
+						this.attr2cname[Circular.config.dataprefix+attrname]=attrname;
 					}
 					
+					Circular[mod.name]=this.stack[idx];
+					
 					if (mod.name=="debug" && Circular.config.debug) {
+						
 						Circular.debug.on();
 					}
 					
@@ -87,7 +147,7 @@ var Circular = {
 		init	: function(config) {
 			
 			if (Circular.debug) Circular.debug.write('Circular.modules.init');
-			
+						
 			// create a stylesheet, add all css and config
 			var css = '';
 			this.stack.forEach(function(mod) {
@@ -126,20 +186,18 @@ var Circular = {
 	----------------------- */
 
 	init 		: function(config) {
-		if (!this.inited) {
-			$(document).ready(function() {
-				Circular.modules.init(config);
-				if (Circular.engine) {
-					Circular.engine.cycle();	
-				} else if (Circular.log) {
-					Circular.log.fatal('Circular mod.engine not found');
-				} else {
-					alert('Circular mod.engine and mod.log not found');
-					Circular.die();
-				}
-			});
-			this.inited = true;
-		} 
+		$(document).ready(function() {
+			Circular.modules.init(config);
+			if (Circular.engine) {
+				Circular.engine.start();	
+			} else if (Circular.log) {
+				Circular.log.fatal('Circular mod.engine not found');
+			} else {
+				alert('Circular mod.engine and mod.log not found');
+				Circular.die();
+			}
+		});
+		this.inited = true;
 	},
 	
 	die		: function() {
@@ -150,15 +208,19 @@ var Circular = {
 }
 
 
-$(document).ready(function() {
-	Circular.init();
-});
-
 function CircularModule(def) {
+
 	if (def.name) {
-		if (!def.in)		def.in 	= function(attr,node,props) { return true; }
-		if (!def.out) 	def.out = function(attr,node,props) { return true; }	
+	
+		if (!def.in)					def.in 	= function(attr,node,props) { return true; }
+		if (!def.out) 				def.out = function(attr,node,props) { return true; }	
+		if (!def.requires)		def.requires = [];
+		if (!def.attributes)	def.attributes = [Circular.config.attrprefix+def.name];
+		if (!def.override)		def.override = false;
+		if (!def.priority)		def.priority = 0;
+		if (!def.config)			def.config = {};
 		Circular.modules.add(def);
+		
 	} else if (Circular.log) {
 		Circular.log.fatal('CircularModule.name is required');
 	} else {
@@ -166,3 +228,9 @@ function CircularModule(def) {
 		Circular.die();
 	}
 }
+
+$(document).ready(function() {
+	if (Circular.config.autoinit && !Circular.inited) {
+		Circular.init();
+	}
+});

@@ -4,13 +4,14 @@
 
 new CircularModule({
 
-	name			: 'debug',
-	enabled		: false,
+	name				: 'debug',
 	requires	: ['log'],
 	config		: {
 		debug	: false
 	},
 	
+	enabled		: false,
+
 	init	: function() {
 		if (Circular.config.debug) {
 			this.toggle(true);
