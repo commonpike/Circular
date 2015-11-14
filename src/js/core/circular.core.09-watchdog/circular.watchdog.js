@@ -67,6 +67,7 @@ new CircularModule({
 		this.watchdata(node,props);
 		
 		// unset the flags youve set before recycle
+		props.flags['attrsetchanged'] = false;
 		props.flags['contentchanged'] = false;
 		props.flags['contextchanged'] = false;
 		props.flags['attrdomchanged'] = false;
@@ -84,7 +85,8 @@ new CircularModule({
 		if (!props.flags.domobserved) {
 			Circular.debug.write('Circular.watchdog.watchdom',props);
 			this.domobserver.observe(node, { 
-				attributes		: true, 
+				attributes				: true, 
+				attributeOldValue	: true,
 				childList			: true, 
 				characterData	: true,
 				subtree				: false
@@ -110,7 +112,11 @@ new CircularModule({
 		records.forEach(function(record) {
 			switch(record.type) {
 				case 'attributes':
-					Circular.watchdog.catch(record.target,'event','attrdomchanged',record.attributeName);
+					if (record.oldValue===null || record.target.getAttribute(record.attributeName)===null) {
+						Circular.watchdog.catch(record.target,'event','attrsetchanged');
+					} else {
+						Circular.watchdog.catch(record.target,'event','attrdomchanged',record.attributeName);
+					}
 					break;
 				case 'characterData':
 					Circular.watchdog.catch(record.target,'event','contentchanged');
@@ -229,15 +235,15 @@ new CircularModule({
 	
 	
 	pass	: function(node,event,target) {
-		Circular.debug.write('Circular.watchdog.pass');
+		//Circular.debug.write('Circular.watchdog.pass');
 		this.catch(node,'pass',event,target);
 	},
 	ignore	: function(node,event,target) {
-		Circular.debug.write('Circular.watchdog.ignore');
+		//Circular.debug.write('Circular.watchdog.ignore');
 		this.catch(node,'ignore',event,target);
 	},
 	unignore	: function(node,event,target) {
-		Circular.debug.write('Circular.watchdog.unignore');
+		//Circular.debug.write('Circular.watchdog.unignore');
 		// todo: add domchange/datachange timeout
 		this.catch(node,'unignore',event,target);
 	},
@@ -341,6 +347,22 @@ new CircularModule({
 								processing=true;
 								break;
 								
+							case 'attrsetchanged':
+							
+								if (props.flags['attrsetchanged:i']) {
+									Circular.debug.write('Circular.watchdog.release','node ignoring attrsetchanged');
+									break;
+								}
+								if (props.flags['attrsetchanged:p']) {
+									Circular.debug.write('Circular.watchdog.release','node passing attrsetchanged');
+									props.flags['attrsetchanged:p']--;
+									break;
+								}
+								Circular.debug.write('Circular.watchdog.release','attrsetchanged',record,node);
+								props.flags['attrsetchanged']=true;
+								processing=true;
+								break;
+								
 							default:
 								Circular.log.error('Circular.watchdog.release','unknown flag '+record.flag,record);
 						}
@@ -367,6 +389,11 @@ new CircularModule({
 							case 'contentchanged':
 								props.flags['contentchanged:p']++;
 								break;
+							
+							case 'attrsetchanged':
+								props.flags['attrsetchanged:p']++;
+								break;
+								
 								
 							default:
 								Circular.log.error('Circular.watchdog.release','unknown flag '+record.flag,record);
@@ -393,6 +420,10 @@ new CircularModule({
 
 							case 'contentchanged':
 								props.flags['contentchanged:i']=true;
+								break;
+								
+							case 'attrsetchanged':
+								props.flags['attrsetchanged:i']=true;
 								break;
 								
 							default:
@@ -447,7 +478,7 @@ new CircularModule({
 		this.releasing.nodes.forEach(function(node) { todo.push(node); });
 		if (todo.length) {
 			Circular.debug.write('recycling '+todo.length+' nodes');
-			if (Circular.debug.enabled) this.report(this.releasing);
+			if (Circular.debug.enabled) this.report(this.releasing);		
 			Circular.engine.recycle(todo,true);
 		}
 		this.releasing = {};
