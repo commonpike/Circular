@@ -11,7 +11,7 @@ new CircularModule({
 	timer				: null,
 	lock				: false,
 	config			: {
-		watchdogtimeout	: 500
+		watchdogtimeout	: 50
 	},
 	
 	domobserver : null,

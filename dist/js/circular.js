@@ -8852,9 +8852,15 @@ new CircularModule({
 					var parent = node.parentNode;
 					if (!parent.hasAttribute('cc-content')) {
 						Circular.debug.write('@engine.processTextNode','setting cc-content on the parent');
-						if (Circular.watchdog) {
-							Circular.watchdog.pass(parent,'contentchanged');
-							Circular.watchdog.pass(parent,'attrsetchanged');
+						
+						// ugly
+						var parprops = Circular.registry.get(parent,true);
+						if (parprops.flags.watched) {
+							if (Circular.watchdog) {
+								Circular.watchdog.pass(parent,'contentchanged');
+								Circular.watchdog.pass(parent,'attrsetchanged');
+							}
+							parprops.flags.attrsetchanged=true;
 						}
 						parent.setAttribute('cc-content',val);
 						parent.removeChild(node);
@@ -8984,7 +8990,7 @@ new CircularModule({
 	timer				: null,
 	lock				: false,
 	config			: {
-		watchdogtimeout	: 500
+		watchdogtimeout	: 50
 	},
 	
 	domobserver : null,
