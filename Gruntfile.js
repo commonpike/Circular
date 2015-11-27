@@ -17,7 +17,7 @@ module.exports = function(grunt) {
 			}
 		},
 		concat: {
-			'dist/js/Circular.js' : [
+			'dist/js/circular.js' : [
 				'vendor/node_modules/esprima/esprima.js',
 				'vendor/node_modules/observe-js/src/observe.js',
 				'src/js/core/circular.core.js',
@@ -30,8 +30,8 @@ module.exports = function(grunt) {
 				banner: '/*! Circular	'+(new Date())+'   */\n'
 			},
 			dist: {
-				src: 'dist/js/Circular.js',
-				dest: 'dist/js/Circular.min.js'
+				src: 'dist/js/circular.js',
+				dest: 'dist/js/circular.min.js'
 			}
 		}
 	});

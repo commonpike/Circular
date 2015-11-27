@@ -12,6 +12,7 @@ new CircularModule({
 		return {
 			'flags'	: {
 				'registered'				: false,
+				'watched'						: false,
 				'processing'				: false,
 				'processedin'				: false,
 				'processedout'			: false,
@@ -39,7 +40,8 @@ new CircularModule({
 			'expression'	: '',
 			'result'			: undefined,
 			'value'				: '',
-			'paths'				: [],		// todo: rename to watch
+			'oldpaths'		: [],
+			'paths'				: [],		
 			'flags'			: {
 				'parsed'						: false,
 				'registered'				: false,

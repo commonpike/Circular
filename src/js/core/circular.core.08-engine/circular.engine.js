@@ -121,6 +121,8 @@ new CircularModule({
 				Circular.debug.write('@engine.process','context changed',props.outercontext,context,node);
 				props.outercontext = context;
 				props.flags.contextchanged=true;
+			} else {
+				Circular.debug.write('@engine.process','context not changed');
 			}
 		} else {
 			if (!props.outercontext) {
@@ -520,7 +522,7 @@ new CircularModule({
 						attr.value = '';
 						Circular.log.warn(x);
 					}
-					if (Circular.watchdog) {
+					if (Circular.watchdog && props.flags.watched) {
 						Circular.watchdog.pass(node,'attrdomchanged',attr.name);
 					}
 					node.setAttribute(attr.name,attr.value);

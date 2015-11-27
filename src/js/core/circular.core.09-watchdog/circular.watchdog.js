@@ -76,6 +76,7 @@ new CircularModule({
 			props.attributes[ac].flags['attrdomchanged'] = false;
 			props.attributes[ac].flags['attrdatachanged'] = false;
 		}
+		props.flags['watched'] = true;
 		Circular.registry.set(node,props);
 	},
 	

@@ -78,18 +78,27 @@ new CircularModule({
 			this.last = (kc==keys.length-1);
 			var context = '('+attr.expression+')["'+keys[kc]+'"]';
 			var itemid = nodeid+'-item-'+keys[kc];
-			$item = $node.children('#'+itemid+'.cc-loop-item');
 			
+			// you cant do this. if there are expressions
+			// anywhere inside the template that are not being
+			// watched, they will not be reprocessed because
+			// the context didnt change. in particular, @loop.index
+			// and friends will be wrong
 			
-			if ($item.size()) {
-				// we already have it. just move it in place 
-				Circular.debug.write('@loop.in','moving old item');
-				Circular.watchdog.pass(node,'contentchanged');
-				$item.appendTo($node).removeClass('cc-loop-expired');
-				//console.log('moving in place',$item);
-				Circular.engine.process($item.get(0),context);
-			} else {
-				// aint there. clone the template 
+			//$item = $node.children('#'+itemid+'.cc-loop-item');
+			//if ($item.size()) {
+			//	// we already have it. just move it in place 
+			//	Circular.debug.write('@loop.in','moving old item');
+			//	Circular.watchdog.pass(node,'contentchanged');
+			//	$item.appendTo($node).removeClass('cc-loop-expired');
+			//	console.log('moving in place',$item);
+			//	console.log(context,Circular.registry.get($item)['outercontext']);
+			//	Circular.debug.on();
+			//	Circular.engine.process($item.get(0),context);
+			//	Circular.debug.off();
+			//	console.log(context,Circular.registry.get($item)['outercontext']);
+			//} else {
+				// clone the template 
 				Circular.debug.write('@loop.in','creating new item');
 				Circular.watchdog.pass(node,'contentchanged');
 				$item = $template.clone().appendTo($node)
@@ -99,7 +108,7 @@ new CircularModule({
 					.attr('id',itemid);
 				Circular.engine.process($item.get(0),context);
 				
-			}
+			//}
 			this.first = false;
 			this.index++;
 		}
