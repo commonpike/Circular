@@ -9,7 +9,10 @@ new CircularModule({
 	name			: 'parser',
 	requires	: ['log','debug'],
 	config		: {
-		exprregex				:	/{{([^}]*?)}}/g,
+		// exprregex		:	/{{([^}]*?)}}/g,
+		// exprregex			:	/{({|\[)([^}\]]*?)(}|\])}/g,
+		// exprregex 			: /{({|\[)(.*?(?=[}\]]}))(}|\])}/g,
+		exprregex				: /{[{\[]([\s\S]*?(?=[}\]]}))[}\]]+}/g,
 		evalfail				: undefined,
 		rootscope				: 'window' // bad idea
 	},
@@ -20,7 +23,20 @@ new CircularModule({
 	
 	getPaths :	function(expression) {
 		Circular.debug.write('Circular.parser.getPaths',expression);
-		var ast = esprima.parse(expression);
+		var ast = null;
+		try {
+			ast = esprima.parse(expression);
+		} catch (e) {
+			// thats not valid javascript. perhaps its an object def
+			try {
+        ast = esprima.parse('var foo='+expression);
+    	} catch (e) {
+        // its not json either
+        Circular.log.error('Circular.parser.getPaths',expression,'not ecmascript, not an object def');
+        return false;
+    	}
+		}
+		
 		if (ast) {
 			Circular.debug.write('Circular.parser.getPaths',ast);
 			var paths = new Array();
@@ -146,6 +162,28 @@ new CircularModule({
 		
 	},
 	
+	/*val		: function(str,ctx) {
+		var parsed = this.parse(str,ctx);
+		if (parsed) {
+			return this.eval(parsed);
+		} else {
+			return str;
+		}
+	},*/
+	
+	/*expression: function(str,ctx) {
+		var parsed = this.parse(str,ctx);
+		return parsed.expression;
+	},
+	result		: function(str,ctx) {
+		var parsed = this.parse(str,ctx);
+		return parsed.expression;
+	},
+	value			: function(str,ctx) {
+		var parsed = this.parse(str,ctx);
+		return parsed.value;
+	}*/
+	
 	
 	match	: function(x) {
 		// returns an array of matches or false
@@ -172,9 +210,13 @@ new CircularModule({
 		return result;
 	},
 	
-	// parse a string including {{moustaches}}, returning a
-	// qualified expression without {{moustaches}} in which
-	// context expressions have been replaced.
+	// parse a string including {{moustaches}}, returning an array of 
+	// expression - qualified expression without {{moustaches}} in which
+	// context expressions have been replaced. or false
+	// result	- evaluated expression
+	// value - string value of result
+	// paths - paths to watch in expression
+	
 	parse	: function(expr,ctx) {
 		Circular.debug.write('Circular.parser.parse',expr);
 		matches = expr.match(Circular.config.exprregex);
@@ -183,22 +225,97 @@ new CircularModule({
 			if (matches[0]===expr) {
 				// this is a single full expression "{{#foo}}"
 				parsed = expr.substring(2,expr.length-2);
+				parsed = parsed.replace(/#this/g,ctx);
 				parsed = parsed.replace(/#/g,ctx+'.');
 				parsed = parsed.replace(/@/g,'Circular.');
+				if (expr.substring(0,2)=="{[") {
+					parsed = JSON.stringify(this.eval(parsed));
+				}
 			} else {
+				// console.log(matches);
 				// this is a stringlike thing, "foo {{#bar}}"
 				var parsed = expr.replace(Circular.config.exprregex,function(match,inner) {
+					inner = inner.replace(/#this/g,ctx);
 					inner = inner.replace(/#/g,ctx+'.');
 					inner = inner.replace(/@/g,'Circular.');
-					return '"+('+inner+')+"';
+					if (match.substring(0,2)=="{[") {
+						return '"+'+JSON.stringify(this.eval(inner))+'+"';
+					} else {
+						return '"+('+inner+')+"';
+					}
 				});
 				// tell eval that this is a stringthing
 				parsed = '"'+parsed+'"';
 			}
 			Circular.debug.write("Circular.parser.parse",expr,ctx,parsed);
 			return parsed;
-		} 
+		} else {
+			Circular.debug.write('Circular.parser.parse','no match');
+		}
 		return '';
+	},
+	
+	parseAttribute	: function(attr,ctx) {
+		Circular.debug.write('Circular.parser.parse',attr.original);
+		
+		var matches = attr.original.match(Circular.config.exprregex);
+		if (matches) {
+			//console.log(matches[0],attr.original);
+			if (matches[0]===attr.original) {
+			
+			
+				// this is a single full expression "{{#foo}}"
+				var orgexpr	= attr.expression;
+				attr.expression = attr.original.substring(2,attr.original.length-2);
+				attr.expression = attr.expression.replace(/#this/g,ctx);
+				attr.expression = attr.expression.replace(/#/g,ctx+'.');
+				attr.expression = attr.expression.replace(/@/g,'Circular.');
+				if (!attr.flags.parsed || attr.expression!=orgexpr) {
+					// the expression is new or changed. need to get paths
+					if (attr.original.substring(0,2)=="{{") {
+						// slice the old saucage for the watchdog
+						if (attr.paths) attr.oldpaths = attr.paths.slice(0);
+						attr.paths 	= this.getPaths(attr.expression);
+					}	
+				}
+				
+			} else {
+			
+				// this is a stringlike thing, "foo {{#bar}}"
+				// console.log(matches);
+				
+				var watches = [];
+				var orgexpr	= attr.expression;
+				attr.expression = attr.original.replace(Circular.config.exprregex,function(match,inner) {
+					inner = inner.replace(/#this/g,ctx);
+					inner = inner.replace(/#/g,ctx+'.');
+					inner = inner.replace(/@/g,'Circular.');
+					if (match.substring(0,2)=="{{") {
+						watches.push(inner);
+					}
+					return '"+('+inner+')+"';
+				});
+				// tell eval that this is a stringthing
+				attr.expression = '"'+attr.expression+'"';
+				
+				if (!attr.flags.parsed || attr.expression!=orgexpr) {
+					// the expression is new or changed. need to get paths
+					if (attr.paths) attr.oldpaths = attr.paths.slice(0);
+					attr.paths = [];
+					for (var wc=0; wc<watches.length;wc++) {
+						attr.paths.push(this.getPaths(watches[wc]));
+					}
+				}
+			}
+			
+			attr.flags.parsed = true;
+			Circular.debug.write("Circular.parser.parse",attr.original,ctx,attr.expression);
+			return true;
+			
+		} else {
+			Circular.debug.write('Circular.parser.parse','no match');
+		}
+		return false;
 	},
 	
 	
@@ -206,14 +323,21 @@ new CircularModule({
 	// this does nothing special, but try,catch.
 	eval	: function(expr) {
 		Circular.debug.write('Circular.parser.eval');
+		var value = Circular.config.evalfail;
 		try {
+				value = eval(expr);
+				Circular.debug.write("Circular.parser.eval",expr,value);
+		} catch (err) {
+			try {
+				// maybe its an object def
+				expr = '('+expr+')';
 				var value = eval(expr);
 				Circular.debug.write("Circular.parser.eval",expr,value);
-				return value;
-		} catch (err) {
-				Circular.log.error("Circular.parser.eval",expr,'fail');
-				return Circular.config.evalfail;
+			} catch (err) {
+				Circular.log.error("Circular.parser.eval",expr,'fail',err);
+			}
 		}
+		return value;
 	},
 	
 	boolish	: function(str) {

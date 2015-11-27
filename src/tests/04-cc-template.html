@@ -1,9 +1,6 @@
 <html>
 	<head>
-		<title>Circular.root</title>
-		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
-		<script src="x../../../../dist/js/Circular.min.js"></script>
-		
+		<script src="../../vendor/node_modules/jquery/dist/jquery.min.js"></script>
 		<script src="../../vendor/node_modules/esprima/esprima.js"></script>
 		<script src="../../vendor/node_modules/observe-js/src/observe.js"></script>
 
@@ -20,11 +17,46 @@
 		
 		<script src="../js/base/circular.base.01-hide/circular.hide.js"></script>
 		<script src="../js/base/circular.base.02-template/circular.template.js"></script>
-		
-		<style type="text/css">body { font-family: sans-serif; }</style>
+		<script>
+			var Model = {	
+				winners	: [{
+					name 	: "Hank",
+					date	: "2015-03-02"
+				}, {
+					name 	: "Jezebel",
+					date	: "2015-03-05"
+				}, {
+					name 	: "John Jagger",
+					date	: "2015-03-09"
+				}]
+			}
+		</script>
+
 	</head>
-	<body>
-		<p>You are properly {{#title}}ed</p>
-		<p cc-root>You are properly {{#title}}ed</p>
+	<body cc-root cc-context="Model">
+
+		<!— oneliner for a winner —>
+	
+		<span class="winner" cc-template id="oneliner">
+			<i>{{#name}}</i> (<b>{{#date}}</b>)<br>
+		</span>
+	
+		<!— the 3 top winners —>
+	
+		<h1>First prize</h1>
+		<p cc-template="#oneliner" cc-context="{{#winners[0]}}"></p>
+	
+		<hr>
+	
+		<h2>Second prize</h2>
+		<p cc-template="#oneliner" cc-context="{{#winners[1]}}"></p>
+	
+		<hr>
+	
+		<h3>Third prize</h3>
+		<p cc-template="#oneliner" cc-context="{{#winners[2]}}"></p>
+	
+		
+	
 	</body>
 </html>

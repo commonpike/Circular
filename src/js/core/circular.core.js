@@ -136,7 +136,7 @@ var Circular = {
 					}
 					
 				} else {
-					//crucial
+					// crucial. i think i want you.
 					if (Circular.log) Circular.log.fatal('Circular.modules.add','fatal error');
 					Circular.die();
 				}
@@ -247,3 +247,4 @@ $(document).ready(function() {
 		Circular.init();
 	}
 });
+

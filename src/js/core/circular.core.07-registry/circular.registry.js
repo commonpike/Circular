@@ -12,9 +12,11 @@ new CircularModule({
 		return {
 			'flags'	: {
 				'registered'				: false,
+				'watched'						: false,
 				'processing'				: false,
 				'processedin'				: false,
 				'processedout'			: false,
+				'attrsetchanged'		: true,
 				'contentchanged'		: true,
 				'contentchanged:p'	: 0,
 				'contentchanged:i'	: false,
@@ -38,8 +40,10 @@ new CircularModule({
 			'expression'	: '',
 			'result'			: undefined,
 			'value'				: '',
-			'paths'				: [],		// todo: rename to watch
+			'oldpaths'		: [],
+			'paths'				: [],		
 			'flags'			: {
+				'parsed'						: false,
 				'registered'				: false,
 				'attrdomchanged'		: true,
 				'attrdomchanged:p'	: 0,
@@ -65,13 +69,16 @@ new CircularModule({
 	},
 	
 	set	: function(node,props,watch) {
-		Circular.debug.write('Circular.registry.set');
+		Circular.debug.write('@registry.set');
 		if (!props.flags.registered) {
 			props.flags.registered = true;
 			this.counter++;
 		}
+		for (var ac=0;ac<props.attributes.length;ac++) {
+			props.attributes[ac].flags.registered=true;
+		}
 		if (watch) {
-			Circular.debug.write('Circular.registry.set','watch',node);
+			Circular.debug.write('@registry.set','watch',node);
 			Circular.watchdog.watch(node,props);
 		}
 		$(node).data('cc-properties',props);
@@ -85,7 +92,7 @@ new CircularModule({
 		if (!props.flags.locked || force) {
 			return props;
 		} else {
-			Circular.log.error('Circular.registry.get','Node is locked',node);
+			Circular.log.error('@registry.get','Node is locked',node);
 		}
 	}
 	

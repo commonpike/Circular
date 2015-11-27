@@ -36,9 +36,19 @@ new CircularModule({
 		this.enabled=state; 
 		if (state) this.write('mod.debug - on');
 	},
-	
+	on	: function() {
+		this.toggle(true);
+	}, 
+	off : function() {
+		this.toggle(false);
+	},
 	write	: function() {
-		if (this.enabled) Circular.log.write(arguments);
+		if (this.enabled) {
+			if (Circular.engine) {
+				arguments = Array.prototype.concat.apply([Circular.engine.counter], arguments);
+			}
+			Circular.log.write(arguments);
+		}
 	}
 	
 	
