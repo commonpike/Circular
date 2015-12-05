@@ -9,7 +9,7 @@ new CircularModule({
 	name				: 'watchdog',
 	requires		: ['log','debug','registry','engine'],
 	timer				: null,
-	lock				: false,
+	lock				: false,	// watchdog is locked while releasing
 	config			: {
 		watchdogtimeout	: 50
 	},
@@ -67,6 +67,7 @@ new CircularModule({
 		this.watchdata(node,props);
 		
 		// unset the flags youve set before recycle
+		props.flags['processing'] = false;
 		props.flags['attrsetchanged'] = false;
 		props.flags['contentchanged'] = false;
 		props.flags['contextchanged'] = false;
@@ -77,7 +78,8 @@ new CircularModule({
 			props.attributes[ac].flags['attrdatachanged'] = false;
 		}
 		props.flags['watched'] = true;
-		Circular.registry.set(node,props);
+		// no need to do this here
+		// Circular.registry.set(node,props);
 	},
 	
 	
@@ -93,7 +95,8 @@ new CircularModule({
 				subtree				: false
 			});
 			props.flags.domobserved=true;
-			Circular.registry.set(node,props);
+			// no need to do this here
+			// Circular.registry.set(node,props);
 		}
 	},
 	
@@ -140,7 +143,7 @@ new CircularModule({
 			
 			props.attributes.forEach(function(attr,idx) {
 				if (attr.flags.attrdomchanged) {
-					if (attr.paths) {
+					if (attr.paths && attr.paths.length) {
 						var ignorepaths = [];
 						if (!attr.oldpaths) attr.oldpaths = [];
 						
@@ -215,6 +218,7 @@ new CircularModule({
 							}
 						},this);
 					}
+					props.flags.dataobserved=true;
 				}
 			},this);
 		}
@@ -322,7 +326,7 @@ new CircularModule({
 										Circular.debug.write('Circular.watchdog.release',record.flag,record.target,node);
 										props.name2attr[record.target].flags[record.flag]=true;
 										props.flags[record.flag]=true;
-										processing=true;
+										props.flags.processing=true;
 									} else {
 										Circular.debug.write('Circular.watchdog.release','unregistered target '+record.target,record);
 									}
@@ -345,7 +349,7 @@ new CircularModule({
 								}
 								Circular.debug.write('Circular.watchdog.release','contentchanged',record,node);
 								props.flags['contentchanged']=true;
-								processing=true;
+								props.flags.processing=true;
 								break;
 								
 							case 'attrsetchanged':
@@ -361,7 +365,7 @@ new CircularModule({
 								}
 								Circular.debug.write('Circular.watchdog.release','attrsetchanged',record,node);
 								props.flags['attrsetchanged']=true;
-								processing=true;
+								props.flags.processing=true;
 								break;
 								
 							default:
@@ -465,18 +469,20 @@ new CircularModule({
 			}
 			
 			// todo: we're not storing the pass and un/ignore flags ?
-			if (!processing) {
-				delete this.releasing.nodes[nc];
-				delete this.releasing.records[nc];
-			} else {
+			if (props.flags.processing) {
 				Circular.registry.set(node,props);
-				Circular.registry.lock(node);
 			}
 		};
 		
 		// make hte array unsparse
 		var todo = [];
-		this.releasing.nodes.forEach(function(node) { todo.push(node); });
+		this.releasing.nodes.forEach(function(node) { 
+			var props = Circular.registry.get(node);
+			if (props.flags.processing) {
+				todo.push(node); 
+				Circular.registry.lock(node);
+			}
+		});
 		if (todo.length) {
 			Circular.debug.write('recycling '+todo.length+' nodes');
 			if (Circular.debug.enabled) this.report(this.releasing);		

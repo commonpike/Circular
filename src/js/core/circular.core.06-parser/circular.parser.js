@@ -256,7 +256,7 @@ new CircularModule({
 	},
 	
 	parseAttribute	: function(attr,ctx) {
-		Circular.debug.write('Circular.parser.parse',attr.original);
+		Circular.debug.write('Circular.parser.parseAttribute',attr.original);
 		
 		var matches = attr.original.match(Circular.config.exprregex);
 		if (matches) {
@@ -300,10 +300,10 @@ new CircularModule({
 				
 				if (!attr.flags.parsed || attr.expression!=orgexpr) {
 					// the expression is new or changed. need to get paths
-					if (attr.paths) attr.oldpaths = attr.paths.slice(0);
+					if (attr.paths) attr.oldpaths = attr.paths.slice(0); // copy
 					attr.paths = [];
 					for (var wc=0; wc<watches.length;wc++) {
-						attr.paths.push(this.getPaths(watches[wc]));
+						attr.paths = attr.paths.concat(this.getPaths(watches[wc]));
 					}
 				}
 			}

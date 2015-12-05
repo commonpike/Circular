@@ -101,6 +101,27 @@ new CircularModule({
 		
 	},
 	
+	getContext(node) {
+		Circular.debug.write('@engine.getContext',node.nodeName);
+		// you rarely need this. while cycling the document,
+		// the context is passed to the process() method or
+		// taken from @context.current. only when out of a 
+		// cycle, if you address a node that has not been
+		// indexed, you may need to find the context it would
+		// have had if it were indexed within a cycle.
+		var props = Circular.registry.get(node);
+		if (props.outercontext) return props.outercontext;
+		else {
+			var $parents = $(node).parents();
+			for (var pc=0; pc < $parents.size(); pc++) {
+				var props = Circular.registry.get(node);
+				if (props.outercontext) return props.outercontext;
+			}
+		}
+		return Circular.config.rootcontext;
+	
+	},
+	
 	process			: function (node,context) {
 		Circular.debug.write('@engine.process',node.nodeName,context);
 		if (!node) {
@@ -129,7 +150,7 @@ new CircularModule({
 				Circular.debug.write('@engine.process','no context: using current',node);
 				props.outercontext = Circular.context.get();
 			} else {
-				Circular.debug.write('@engine.process','no context: using given',context,node);
+				Circular.debug.write('@engine.process','no context: using stored',props.outercontext,node);
 			}
 		}
 		Circular.context.set(props.outercontext);
@@ -405,7 +426,8 @@ new CircularModule({
 		
 		
 		if (this.indexAttribute(node,attr)) {
-		
+			// returns true if it is an expression
+			
 			attr.module=modname;
 			return true;
 			
@@ -416,12 +438,12 @@ new CircularModule({
 			
 			if (!attr.flags.registered) {
 				attr.cname		= Circular.modules.attr2cname[attr.name];
-				var original 	= node.getAttribute(attr.name);
 				attr.module 	= modname;
-				attr.original = original;
-				attr.value		= original;
-				
 			}
+			var original 	= node.getAttribute(attr.name);
+			attr.original = original;
+			attr.value		= original;
+				
 			return true;
 			
 		}
@@ -440,7 +462,7 @@ new CircularModule({
 		// false if it shouldnt
 		
 		if (attr.flags.attrdomchanged) {
-		
+			Circular.debug.write('@engine.indexAttribute','attrdomchanged',attr.original);
 			
 			var expression = '', original = '';
 			

@@ -10,8 +10,10 @@ new CircularModule({
 	
 	css		: '.cc-content-generated {  }',
 	in	: function(attr,node,props) {
-		Circular.debug.write('mod.content.in','setting content',node,attr.result);
-		node.textContent=attr.result;
+		var val = attr.result;
+		if (val==undefined) val = attr.value;
+		Circular.debug.write('mod.content.in','setting content',val);
+		node.textContent=val;
 		$(node).addClass('cc-content-generated');
 	}
 
