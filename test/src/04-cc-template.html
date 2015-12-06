@@ -35,13 +35,13 @@
 	</head>
 	<body cc-root cc-context="Model">
 
-		<!— oneliner for a winner —>
+		<!-- oneliner for a winner -->
 	
 		<span class="winner" cc-template id="oneliner">
 			<i>{{#name}}</i> (<b>{{#date}}</b>)<br>
 		</span>
 	
-		<!— the 3 top winners —>
+		<!-- the 3 top winners -->
 	
 		<h1>First prize</h1>
 		<p cc-template="#oneliner" cc-context="{{#winners[0]}}"></p>

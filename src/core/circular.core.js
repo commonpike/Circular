@@ -207,7 +207,9 @@ var Circular = {
 		$(document).ready(function() {
 			Circular.modules.init(config);
 			if (Circular.engine) {
-				Circular.engine.start();	
+				Circular.queue(function() {
+					Circular.engine.start();	
+				});
 			} else if (Circular.log) {
 				Circular.log.fatal('Circular mod.engine not found');
 			} else {

@@ -18,11 +18,11 @@ new CircularModule({
 	in	: function(attr,node,props) {
 		Circular.debug.write('mod.context.in','setting context',attr.value);
 		attr.before = this.get();
-		if (!attr.expression || typeof attr.result == "string") {
-			this.set(attr.value);
-		} else {
-			Circular.debug.write('mod.context.in','Result is not a string, using expression');
+		if (attr.expression) {
 			this.set(attr.expression);
+		} else {
+			Circular.debug.write('mod.context.in','No expression, using value');
+			this.set(attr.value);
 		}
 	},
 	

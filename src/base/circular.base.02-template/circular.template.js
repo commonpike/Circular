@@ -27,6 +27,7 @@ new CircularModule({
 						.removeAttr('id')
 						.removeAttr('cc-template')
 						.attr(this.orgattr,tplsel)
+						.removeClass('cc-template')
 						.addClass('cc-template-clone');
 				} else {
 					Circular.log.error('@template.in','no such template',tplsel);
