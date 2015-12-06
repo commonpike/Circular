@@ -7581,7 +7581,9 @@ var Circular = {
 		$(document).ready(function() {
 			Circular.modules.init(config);
 			if (Circular.engine) {
-				Circular.engine.start();	
+				Circular.queue(function() {
+					Circular.engine.start();	
+				});
 			} else if (Circular.log) {
 				Circular.log.fatal('Circular mod.engine not found');
 			} else {
@@ -8914,7 +8916,7 @@ new CircularModule({
 						Circular.debug.write('@engine.processTextNode','setting cc-content on the parent');
 						
 						// ugly
-						/*var parprops = Circular.registry.get(parent,true);
+						var parprops = Circular.registry.get(parent,true);
 						if (parprops.flags.watched) {
 							if (Circular.watchdog) {
 								Circular.watchdog.pass(parent,'contentchanged');
@@ -8923,24 +8925,24 @@ new CircularModule({
 							parprops.flags.attrsetchanged=true;
 						}
 						parent.setAttribute('cc-content',val);
-						*/
-						Circular.registry.setAttribute(parent,'cc-content',val);
+						
 						parent.removeChild(node);
-						//this.process(parent);
+						this.process(parent);
+					
 					} else {					
+				
 						Circular.debug.write('@engine.processTextNode','replacing content with single span');
 						var span = document.createElement('span');
 						span.setAttribute('id','cc-engine-'+this.genid++);
-						/*
-							span.setAttribute('cc-content',val);
-							if (Circular.watchdog) {
-								Circular.watchdog.pass(parent,'contentchanged');
-							}
-						*/
-						Circular.registry.setAttribute(span,'cc-content',val);
+
+						span.setAttribute('cc-content',val);
+						if (Circular.watchdog) {
+							Circular.watchdog.pass(parent,'contentchanged');
+						}
+						
 						parent.insertBefore(span, node);
 						parent.removeChild(node);
-						//this.process(span,props.outercontext);
+						this.process(span,props.outercontext);
 					}
 
 				} else {
@@ -8954,8 +8956,7 @@ new CircularModule({
 								Circular.debug.write('@engine.processTextNode','inserting span '+vals[vc].expression);
 								var span = document.createElement('span');
 								span.setAttribute('id','cc-engine-'+this.genid++);
-								//span.setAttribute('cc-content',vals[vc].expression);
-								Circular.registry.setAttribute(span,'cc-content',vals[vc].expression);
+								span.setAttribute('cc-content',vals[vc].expression);
 								nodes.push(span);
 							} else {
 								Circular.debug.write('@engine.processTextNode','inserting text '+vals[vc].text);
@@ -8968,9 +8969,9 @@ new CircularModule({
 							Circular.watchdog.pass(node.parentNode,'contentchanged');
 						}
 						node.parentNode.insertBefore(nodes[nc], node);
-						//if (nodes[nc].nodeType==Node.ELEMENT_NODE) {
-						//	this.process(nodes[nc],props.outercontext);
-						//}
+						if (nodes[nc].nodeType==Node.ELEMENT_NODE) {
+							this.process(nodes[nc],props.outercontext);
+						}
 					}
 					
 					node.parentNode.removeChild(node);
@@ -9626,6 +9627,7 @@ new CircularModule({
 						.removeAttr('id')
 						.removeAttr('cc-template')
 						.attr(this.orgattr,tplsel)
+						.removeClass('cc-template')
 						.addClass('cc-template-clone');
 				} else {
 					Circular.log.error('@template.in','no such template',tplsel);

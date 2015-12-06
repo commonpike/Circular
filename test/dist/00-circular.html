@@ -60,7 +60,7 @@
 	
 		<nav cc-loop="{{Model.menu}}">
 			<span>
-				<a onclick="Control.goto('#link')">{{#title}}</a> 
+				<a onclick="Control.goto('{[#link]}')">{{#title}}</a> 
 				<span cc-if="{[!@loop.last]}">|</span>
 			</span>
 		</nav>
