@@ -648,7 +648,7 @@ new CircularModule({
 						*/
 						Circular.registry.setAttribute(parent,'cc-content',val);
 						parent.removeChild(node);
-						this.process(parent);
+						//this.process(parent);
 					} else {					
 						Circular.debug.write('@engine.processTextNode','replacing content with single span');
 						var span = document.createElement('span');
