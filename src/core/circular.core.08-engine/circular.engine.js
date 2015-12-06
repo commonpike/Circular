@@ -489,7 +489,7 @@ new CircularModule({
 				
 					// so its not an expression (anymore)
 					// ignore it or forget it
-					
+					//alert('forget '+node.nodeName+'.'+attr.name);
 					if (Circular.debug.enabled) {
 						if (attr.name.indexOf('cc-')==0) node.removeAttribute('cc-'+attr.name.substring(3)+'-debug');
 						else node.removeAttribute('cc-'+attr.name+'-debug');
@@ -545,7 +545,7 @@ new CircularModule({
 						attr.value = '';
 						Circular.log.warn(x);
 					}
-					if (Circular.watchdog && props.flags.watched) {
+					if (Circular.watchdog) { //  && props.flags.watched
 						Circular.watchdog.pass(node,'attrdomchanged',attr.name);
 					}
 					node.setAttribute(attr.name,attr.value);

@@ -309,11 +309,11 @@ new CircularModule({
 			}
 			
 			attr.flags.parsed = true;
-			Circular.debug.write("Circular.parser.parse",attr.original,ctx,attr.expression);
+			Circular.debug.write("Circular.parser.parseAttribute",attr.original,ctx,attr.expression);
 			return true;
 			
 		} else {
-			Circular.debug.write('Circular.parser.parse','no match');
+			Circular.debug.write('Circular.parser.parseAttribute','no match');
 		}
 		return false;
 	},
