@@ -187,11 +187,16 @@ var Circular = {
 
 	
 	queue			: function(func) {
-		Circular.debug.write("Circular.engine.queue",this.$queued.size()+1);
+		Circular.debug.write("Circular.engine.queue","add",this.$queued.size());
 		this.$queued.queue('circular',function(next) {
-			func(); next();
-		})
-		this.$queued.dequeue('circular'); 
+			func(); 
+			Circular.debug.write("Circular.engine.queue","next",Circular.$queued.size());
+			next();
+		});
+		if (this.$queued.size()==1) {
+			// queue was empty. kick it off.
+			this.$queued.dequeue('circular'); 
+		}
 	},
 	
 	/* ----------------------

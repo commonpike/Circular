@@ -76,39 +76,13 @@ new CircularModule({
 		}
 		
 		// this would usually be enough:
-		/*
-			// save and watch
-			this.set(node,props,true);
-	
-			// wake up the dogs
-			node.setAttribute(attrname,value);
-		*/
 		
-		// but we will be more elaborate:
-		// we'll set the original prop of the attribute,
-		// not register it, wake up the dogs. this makes it 
-		// possible to set things in the attribute which
-		// may not fit in there for dom reasons
-		if (!props.flags.watched) {
-				Circular.watchdog.watch(node,props);
-		}
-		if (!props.name2attr[attrname]) {
-			var attr = this.newAttribute(attrname);
-			attr.original = value;
-			props.attributes.push(attr);
-		} else {
-			props.name2attr[attrname].original=value;
-		}
-		
-		// dont register that, fake store it
-		$node.data('cc-properties',props);
-		
-		
+		// save and watch
+		this.set(node,props,true);
+
 		// wake up the dogs
-		node.setAttribute(attrname,'{|@registry.pending|}');
-		
-		//Circular.watchdog.catch(node,'event','attrsetchanged');
-		//Circular.watchdog.catch(node,'event','attrdatachanged',attrname);
+		node.setAttribute(attrname,value);
+
 		
 	},
 	
