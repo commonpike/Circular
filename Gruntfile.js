@@ -8,26 +8,34 @@ module.exports = function(grunt) {
 	process.chdir(cwd);
 	grunt.initConfig({
 		copy: {
-			dist : {
+			js : {
 				expand: true,
 				flatten: true,
-				src: ['src/js/contrib/*/circular.*.js'],
+				src: ['src/contrib/*/circular.*.js'],
 				dest: 'dist/js/',
 				filter: 'isFile'
+			},
+			demo : {
+				expand: true,
+				//flatten: true,
+				cwd: 'src/contrib',
+				src: ['*/demo*','*/demo*/*'],
+				dest: 'dist/demo/',
+				//filter: 'isDirectory'
 			}
 		},
 		concat: {
 			'dist/js/circular.js' : [
 				'vendor/node_modules/esprima/esprima.js',
 				'vendor/node_modules/observe-js/src/observe.js',
-				'src/js/core/circular.core.js',
-				'src/js/core/*/*.js',
-				'src/js/base/*/*.js'
+				'src/core/circular.core.js',
+				'src/core/*/*.js',
+				'src/base/*/*.js'
 			]
 		},
 		uglify: {
 			options: {
-				banner: '/*! Circular	'+(new Date())+'   */\n'
+				//banner: '/*! Circular	'+(new Date())+'   */\n'
 			},
 			dist: {
 				src: 'dist/js/circular.js',

@@ -1,6 +1,5 @@
 <html>
 	<head>
-	
 		<script src="../../vendor/node_modules/jquery/dist/jquery.min.js"></script>
 		<script src="../../vendor/node_modules/esprima/esprima.js"></script>
 		<script src="../../vendor/node_modules/observe-js/src/observe.js"></script>
@@ -19,25 +18,53 @@
 		<script src="../../src/base/circular.base.01-hide/circular.hide.js"></script>
 		<script src="../../src/base/circular.base.02-template/circular.template.js"></script>
 		<script>
-		
-			var Model = {
-				currentpage	:  {
-					title : 'Hello World',
-					content	: 'Hello Good World',
-				}
+			var Model = {	
+				winners	: [{
+					name 	: "Hank",
+					date	: "2015-03-02"
+				}, {
+					name 	: "Jezebel",
+					date	: "2015-03-05"
+				}, {
+					name 	: "John Jagger",
+					date	: "2015-03-09"
+				}]
 			}
-			
 			Circular.init({
-				debugging:false
+				debug:true
 			});
-			
 		</script>
+
 	</head>
-	<body cc-context="Model.currentpage">
-		<h1 cc-debug>{{#title}}</h1>
-		La
-		{{#content}}
-		La
-		{{#content}}
+	<body cc-root>
+
+		<!-- oneliner for a winner -->
+	
+		<xmp id="test01">{{Model.winners[0].name}}</xmp>
+		
+		<hr>
+		
+		<xmp id="test02">
+			{{Model.winners[1].name}}
+		</xmp>
+		
+		<hr>
+		
+		<xmp id="test03"></xmp>
+		
+		<button onclick="Circular.registry.setAttribute($('#test03'),'cc-content',Model.winners[2].name)">
+			@registry.setAttribute()
+		</button>
+		
+		<hr>
+		
+		<xmp id="test04" cc-content="no paths {{22}},{{23}},{{24}}"></xmp>
+	
+		<hr>
+		
+		<button onclick="Circular.queue(function(){alert(1)});Circular.queue(function(){alert(2)});Circular.queue(function(){alert(3)}); ">
+			queue
+		</button>
+		
 	</body>
 </html>

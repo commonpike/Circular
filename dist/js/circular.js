@@ -7561,11 +7561,16 @@ var Circular = {
 
 	
 	queue			: function(func) {
-		Circular.debug.write("Circular.engine.queue",this.$queued.size()+1);
+		Circular.debug.write("Circular.engine.queue","add",this.$queued.size());
 		this.$queued.queue('circular',function(next) {
-			func(); next();
-		})
-		this.$queued.dequeue('circular'); 
+			func(); 
+			Circular.debug.write("Circular.engine.queue","next",Circular.$queued.size());
+			next();
+		});
+		if (this.$queued.size()==1) {
+			// queue was empty. kick it off.
+			this.$queued.dequeue('circular'); 
+		}
 	},
 	
 	/* ----------------------
@@ -7773,8 +7778,10 @@ new CircularModule({
 	
 	css		: '.cc-content-generated {  }',
 	in	: function(attr,node,props) {
-		Circular.debug.write('mod.content.in','setting content',node,attr.result);
-		node.textContent=attr.result;
+		var val = attr.result;
+		if (val==undefined) val = attr.value;
+		Circular.debug.write('mod.content.in','setting content',val);
+		node.textContent=val;
 		$(node).addClass('cc-content-generated');
 	}
 
@@ -8039,7 +8046,7 @@ new CircularModule({
 	},
 	
 	parseAttribute	: function(attr,ctx) {
-		Circular.debug.write('Circular.parser.parse',attr.original);
+		Circular.debug.write('Circular.parser.parseAttribute',attr.original);
 		
 		var matches = attr.original.match(Circular.config.exprregex);
 		if (matches) {
@@ -8083,10 +8090,10 @@ new CircularModule({
 				
 				if (!attr.flags.parsed || attr.expression!=orgexpr) {
 					// the expression is new or changed. need to get paths
-					if (attr.paths) attr.oldpaths = attr.paths.slice(0);
+					if (attr.paths) attr.oldpaths = attr.paths.slice(0); // copy
 					attr.paths = [];
 					for (var wc=0; wc<watches.length;wc++) {
-						attr.paths.push(this.getPaths(watches[wc]));
+						attr.paths = attr.paths.concat(this.getPaths(watches[wc]));
 					}
 				}
 			}
@@ -8153,6 +8160,8 @@ new CircularModule({
 			'flags'	: {
 				'registered'				: false,
 				'watched'						: false,
+				'domobserved'				: false,
+				'dataobserved'			: false,
 				'processing'				: false,
 				'processedin'				: false,
 				'processedout'			: false,
@@ -8194,8 +8203,36 @@ new CircularModule({
 				'breaking'					: false
 			}
 		}
-	} ,
+	},
 
+	setAttribute	:	function(node,attrname,value,cycle) {
+		if (!cycle) {
+			Circular.queue(function() {
+				Circular.registry.setAttribute(node,attrname,value,true);
+				return;
+			});
+		}
+		Circular.debug.write('@registry.setAttribute',attrname);
+		var $node = $(node);
+		if (node instanceof jQuery) node = $node.get(0);
+		
+		var props = this.get(node);
+		if (!props.outercontext) {
+			props.outercontext = Circular.engine.getContext(node);
+			Circular.debug.write('@registry.setAttribute','context:',props.outercontext);
+		}
+		
+		// this would usually be enough:
+		
+		// save and watch
+		this.set(node,props,true);
+
+		// wake up the dogs
+		node.setAttribute(attrname,value);
+
+		
+	},
+	
 	lock	: function(node) {
 		var props = this.get(node,true);
 		props.flags.locked=true;
@@ -8342,6 +8379,27 @@ new CircularModule({
 		
 	},
 	
+	getContext	: function(node) {
+		Circular.debug.write('@engine.getContext',node.nodeName);
+		// you rarely need this. while cycling the document,
+		// the context is passed to the process() method or
+		// taken from @context.current. only when out of a 
+		// cycle, if you address a node that has not been
+		// indexed, you may need to find the context it would
+		// have had if it were indexed within a cycle.
+		var props = Circular.registry.get(node);
+		if (props.outercontext) return props.outercontext;
+		else {
+			var $parents = $(node).parents();
+			for (var pc=0; pc < $parents.size(); pc++) {
+				var props = Circular.registry.get(node);
+				if (props.outercontext) return props.outercontext;
+			}
+		}
+		return Circular.config.rootcontext;
+	
+	},
+	
 	process			: function (node,context) {
 		Circular.debug.write('@engine.process',node.nodeName,context);
 		if (!node) {
@@ -8370,7 +8428,7 @@ new CircularModule({
 				Circular.debug.write('@engine.process','no context: using current',node);
 				props.outercontext = Circular.context.get();
 			} else {
-				Circular.debug.write('@engine.process','no context: using given',context,node);
+				Circular.debug.write('@engine.process','no context: using stored',props.outercontext,node);
 			}
 		}
 		Circular.context.set(props.outercontext);
@@ -8646,7 +8704,8 @@ new CircularModule({
 		
 		
 		if (this.indexAttribute(node,attr)) {
-		
+			// returns true if it is an expression
+			
 			attr.module=modname;
 			return true;
 			
@@ -8657,12 +8716,12 @@ new CircularModule({
 			
 			if (!attr.flags.registered) {
 				attr.cname		= Circular.modules.attr2cname[attr.name];
-				var original 	= node.getAttribute(attr.name);
 				attr.module 	= modname;
-				attr.original = original;
-				attr.value		= original;
-				
 			}
+			var original 	= node.getAttribute(attr.name);
+			attr.original = original;
+			attr.value		= original;
+				
 			return true;
 			
 		}
@@ -8681,7 +8740,7 @@ new CircularModule({
 		// false if it shouldnt
 		
 		if (attr.flags.attrdomchanged) {
-		
+			Circular.debug.write('@engine.indexAttribute','attrdomchanged',attr.original);
 			
 			var expression = '', original = '';
 			
@@ -8988,7 +9047,7 @@ new CircularModule({
 	name				: 'watchdog',
 	requires		: ['log','debug','registry','engine'],
 	timer				: null,
-	lock				: false,
+	lock				: false,	// watchdog is locked while releasing
 	config			: {
 		watchdogtimeout	: 50
 	},
@@ -9046,6 +9105,7 @@ new CircularModule({
 		this.watchdata(node,props);
 		
 		// unset the flags youve set before recycle
+		props.flags['processing'] = false;
 		props.flags['attrsetchanged'] = false;
 		props.flags['contentchanged'] = false;
 		props.flags['contextchanged'] = false;
@@ -9056,7 +9116,8 @@ new CircularModule({
 			props.attributes[ac].flags['attrdatachanged'] = false;
 		}
 		props.flags['watched'] = true;
-		Circular.registry.set(node,props);
+		// no need to do this here
+		// Circular.registry.set(node,props);
 	},
 	
 	
@@ -9072,7 +9133,8 @@ new CircularModule({
 				subtree				: false
 			});
 			props.flags.domobserved=true;
-			Circular.registry.set(node,props);
+			// no need to do this here
+			// Circular.registry.set(node,props);
 		}
 	},
 	
@@ -9119,7 +9181,7 @@ new CircularModule({
 			
 			props.attributes.forEach(function(attr,idx) {
 				if (attr.flags.attrdomchanged) {
-					if (attr.paths) {
+					if (attr.paths && attr.paths.length) {
 						var ignorepaths = [];
 						if (!attr.oldpaths) attr.oldpaths = [];
 						
@@ -9194,6 +9256,7 @@ new CircularModule({
 							}
 						},this);
 					}
+					props.flags.dataobserved=true;
 				}
 			},this);
 		}
@@ -9301,7 +9364,7 @@ new CircularModule({
 										Circular.debug.write('Circular.watchdog.release',record.flag,record.target,node);
 										props.name2attr[record.target].flags[record.flag]=true;
 										props.flags[record.flag]=true;
-										processing=true;
+										props.flags.processing=true;
 									} else {
 										Circular.debug.write('Circular.watchdog.release','unregistered target '+record.target,record);
 									}
@@ -9324,7 +9387,7 @@ new CircularModule({
 								}
 								Circular.debug.write('Circular.watchdog.release','contentchanged',record,node);
 								props.flags['contentchanged']=true;
-								processing=true;
+								props.flags.processing=true;
 								break;
 								
 							case 'attrsetchanged':
@@ -9340,7 +9403,7 @@ new CircularModule({
 								}
 								Circular.debug.write('Circular.watchdog.release','attrsetchanged',record,node);
 								props.flags['attrsetchanged']=true;
-								processing=true;
+								props.flags.processing=true;
 								break;
 								
 							default:
@@ -9444,18 +9507,20 @@ new CircularModule({
 			}
 			
 			// todo: we're not storing the pass and un/ignore flags ?
-			if (!processing) {
-				delete this.releasing.nodes[nc];
-				delete this.releasing.records[nc];
-			} else {
+			if (props.flags.processing) {
 				Circular.registry.set(node,props);
-				Circular.registry.lock(node);
 			}
 		};
 		
 		// make hte array unsparse
 		var todo = [];
-		this.releasing.nodes.forEach(function(node) { todo.push(node); });
+		this.releasing.nodes.forEach(function(node) { 
+			var props = Circular.registry.get(node);
+			if (props.flags.processing) {
+				todo.push(node); 
+				Circular.registry.lock(node);
+			}
+		});
 		if (todo.length) {
 			Circular.debug.write('recycling '+todo.length+' nodes');
 			if (Circular.debug.enabled) this.report(this.releasing);		

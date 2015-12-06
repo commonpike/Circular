@@ -56,9 +56,9 @@ new CircularModule({
 				'breaking'					: false
 			}
 		}
-	} ,
+	},
 
-	setAttribute(node,attrname,value,cycle) {
+	setAttribute	:	function(node,attrname,value,cycle) {
 		if (!cycle) {
 			Circular.queue(function() {
 				Circular.registry.setAttribute(node,attrname,value,true);

@@ -101,7 +101,7 @@ new CircularModule({
 		
 	},
 	
-	getContext(node) {
+	getContext	: function(node) {
 		Circular.debug.write('@engine.getContext',node.nodeName);
 		// you rarely need this. while cycling the document,
 		// the context is passed to the process() method or

@@ -1,0 +1,384 @@
+	<html>
+		<head>
+			<title>Circular</title>
+			<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+			<script src="http://circularjs.net/current/js/circular.min.js"></script>
+		</head>
+		<body cc-root>
+		</body>
+	</html>
+	
+------
+parser
+
+	<html>
+		<head>
+			<title>Circular</title>
+			<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+			<script src="http://circularjs.net/current/js/circular.min.js"></script>
+		</head>
+		<body cc-root>
++			{{document.title}}
+		</body>
+	</html>
+	
+------
+	
+	document.title = 'Hello'
+	
+------
+context
+
+	<html>
+		<head>
+			<title>Circular</title>
+			<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+			<script src="http://circularjs.net/current/js/circular.min.js"></script>
+		</head>
++		<body cc-root cc-context="{{document}}">
++			{{#title}}
+		</body>
+	</html>
+	
+
+------
+style
+
+	<html>
+		<head>
+			<title>Circular</title>
+			<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+			<script src="http://circularjs.net/current/js/circular.min.js"></script>
++			<link rel="stylesheet" type="text/css" href="demo.01.css">
+		</head>
+		<body cc-root cc-context="{{document}}">
++			<h1>{{#title}}</h1> 
+		</body>
+	</html>
+
+------
+binding
+
+	<html>
+		<head>
+			<title>Circular</title>
+			<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+			<script src="http://circularjs.net/current/js/circular.min.js"></script>
+			<link rel="stylesheet" type="text/css" href="demo.01.css">
+		</head>
+		<body cc-root cc-context="{{document}}">
++			<h1>{[#title]} static expression</h1> 
+			<h1>{{#title}} binding expression</h1>
+		</body>
+	</html>
+	
+------
+	
+		document.title = 'Example'
+
+------
+javascript expressions
+
+	<html>
+		<head>
+			<title>Circular</title>
+			<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+			<script src="http://circularjs.net/current/js/circular.min.js"></script>
+			<link rel="stylesheet" type="text/css" href="demo.01.css">
+		</head>
+		<body cc-root cc-context="{{document}}">
+			<h1>{{#title}}</h1> 
++			<xmp>
++				{{1+1}}
++				{{alert('boo')}}
++				{{#this}}
++				{{@config.version}}
++				{{@log.write('boo')}}
++			</xmp>
+		</body>
+	</html>
+	
+------
+cc-debug, cc-content
+
+	<html>
+		<head>
+			<title>Circular</title>
+			<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+			<script src="http://circularjs.net/current/js/circular.min.js"></script>
+			<link rel="stylesheet" type="text/css" href="demo.01.css">
+		</head>
+		<body cc-root cc-context="{{document}}">
+			<h1>{{#title}}</h1> 
++			<span cc-debug cc-content="boo"></span>
+		</body>
+	</html>
+	
+------
+model
+
+	<html>
+		<head>
+			<title>Circular</title>
+			<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+			<script src="http://circularjs.net/current/js/circular.min.js"></script>
+			<link rel="stylesheet" type="text/css" href="demo.01.css">
++			<script>
++				var Model = {
++					pages : {
++						hello : {
++							title 	: 'Hello',
++							content	: 'hello happy world'
++						}
++					}
++				}
+			</script>
+		</head>
++		<body cc-root cc-context="{{Model.pages.hello}}">
+			<h1>{{#title}}</h1> 
+-
++			<p>{{#content}}</p>
+		</body>
+	</html>
+
+------
+
+Model.pages.hello.title = 'Goodbye'
+
+
+	
+------
+3waybinding
+
+	<html>
+		<head>
+			<title>Circular</title>
+			<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+			<script src="http://circularjs.net/current/js/circular.min.js"></script>
+			<link rel="stylesheet" type="text/css" href="demo.01.css">
+			<script>
+				var Model = {
+					pages : {
+						hello : {
+							title 	: 'Hello',
+							content	: 'hello happy world'
++						},
++						goodbye : {
++							title 	: 'Goodbye',
++							content	: 'goodbye cruel world'						
++						}
+					}
+				}
+			</script>
+		</head>
+		<body cc-root cc-context="{{Model.pages.hello}}">
+			<h1>{{#title}}</h1> 
+			<p>{{#content}}</p>
+		</body>
+	</html>
+
+------
+
+>> <body cc-root cc-context="{{Model.pages.goodbye}}">
+
+------
+control
+
+	<html>
+		<head>
+			<title>Circular</title>
+			<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+			<script src="http://circularjs.net/current/js/circular.min.js"></script>
+			<link rel="stylesheet" type="text/css" href="demo.01.css">
+			<script>
+				var Model = {
+					pages : {
+						hello : {
+							title 	: 'Hello',
+							content	: 'hello happy world'
+						},
+						goodbye : {
+							title 	: 'Goodbye',
+							content	: 'goodbye cruel world'						
+						}
+					}
+				}
++				var Control	= {
++					currentpage : Model.pages.hello,
++					goto				: function(page) {
++						this.currentpage = Model.pages[page]
++					}
++				}
+			</script>
+		</head>
+		<body cc-root cc-context="{{Control.currentpage}}">
+			<h1>{{#title}}</h1> 
+			<p>{{#content}}</p>
+		</body>
+	</html>
+	
+	
+------
+	
+Control.goto('goodbye')	
+	
+------
+cc-loop
+
+	<html>
+		<head>
+			<title>Circular</title>
+			<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+			<script src="http://circularjs.net/current/js/circular.min.js"></script>
+			<link rel="stylesheet" type="text/css" href="demo.01.css">
+			<script>
+				var Model = {
+					pages : {
+						hello : {
+							title 	: 'Hello',
+							content	: 'hello happy world'
+						},
+						goodbye : {
+							title 	: 'Goodbye',
+							content	: 'goodbye cruel world'						
+						}
+					}
+				}
+				var Control	= {
+					currentpage : Model.pages.hello,
+					goto				: function(page) {
+						this.currentpage = Model.pages[page]
+					}
+				}
+			</script>
+		</head>
+		<body cc-root cc-context="{{Control.currentpage}}">
++			<nav cc-loop="{{Model.pages}}">
++				{{#title}} 
++			</nav>
+			<h1>{{#title}}</h1> 
+			<p>{{#content}}</p>
+		</body>
+	</html>
+	
+------
+cc-hide
+
+	<html>
+		<head>
+			<title>Circular</title>
+			<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+			<script src="http://circularjs.net/current/js/circular.min.js"></script>
+			<link rel="stylesheet" type="text/css" href="demo.01.css">
+			<script>
+				var Model = {
+					pages : {
+						hello : {
+							title 	: 'Hello',
+							content	: 'hello happy world'
+						},
+						goodbye : {
+							title 	: 'Goodbye',
+							content	: 'goodbye cruel world'						
+						}
+					}
+				}
+				var Control	= {
+					currentpage : Model.pages.hello,
+					goto				: function(page) {
+						this.currentpage = Model.pages[page]
+					}
+				}
+			</script>
+		</head>
+		<body cc-root cc-context="{{Control.currentpage}}">
+			<nav cc-loop="{{Model.pages}}">
+				{{#title}}
++				<span cc-hide="{[@loop.last]}">|</span>
+			</nav>
+			<h1>{{#title}}</h1> 
+			<p>{{#content}}</p>
+		</body>
+	</html>
+	
+------
+@loop.key
+
+	<html>
+		<head>
+			<title>Circular</title>
+			<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+			<script src="http://circularjs.net/current/js/circular.min.js"></script>
+			<link rel="stylesheet" type="text/css" href="demo.01.css">
+			<script>
+				var Model = {
+					pages : {
+						hello : {
+							title 	: 'Hello',
+							content	: 'hello happy world'
+						},
+						goodbye : {
+							title 	: 'Goodbye',
+							content	: 'goodbye cruel world'						
+						}
+					}
+				}
+				var Control	= {
+					currentpage : Model.pages.hello,
+					goto				: function(page) {
+						this.currentpage = Model.pages[page]
+					}
+				}
+			</script>
+		</head>
+		<body cc-root cc-context="{{Control.currentpage}}">
+			<nav cc-loop="{{Model.pages}}">
++				<a onclick="Control.goto('{[@loop.key]}')">{{#title}}</a>
+				<span cc-hide="{[@loop.last]}">|</span>
+			</nav>
+			<h1>{{#title}}</h1> 
+			<p>{{#content}}</p>
+		</body>
+	</html>
+	
+------
+@loop.key
+
+	<html>
+		<head>
+			<title>Circular</title>
+			<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+			<script src="http://circularjs.net/current/js/circular.min.js"></script>
+			<link rel="stylesheet" type="text/css" href="demo.01.css">
+			<script>
+				var Model = {
+					pages : {
+						hello : {
+							title 	: 'Hello',
+							content	: 'hello happy world'
+						},
+						goodbye : {
+							title 	: 'Goodbye',
+							content	: 'goodbye cruel world'						
+						}
+					}
+				}
+				var Control	= {
+					currentpage : Model.pages.hello,
+					goto				: function(page) {
+						this.currentpage = Model.pages[page]
+					}
+				}
+			</script>
+		</head>
+		<body cc-root cc-context="{{Control.currentpage}}">
+			<nav cc-loop="{{Model.pages}}">
++				<a class="{{(Control.currentpage==#this)?'current':''}}" 
+						onclick="Control.goto('{[@loop.key]}')">{{#title}}</a>
+				<span cc-hide="{[@loop.last]}">|</span>
+			</nav>
+			<h1>{{#title}}</h1> 
+			<p>{{#content}}</p>
+		</body>
+	</html>
+	
