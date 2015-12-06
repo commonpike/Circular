@@ -8,10 +8,10 @@ new CircularModule({
 	name			: 'alert',
 	
 	in	: function(attr,node,props) {
-		alert('in: '+attr.value)
+		alert('in: '+attr.result)
 	},
 	out	: function(attr,node,props) {
-		alert('out: '+attr.value)
+		alert('out: '+attr.result)
 	}
 
 	

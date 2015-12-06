@@ -8721,6 +8721,7 @@ new CircularModule({
 			var original 	= node.getAttribute(attr.name);
 			attr.original = original;
 			attr.value		= original;
+			attr.result		= original;
 				
 			return true;
 			
