@@ -1,0 +1,49 @@
+<html>
+	<head>
+		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+		<script src="../../../js/circular.min.js"></script>
+		<script src="../../../js/circular.template.js"></script>
+		
+		<script>
+			var Model = {	
+				winners	: [{
+					name 	: 'Hank',
+					date	: '2015-03-02'
+				}, {
+					name 	: 'Jezebel',
+					date	: '2015-03-05'
+				}, {
+					name 	: 'John Jagger',
+					date	: '2015-03-09'
+				}]
+			}
+		</script>
+
+</head>
+<body cc-root cc-context="{{Model}}">
+
+	<!-- oneliner for a winner -->
+
+	<div cc-template id="oneliner">
+		<i>{{#name}}</i>,<b>{{#date}}</b>
+	</div>
+
+	<!-- the 3 top winners -->
+
+	<h1>First prize</h1>
+	<p cc-template="#oneliner" cc-context="{{#winners[0]}}"></p>
+
+	<hr>
+
+	<h2>Second prize</h2>
+	<p cc-template="#oneliner" cc-context="{{#winners[1]}}"></p>
+
+	<hr>
+
+	<h3>Third prize</h3>
+	<p cc-template="#oneliner" cc-context="{{#winners[2]}}"></p>
+
+	
+
+</body>
+</html>

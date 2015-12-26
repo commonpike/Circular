@@ -4,10 +4,8 @@ module.exports = function(grunt) {
 	// be copied to dist/docs
 	var docpattern = [
 		'*/*.md',
-		'*/demo*','*/demo*/*',
-		'!*/demo*/*.src.html',
-		'*/tests','*/tests/*',
-		'!*/tests/*.src.html'
+		'*/*.html','*/*/*',
+		'!*/*.src.html'
 	];
 	
 	var cwd = process.cwd();
@@ -43,20 +41,12 @@ module.exports = function(grunt) {
 				dest: 'dist/js/',
 				filter: 'isFile'
 			},
-			circdocs : {
-				expand: true,
-				//flatten: true,
-				cwd: 'src/core',
-				src: docpattern,
-				dest: 'dist/docs/',
-				//filter: 'isDirectory'
-			},
 			coredocs : {
 				expand: true,
 				//flatten: true,
 				cwd: 'src/core',
 				src: docpattern,
-				dest: 'dist/docs/',
+				dest: 'dist/docs/core',
 				//filter: 'isDirectory'
 			},
 			basedocs : {
@@ -64,7 +54,7 @@ module.exports = function(grunt) {
 				//flatten: true,
 				cwd: 'src/base',
 				src: docpattern,
-				dest: 'dist/docs/',
+				dest: 'dist/docs/base',
 				//filter: 'isDirectory'
 			},
 			contribdocs : {
@@ -72,12 +62,15 @@ module.exports = function(grunt) {
 				//flatten: true,
 				cwd: 'src/contrib',
 				src: docpattern,
-				dest: 'dist/docs/',
+				dest: 'dist/docs/contrib',
 				//filter: 'isDirectory'
 			}
 		},
 		clean: {
-      main: {
+			before: {
+        src: ['dist/docs/**']
+      },
+      after: {
         src: ['dist/docs/**'],
         filter: function(fp) {
           return grunt.file.isDir(fp) && require('fs').readdirSync(fp).length === 0;
@@ -86,5 +79,5 @@ module.exports = function(grunt) {
     }
 	});
 	
-	grunt.registerTask('default', ["concat","uglify","copy","clean"]);
+	grunt.registerTask('default', ["clean:before","concat","uglify","copy","clean:after"]);
 }
