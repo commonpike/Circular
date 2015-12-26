@@ -1,0 +1,85 @@
+<html>
+	<head>
+		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+		<script src="../../../js/circular.min.js"></script>
+		<style type="text/css">
+			body {
+				padding:2em; 
+				background-color:#1C1F26; 
+				color:#c0c5ce; 
+				font-family:sans-serif;
+			}
+			a[onclick] {
+				text-decoration:underline;
+				cursor:pointer;
+			}
+		</style>
+		<script>
+		
+			var Model = {
+				currentpage	: null,
+				menu	: [
+						{ 
+							title	: 'Hello',
+							link	: 'hello'
+						},
+						{
+							title	: 'Goodbye',
+							link	: 'goodbye'
+						}
+				], 
+				pages	: {
+					hello 	: {
+						title 	: 'Hello World',
+						content	: 'Hello Good World',
+					},
+					goodbye : {
+						title 	: 'Goodbye World',
+						content	: 'Goodbye cruel world',
+						url		: 'goodbye.html'
+					}
+				}
+				
+			}
+			
+			var Control = {
+				goto	: function(page) {
+					Model.currentpage=Model.pages[page];
+				}
+			}
+			
+			Control.goto('hello');
+			
+			Circular.init({
+				watchdogtimeout:50
+			});
+			
+		</script>
+	</head>
+	<body cc-context="{{Model.currentpage}}">
+	
+		<nav cc-loop="{{Model.menu}}">
+			<span>
+				<a onclick="Control.goto('{[#link]}')">{{#title}}</a> 
+				<span cc-if="{[!@loop.last]}">|</span>
+			</span>
+		</nav>
+		
+		<h1>{{#title.toUpperCase()}}</h1>
+		
+		<p class="content {{#this==Model.pages.home?'home':'other'}}">
+			{{#content}}
+		</p>
+		
+		<p cc-include="{{#url}}">
+			<blink>Loading...</blink>
+		</p>
+		<!--
+			{{Model.test = 'Variable set';}}
+		-->
+		<span>test: {{Model.test}}</span>
+		<!--
+			{{@log.info('Registered:'+@registry.counter)}}
+		-->
+	</body>
+</html>

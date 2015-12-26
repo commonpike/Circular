@@ -1,0 +1,99 @@
+<html>
+	<head>
+		<script src="../../../vendor/node_modules/jquery/dist/jquery.min.js"></script>
+		<script src="../../../vendor/node_modules/esprima/esprima.js"></script>
+		<script src="../../../vendor/node_modules/observe-js/src/observe.js"></script>
+
+		<script src="../../core/circular.core.00/circular.core.js"></script>
+		<script src="../../core/circular.core.01-log/circular.log.js"></script>
+		<script src="../../core/circular.core.02-debug/circular.debug.js"></script>
+		<script src="../../core/circular.core.03-queue/circular.queue.js"></script>
+		<script src="../../core/circular.core.04-context/circular.context.js"></script>
+		<script src="../../core/circular.core.05-root/circular.root.js"></script>
+		<script src="../../core/circular.core.06-content/circular.content.js"></script>
+		<script src="../../core/circular.core.07-parser/circular.parser.js"></script>
+		<script src="../../core/circular.core.08-registry/circular.registry.js"></script>
+		<script src="../../core/circular.core.09-engine/circular.engine.js"></script>
+		<script src="../../core/circular.core.10-watchdog/circular.watchdog.js"></script>
+		
+		<script src="../../base/circular.base.01-hide/circular.hide.js"></script>
+		<script src="../../base/circular.base.02-template/circular.template.js"></script>
+		<script>
+			var Model = {	
+				winners	: [{
+					name 	: "Hank",
+					date	: "2015-03-02"
+				}, {
+					name 	: "Jezebel",
+					date	: "2015-03-05"
+				}, {
+					name 	: "John Jagger",
+					date	: "2015-03-09"
+				}],
+				test	: "some<br>html<br><b>for your</b><br>test"
+			}
+			Circular.init({
+				debug:true
+			});
+		</script>
+
+	</head>
+	<body cc-root>
+
+		<!-- oneliner for a winner -->
+	
+		<xmp id="test01">
+		
+			here is the first winner:<br>
+			- Model.winners[0].name
+			
+			<b>check back later for more</b><br>
+			
+		</xmp>
+		
+		<hr>
+		
+		<xmp id="test02">
+			{{Model.winners[1].name}}
+		</xmp>
+		
+		
+		
+		<hr>
+		
+		<xmp id="test04"></xmp>
+	
+		
+		<button onclick="$('#test04').attr('cc-content',Model.winners[2].name); Circular.engine.recycle($('#test04')); ">
+			@engine.recycle()
+		</button>
+		
+			<hr>
+		
+		<xmp id="test05"></xmp>
+	
+		
+		<button onclick="Circular.watchdog.watch($('#test05')); $('#test05').attr('cc-content',$('#test01').html());  ">
+			@watchdog.watch()
+		</button>
+		
+			<hr>
+		
+		<xmp id="test06" cc-content="{{Model.test}}"></xmp>
+	
+		
+		<button onclick="$('#test06').attr('cc-content',Model.winners[2].name); Circular.engine.recycle($('#test06')); ">
+			@engine.recycle()
+		</button>
+		
+			<hr>
+		
+		<xmp id="test07" cc-content="{{Model.test}}"></xmp>
+	
+		
+		<button onclick="Circular.watchdog.watch($('#test07')); $('#test07').attr('cc-content',$('#test01').html());  ">
+			@watchdog.watch()
+		</button>
+		
+	</body>
+</html>

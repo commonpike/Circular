@@ -7379,7 +7379,7 @@ var Circular = {
 	----------------------- */
 	
 	config	: {
-		version				: '0.0.9',
+		version				: '0.1.5',
 		autoinit			:	 true,
 		attrprefix		: 'cc-',
 		dataprefix		: 'data-'
@@ -7388,7 +7388,6 @@ var Circular = {
 	// status
 	inited		: false,
 	dead			: false,
-	$queued		: $({}),	
 
 	/* ----------------------
 		modules 
@@ -7554,24 +7553,7 @@ var Circular = {
 		
 	},
 
-	/* ----------------------
-		queue 
-	----------------------- */
 	
-
-	
-	queue			: function(func) {
-		Circular.debug.write("Circular.engine.queue","add",this.$queued.size());
-		this.$queued.queue('circular',function(next) {
-			func(); 
-			Circular.debug.write("Circular.engine.queue","next",Circular.$queued.size());
-			next();
-		});
-		if (this.$queued.size()==1) {
-			// queue was empty. kick it off.
-			this.$queued.dequeue('circular'); 
-		}
-	},
 	
 	/* ----------------------
 		init 
@@ -7580,16 +7562,23 @@ var Circular = {
 	init 		: function(config) {
 		$(document).ready(function() {
 			Circular.modules.init(config);
-			if (Circular.engine) {
-				Circular.queue(function() {
-					Circular.engine.start();	
-				});
-			} else if (Circular.log) {
-				Circular.log.fatal('Circular mod.engine not found');
+			if (Circular.log) {
+				if (Circular.queue) {
+					if (Circular.engine) {
+						Circular.queue.add(function() {
+							Circular.engine.start();	
+						});
+					} else {
+						Circular.log.fatal('@engine not found');
+					} 
+				} else {
+					Circular.log.fatal('@queue not found');
+				}
 			} else {
-				alert('Circular mod.engine and mod.log not found');
+				alert('@log not found');
 				Circular.die();
 			}
+					
 		});
 		this.inited = true;
 	},
@@ -7714,6 +7703,42 @@ new CircularModule({
 	
 	
 });
+
+/* ----------------------
+	queue
+----------------------- */
+
+new CircularModule({
+
+	name				: 'queue',
+	requires		: ['debug'],
+
+	todo	: [],
+	
+	
+	add		: function(func) {
+		Circular.debug.write("Circular.queue.add",this.todo.length);
+		this.todo.push(func);
+		if (this.todo.length==1) this.next();
+	}, 
+	
+	next	: function() {
+		if (!Circular.dead) {
+			if (this.todo.length) {
+				Circular.debug.write("Circular.queue.next",this.todo.length);
+				this.todo[this.todo.length-1]();
+				this.todo.pop();
+				this.next();
+			} else {
+				Circular.debug.write("Circular.queue.next","all done.");
+			}
+		} else {
+			Circular.debug.write("Circular.queue.next","dead");
+		}
+	}
+		
+});
+
 /* ----------------------
 	context
 ----------------------- */
@@ -8009,7 +8034,7 @@ new CircularModule({
 	// value - string value of result
 	// paths - paths to watch in expression
 	
-	parse	: function(expr,ctx) {
+	/*parse	: function(expr,ctx) {
 		Circular.debug.write('Circular.parser.parse',expr);
 		matches = expr.match(Circular.config.exprregex);
 		if (matches) {
@@ -8045,7 +8070,7 @@ new CircularModule({
 			Circular.debug.write('Circular.parser.parse','no match');
 		}
 		return '';
-	},
+	},*/
 	
 	parseAttribute	: function(attr,ctx) {
 		Circular.debug.write('Circular.parser.parseAttribute',attr.original);
@@ -8106,6 +8131,13 @@ new CircularModule({
 			
 		} else {
 			Circular.debug.write('Circular.parser.parseAttribute','no match');
+			if (attr.expression) {
+				// the expression is new or changed. need to remove paths
+				attr.expression = '';
+				if (attr.paths) attr.oldpaths = attr.paths.slice(0);
+				attr.paths 	= [];
+			}
+			
 		}
 		return false;
 	},
@@ -8207,34 +8239,6 @@ new CircularModule({
 		}
 	},
 
-	setAttribute	:	function(node,attrname,value,cycle) {
-		if (!cycle) {
-			Circular.queue(function() {
-				Circular.registry.setAttribute(node,attrname,value,true);
-				return;
-			});
-		}
-		Circular.debug.write('@registry.setAttribute',attrname);
-		var $node = $(node);
-		if (node instanceof jQuery) node = $node.get(0);
-		
-		var props = this.get(node);
-		if (!props.outercontext) {
-			props.outercontext = Circular.engine.getContext(node);
-			Circular.debug.write('@registry.setAttribute','context:',props.outercontext);
-		}
-		
-		// this would usually be enough:
-		
-		// save and watch
-		this.set(node,props,true);
-
-		// wake up the dogs
-		node.setAttribute(attrname,value);
-
-		
-	},
-	
 	lock	: function(node) {
 		var props = this.get(node,true);
 		props.flags.locked=true;
@@ -8315,10 +8319,10 @@ new CircularModule({
 			nodes = nodes.toArray();
 		}
 		
-		if (!nodes) return this.cycle();
+		if (!nodes) return this.start();
 		
 		if (!now) {
-			Circular.queue(function() {
+			Circular.queue.add(function() {
 				Circular.engine.recycle(nodes,true);
 			});
 			return true;
@@ -8403,6 +8407,7 @@ new CircularModule({
 	},
 	
 	process			: function (node,context) {
+		if (node instanceof jQuery) node = node.get(0);
 		Circular.debug.write('@engine.process',node.nodeName,context);
 		if (!node) {
 			Circular.log.fatal('@engine.process','no node given');
@@ -8411,7 +8416,7 @@ new CircularModule({
 			Circular.log.fatal('@engine.process','Circular died :-|');
 			return false;
 		}
-		
+		if (node instanceof jQuery) node = $node.get(0);
 		this.counter++;
 		
 		var props = Circular.registry.get(node,true);
@@ -8702,7 +8707,7 @@ new CircularModule({
 	
 
 	indexModuleAttribute			: function(node,attr,modname) {
-		Circular.debug.write('@engine.indexModule',modname);
+		Circular.debug.write('@engine.indexModuleAttribute',modname);
 		
 		
 		if (this.indexAttribute(node,attr)) {
@@ -8770,6 +8775,8 @@ new CircularModule({
 					// so its not an expression (anymore)
 					// ignore it or forget it
 					//alert('forget '+node.nodeName+'.'+attr.name);
+					
+					
 					if (Circular.debug.enabled) {
 						if (attr.name.indexOf('cc-')==0) node.removeAttribute('cc-'+attr.name.substring(3)+'-debug');
 						else node.removeAttribute('cc-'+attr.name+'-debug');
@@ -8811,26 +8818,34 @@ new CircularModule({
 				// (re-)eval this attribute, be it a full match
 				// or  a string containing matches 
 				
-				var result = Circular.parser.eval(attr.expression);
-				
-				if (result!=attr.result) {
-				
-					attr.result = result;
-					Circular.debug.write('@engine.processAttributesIn','changed',attr.name,attr.expression,attr.result);
-					try {
-						if (result===undefined) attr.value = ''; 
-						else if (typeof attr.result == 'object') attr.value = attr.original;
-						else attr.value = attr.result.toString();
-					} catch (x) {
-						attr.value = '';
-						Circular.log.warn(x);
-					}
-					if (Circular.watchdog) { //  && props.flags.watched
-						Circular.watchdog.pass(node,'attrdomchanged',attr.name);
-					}
-					node.setAttribute(attr.name,attr.value);
-					//alert(attr.value);
+				if (attr.expression) {
+					var result = Circular.parser.eval(attr.expression);
+					
+					if (result!=attr.result) {
+					
+						attr.result = result;
+						Circular.debug.write('@engine.processAttributesIn','changed',attr.name,attr.expression,attr.result);
+						try {
+							if (result===undefined) attr.value = ''; 
+							else if (typeof attr.result == 'object') attr.value = attr.original;
+							else attr.value = attr.result.toString();
+						} catch (x) {
+							attr.value = '';
+							Circular.log.warn(x);
+						}
+						if (Circular.watchdog  && props.flags.watched ) { // watched was commented ?
+							Circular.watchdog.pass(node,'attrdomchanged',attr.name);
+						}
+						node.setAttribute(attr.name,attr.value);
+						//alert(attr.value);
+						
+					} 
+				} else {
+					attr.result = undefined;
+					attr.value = attr.original;
 				}
+				
+					
 			}
 
 			// even if it didnt change, you need to execute it
@@ -9109,6 +9124,8 @@ new CircularModule({
 	
 	watch	: function (node,props) {
 		Circular.debug.write('Circular.watchdog.watch');
+		if (!props) props = Circular.registry.get(node);
+		if (node instanceof jQuery) node = node.get(0);
 		this.watchdom(node,props);
 		this.watchdata(node,props);
 		
@@ -9315,7 +9332,7 @@ new CircularModule({
 		
 		
 		this.timer = setTimeout(function () {
-			Circular.queue(function() {
+			Circular.queue.add(function() {
 				Circular.watchdog.release();
 			});
 		}, Circular.config.watchdogtimeout);
