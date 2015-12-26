@@ -217,7 +217,7 @@ new CircularModule({
 	// value - string value of result
 	// paths - paths to watch in expression
 	
-	parse	: function(expr,ctx) {
+	/*parse	: function(expr,ctx) {
 		Circular.debug.write('Circular.parser.parse',expr);
 		matches = expr.match(Circular.config.exprregex);
 		if (matches) {
@@ -253,7 +253,7 @@ new CircularModule({
 			Circular.debug.write('Circular.parser.parse','no match');
 		}
 		return '';
-	},
+	},*/
 	
 	parseAttribute	: function(attr,ctx) {
 		Circular.debug.write('Circular.parser.parseAttribute',attr.original);
@@ -314,6 +314,13 @@ new CircularModule({
 			
 		} else {
 			Circular.debug.write('Circular.parser.parseAttribute','no match');
+			if (attr.expression) {
+				// the expression is new or changed. need to remove paths
+				attr.expression = '';
+				if (attr.paths) attr.oldpaths = attr.paths.slice(0);
+				attr.paths 	= [];
+			}
+			
 		}
 		return false;
 	},

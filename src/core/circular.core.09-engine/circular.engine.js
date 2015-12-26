@@ -35,10 +35,10 @@ new CircularModule({
 			nodes = nodes.toArray();
 		}
 		
-		if (!nodes) return this.cycle();
+		if (!nodes) return this.start();
 		
 		if (!now) {
-			Circular.queue(function() {
+			Circular.queue.add(function() {
 				Circular.engine.recycle(nodes,true);
 			});
 			return true;
@@ -123,6 +123,7 @@ new CircularModule({
 	},
 	
 	process			: function (node,context) {
+		if (node instanceof jQuery) node = node.get(0);
 		Circular.debug.write('@engine.process',node.nodeName,context);
 		if (!node) {
 			Circular.log.fatal('@engine.process','no node given');
@@ -131,7 +132,7 @@ new CircularModule({
 			Circular.log.fatal('@engine.process','Circular died :-|');
 			return false;
 		}
-		
+		if (node instanceof jQuery) node = $node.get(0);
 		this.counter++;
 		
 		var props = Circular.registry.get(node,true);
@@ -422,7 +423,7 @@ new CircularModule({
 	
 
 	indexModuleAttribute			: function(node,attr,modname) {
-		Circular.debug.write('@engine.indexModule',modname);
+		Circular.debug.write('@engine.indexModuleAttribute',modname);
 		
 		
 		if (this.indexAttribute(node,attr)) {
@@ -490,6 +491,8 @@ new CircularModule({
 					// so its not an expression (anymore)
 					// ignore it or forget it
 					//alert('forget '+node.nodeName+'.'+attr.name);
+					
+					
 					if (Circular.debug.enabled) {
 						if (attr.name.indexOf('cc-')==0) node.removeAttribute('cc-'+attr.name.substring(3)+'-debug');
 						else node.removeAttribute('cc-'+attr.name+'-debug');
@@ -531,26 +534,34 @@ new CircularModule({
 				// (re-)eval this attribute, be it a full match
 				// or  a string containing matches 
 				
-				var result = Circular.parser.eval(attr.expression);
-				
-				if (result!=attr.result) {
-				
-					attr.result = result;
-					Circular.debug.write('@engine.processAttributesIn','changed',attr.name,attr.expression,attr.result);
-					try {
-						if (result===undefined) attr.value = ''; 
-						else if (typeof attr.result == 'object') attr.value = attr.original;
-						else attr.value = attr.result.toString();
-					} catch (x) {
-						attr.value = '';
-						Circular.log.warn(x);
-					}
-					if (Circular.watchdog) { //  && props.flags.watched
-						Circular.watchdog.pass(node,'attrdomchanged',attr.name);
-					}
-					node.setAttribute(attr.name,attr.value);
-					//alert(attr.value);
+				if (attr.expression) {
+					var result = Circular.parser.eval(attr.expression);
+					
+					if (result!=attr.result) {
+					
+						attr.result = result;
+						Circular.debug.write('@engine.processAttributesIn','changed',attr.name,attr.expression,attr.result);
+						try {
+							if (result===undefined) attr.value = ''; 
+							else if (typeof attr.result == 'object') attr.value = attr.original;
+							else attr.value = attr.result.toString();
+						} catch (x) {
+							attr.value = '';
+							Circular.log.warn(x);
+						}
+						if (Circular.watchdog  && props.flags.watched ) { // watched was commented ?
+							Circular.watchdog.pass(node,'attrdomchanged',attr.name);
+						}
+						node.setAttribute(attr.name,attr.value);
+						//alert(attr.value);
+						
+					} 
+				} else {
+					attr.result = undefined;
+					attr.value = attr.original;
 				}
+				
+					
 			}
 
 			// even if it didnt change, you need to execute it

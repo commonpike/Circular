@@ -5,7 +5,7 @@ var Circular = {
 	----------------------- */
 	
 	config	: {
-		version				: '0.0.9',
+		version				: '0.1.5',
 		autoinit			:	 true,
 		attrprefix		: 'cc-',
 		dataprefix		: 'data-'
@@ -14,7 +14,6 @@ var Circular = {
 	// status
 	inited		: false,
 	dead			: false,
-	$queued		: $({}),	
 
 	/* ----------------------
 		modules 
@@ -180,24 +179,7 @@ var Circular = {
 		
 	},
 
-	/* ----------------------
-		queue 
-	----------------------- */
 	
-
-	
-	queue			: function(func) {
-		Circular.debug.write("Circular.engine.queue","add",this.$queued.size());
-		this.$queued.queue('circular',function(next) {
-			func(); 
-			Circular.debug.write("Circular.engine.queue","next",Circular.$queued.size());
-			next();
-		});
-		if (this.$queued.size()==1) {
-			// queue was empty. kick it off.
-			this.$queued.dequeue('circular'); 
-		}
-	},
 	
 	/* ----------------------
 		init 
@@ -206,16 +188,23 @@ var Circular = {
 	init 		: function(config) {
 		$(document).ready(function() {
 			Circular.modules.init(config);
-			if (Circular.engine) {
-				Circular.queue(function() {
-					Circular.engine.start();	
-				});
-			} else if (Circular.log) {
-				Circular.log.fatal('Circular mod.engine not found');
+			if (Circular.log) {
+				if (Circular.queue) {
+					if (Circular.engine) {
+						Circular.queue.add(function() {
+							Circular.engine.start();	
+						});
+					} else {
+						Circular.log.fatal('@engine not found');
+					} 
+				} else {
+					Circular.log.fatal('@queue not found');
+				}
 			} else {
-				alert('Circular mod.engine and mod.log not found');
+				alert('@log not found');
 				Circular.die();
 			}
+					
 		});
 		this.inited = true;
 	},

@@ -63,6 +63,8 @@ new CircularModule({
 	
 	watch	: function (node,props) {
 		Circular.debug.write('Circular.watchdog.watch');
+		if (!props) props = Circular.registry.get(node);
+		if (node instanceof jQuery) node = node.get(0);
 		this.watchdom(node,props);
 		this.watchdata(node,props);
 		
@@ -269,7 +271,7 @@ new CircularModule({
 		
 		
 		this.timer = setTimeout(function () {
-			Circular.queue(function() {
+			Circular.queue.add(function() {
 				Circular.watchdog.release();
 			});
 		}, Circular.config.watchdogtimeout);

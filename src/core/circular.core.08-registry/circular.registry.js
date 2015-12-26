@@ -58,34 +58,6 @@ new CircularModule({
 		}
 	},
 
-	setAttribute	:	function(node,attrname,value,cycle) {
-		if (!cycle) {
-			Circular.queue(function() {
-				Circular.registry.setAttribute(node,attrname,value,true);
-				return;
-			});
-		}
-		Circular.debug.write('@registry.setAttribute',attrname);
-		var $node = $(node);
-		if (node instanceof jQuery) node = $node.get(0);
-		
-		var props = this.get(node);
-		if (!props.outercontext) {
-			props.outercontext = Circular.engine.getContext(node);
-			Circular.debug.write('@registry.setAttribute','context:',props.outercontext);
-		}
-		
-		// this would usually be enough:
-		
-		// save and watch
-		this.set(node,props,true);
-
-		// wake up the dogs
-		node.setAttribute(attrname,value);
-
-		
-	},
-	
 	lock	: function(node) {
 		var props = this.get(node,true);
 		props.flags.locked=true;
