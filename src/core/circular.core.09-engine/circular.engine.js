@@ -9,20 +9,22 @@ new CircularModule({
 	requires		: ['root','context','content','log','debug','registry'],
 	config			: { 
 		rootselector 	: '',
+		greedy				: false, // trim whitespace from inline expressions
 	},
 	counter			: 0,
 	genid				: 0,
+	greedy			: true,
 	
-	ejected			: {
-		// #id : $placeholder
+	init				: function() {
+		this.greedy = this.config.greedy;
 	},
 	
 	start				: function() {
 		Circular.debug.write('@engine.start ');
 		var rootsel = Circular.config.rootselector;
 		if (!rootsel) {
-			rootsel = '['+Circular.config.attrprefix+'root],';
-			rootsel += '['+Circular.config.attrprefix+Circular.config.attrprefix+'root]';
+			rootsel = '[cc-root],';
+			rootsel += '['+Circular.config.dataprefix+'cc-root]';
 		}
 		var $root = $(rootsel);
 		if (!$root.size()) $root = $('html');
@@ -33,6 +35,8 @@ new CircularModule({
 		Circular.debug.write('@engine.recycle ');
 		if (nodes instanceof jQuery) {
 			nodes = nodes.toArray();
+		} else if (!Array.isArray(nodes)) {
+			nodes = [nodes];
 		}
 		
 		if (!nodes) return this.start();
@@ -109,13 +113,15 @@ new CircularModule({
 		// cycle, if you address a node that has not been
 		// indexed, you may need to find the context it would
 		// have had if it were indexed within a cycle.
-		var props = Circular.registry.get(node);
+		var props = Circular.registry.get(node,true);
 		if (props.outercontext) return props.outercontext;
 		else {
 			var $parents = $(node).parents();
 			for (var pc=0; pc < $parents.size(); pc++) {
-				var props = Circular.registry.get(node);
-				if (props.outercontext) return props.outercontext;
+				var props = Circular.registry.get($parents.eq(pc),true);
+				if (props.innercontext) {
+					return props.innercontext;
+				}
 			}
 		}
 		return Circular.config.rootcontext;
@@ -148,8 +154,10 @@ new CircularModule({
 			}
 		} else {
 			if (!props.outercontext) {
-				Circular.debug.write('@engine.process','no context: using current',node);
-				props.outercontext = Circular.context.get();
+				Circular.debug.write('@engine.process','no context, searching',node);
+				//props.outercontext = Circular.context.get();
+				props.outercontext = this.getContext(node);
+				Circular.debug.write('@engine.process','found context',props.outercontext);
 			} else {
 				Circular.debug.write('@engine.process','no context: using stored',props.outercontext,node);
 			}
@@ -638,6 +646,9 @@ new CircularModule({
 		
 			var val = node.textContent;
 			var match, exec, nodes = [];
+			
+			if (this.config.greedy) val=val.trim();
+			
 			if (matches = Circular.parser.match(val)) {
 													
 				if (matches.length==1 && matches[0]==val) {
@@ -647,18 +658,30 @@ new CircularModule({
 						Circular.debug.write('@engine.processTextNode','setting cc-content on the parent');
 						
 						// ugly
-						var parprops = Circular.registry.get(parent,true);
-						if (parprops.flags.watched) {
-							if (Circular.watchdog) {
-								Circular.watchdog.pass(parent,'contentchanged');
-								Circular.watchdog.pass(parent,'attrsetchanged');
-							}
-							parprops.flags.attrsetchanged=true;
-						}
-						parent.setAttribute('cc-content',val);
+						//var parprops = Circular.registry.get(parent,true);
+						//if (parprops.flags.watched) {
+							//if (Circular.watchdog) {
+							//	Circular.watchdog.pass(parent,'contentchanged');
+							//	Circular.watchdog.pass(parent,'attrsetchanged');
+							//}
+							//parprops.flags.attrsetchanged=true;
+						//}
 						
-						parent.removeChild(node);
-						this.process(parent);
+						// ugly too
+						//Circular.queue.add(function() {
+						//	parent.setAttribute('cc-content',val);
+						//	Circular.engine.recycle(parent);
+						//});
+						
+						Circular.queue.add(function() {
+							Circular.watchdog.watch(parent);
+							parent.setAttribute('cc-content',val);
+						});
+						
+						// parent.removeChild(node);
+						// ah well lets already put the content in.
+						// cc-content will come again in 2 rounds
+						$(parent).html(Circular.parser.result(val,props.outercontext));
 					
 					} else {					
 				

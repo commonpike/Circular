@@ -74,6 +74,7 @@ new CircularModule({
 		Circular.debug.write('@watchdog.watch');
 		if (!props) props = Circular.registry.get(node);
 		if (node instanceof jQuery) node = node.get(0);
+		
 		this.watchdom(node,props);
 		this.watchdata(node,props);
 		
@@ -89,8 +90,8 @@ new CircularModule({
 			props.attributes[ac].flags['attrdatachanged'] = false;
 		}
 		props.flags['watched'] = true;
-		// no need to do this here
-		// Circular.registry.set(node,props);
+		// needed if watch is called from outside ..
+		Circular.registry.set(node,props);
 	},
 	
 	
@@ -149,12 +150,13 @@ new CircularModule({
 	},
 	
 	watchdata	: function(node,props) {
-		if (props.flags.attrdomchanged) {
+		if (props.flags.attrdomchanged || props.flags.attrsetchanged) {
 			Circular.debug.write('@watchdog.watchdata',node,props);
 			
 			props.attributes.forEach(function(attr,idx) {
 				if (attr.flags.attrdomchanged) {
 					if (attr.paths && attr.paths.length) {
+						
 						var ignorepaths = [];
 						if (!attr.oldpaths) attr.oldpaths = [];
 						
@@ -228,10 +230,17 @@ new CircularModule({
 								Circular.debug.write('@watchdog.watchdata','path already watched',path);
 							}
 						},this);
+					
+					} else {
+						Circular.debug.write('@watchdog.watchdata','no paths',attr.name);
 					}
 					props.flags.dataobserved=true;
+				} else {
+					Circular.debug.write('@watchdog.watchdata','no attrdomchanged',attr.name);
 				}
 			},this);
+		} else {
+			Circular.debug.write('@watchdog.watchdata','no attrdomchanged in node',node.tagName);
 		}
 	},
 	
@@ -506,10 +515,11 @@ new CircularModule({
 	
 	report	: function(list) {
 		if (!list) list = this.caught;
-		Circular.log.write('@watchdog.report');
+		Circular.log.write('@watchdog.report======================');
 		list.nodes.forEach(function(node,idx) {
 			Circular.log.write(node.tagName,list.records[idx]);
 		},this);
+		Circular.log.write('======================================');
 	}
 
 	

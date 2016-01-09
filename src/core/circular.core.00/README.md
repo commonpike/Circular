@@ -121,7 +121,6 @@
 *example:* 
 	
 	Circular.init({
-		attrprefix	: 'kp-',
 		dataprefix	: 'data-',
 		autoinit	: true
 	})
@@ -129,11 +128,8 @@
 
 *arguments:*
 
-- **attrprefix:** (*type:* string, *default:* 'cc-')
 
-The string to prefix to a module name when used as an attribute. If a module is named 'foo', its attribute will be 'cc-foo'.
-
-- **attrprefix:** (*type:* string, *default:* 'data-')
+- **dataprefix:** (*type:* string, *default:* 'data-')
 
 The string to prefix to an custom attribute to make it valid html5
 
@@ -143,7 +139,7 @@ Wether to start Circular on `$(document).ready()` by itself. Example:
   
 	Circular.config.autoinit=false;
 	$(document).on('kp-loaded',function() {
-	  Circular.init({attrprefix:'kp-'})
+	  Circular.init({dataprefix:'kp-'})
 	});
 
 

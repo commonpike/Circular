@@ -71,7 +71,7 @@ new CircularModule({
 	},
 	
 	set	: function(node,props,watch) {
-		Circular.debug.write('@registry.set');
+		//Circular.debug.write('@registry.set');
 		if (!props.flags.registered) {
 			props.flags.registered = true;
 			this.counter++;
@@ -86,12 +86,12 @@ new CircularModule({
 		$(node).data('cc-properties',props);
 	},
 	
-	get	: function(node,force) {
+	get	: function(node,readonly) {
 		// Circular.debug.write('Circular.registry.get');
 		// this should perhaps return a deep copy instead ..
 		var props = $(node).data('cc-properties');
 		if (!props) props = this.newProperties();
-		if (!props.flags.locked || force) {
+		if (!props.flags.locked || readonly) {
 			return props;
 		} else {
 			Circular.log.error('@registry.get','Node is locked',node);

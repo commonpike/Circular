@@ -7,7 +7,6 @@ var Circular = {
 	config	: {
 		version				: '0.1.5',
 		autoinit			:	 true,
-		attrprefix		: 'cc-',
 		dataprefix		: 'data-'
 	},
 	
@@ -224,7 +223,7 @@ function CircularModule(def) {
 		if (!def.in)					def.in 	= function(attr,node,props) { return true; }
 		if (!def.out) 				def.out = function(attr,node,props) { return true; }	
 		if (!def.requires)		def.requires = [];
-		if (!def.attributes)	def.attributes = [Circular.config.attrprefix+def.name];
+		if (!def.attributes)	def.attributes = ['cc-'+def.name];
 		if (!def.override)		def.override = false;
 		if (!def.priority)		def.priority = 0;
 		if (!def.config)			def.config = {};
