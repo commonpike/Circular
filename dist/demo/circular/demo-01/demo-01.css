@@ -32,6 +32,16 @@ section {
 	bottom:1em;
 	left:1em;
 	right:1em;
+	padding:1em;
+}
+nav + section {
 	padding:4em 1em;
+}
+#logo {
+	position:absolute;
+	top:2em;
+	right:2em;
+	width:1em;
+	height:1em;
 }
 	
