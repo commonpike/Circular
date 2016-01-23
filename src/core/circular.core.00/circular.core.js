@@ -209,6 +209,7 @@ var Circular = {
 	},
 	
 	die		: function() {
+		if (Circular.log) Circular.log.warn('Circular.die()');
 		this.dead = true;
 	}
 

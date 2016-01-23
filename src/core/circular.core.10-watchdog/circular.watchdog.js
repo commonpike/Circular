@@ -17,7 +17,8 @@ new CircularModule({
 	
 	
 	
-	domobserver : null,
+	domobserver 		:	null,
+	countdobs				: 0,
 	
 	pathobservers		: {
 	
@@ -31,8 +32,9 @@ new CircularModule({
 		//  .. 
 	
 	},
-	
-	caught	: {
+	countpobs				: 0,
+
+	eventsin	: {
 		nodes		: [
 			// Node,Node,..
 		],
@@ -44,8 +46,8 @@ new CircularModule({
 		]
 	},
 	
-	releasing	: {
-		// copy of caught on release()
+	eventsout	: {
+		// copy of eventsin on release()
 	},
 	
 	
@@ -107,6 +109,7 @@ new CircularModule({
 				subtree				: false
 			});
 			props.flags.domobserved=true;
+			this.countdobs++;
 			// no need to do this here
 			// Circular.registry.set(node,props);
 		}
@@ -178,6 +181,7 @@ new CircularModule({
 														Circular.debug.write('@watchdog.watchdata','closing pathobserver',oldpath);
 														this.pathobservers[oldpath].observer.close();
 														delete this.pathobservers[oldpath];
+														this.countpobs--;
 													}
 												}
 											}
@@ -214,6 +218,7 @@ new CircularModule({
 												'observer'	: new PathObserver(object,subpath),
 												'properties': [property]
 											};
+											this.countpobs++;
 											this.pathobservers[path].observer.open(function(newvalue,oldvalue) {
 												Circular.watchdog.ondatachange(path,newvalue,oldvalue)
 											});
@@ -277,15 +282,15 @@ new CircularModule({
 		Circular.debug.write('@watchdog.catch',node,type,flag,target);
 		clearTimeout(this.timer);
 		
-		var nodeidx = this.caught.nodes.indexOf(node);
+		var nodeidx = this.eventsin.nodes.indexOf(node);
 		if (nodeidx==-1) {
-			nodeidx=this.caught.nodes.length;
-			this.caught.nodes.push(node);
+			nodeidx=this.eventsin.nodes.length;
+			this.eventsin.nodes.push(node);
 		}
-		if (!this.caught.records[nodeidx]) {
-			this.caught.records[nodeidx] = [];
+		if (!this.eventsin.records[nodeidx]) {
+			this.eventsin.records[nodeidx] = [];
 		}
-		this.caught.records[nodeidx].push({type:type,flag:flag,target:target});
+		this.eventsin.records[nodeidx].push({type:type,flag:flag,target:target});
 		
 		
 		this.timer = setTimeout(function () {
@@ -311,13 +316,13 @@ new CircularModule({
 			return false;
 		}
 		this.lock = true;
-		$.extend(true,this.releasing,this.caught);
-		this.caught.nodes = [];
-		this.caught.records = [];
+		$.extend(true,this.eventsout,this.eventsin);
+		this.eventsin.nodes = [];
+		this.eventsin.records = [];
 		
-		for (var nc=0;nc<this.releasing.nodes.length;nc++) {
-			var node			= this.releasing.nodes[nc];
-			var records 	= this.releasing.records[nc];
+		for (var nc=0;nc<this.eventsout.nodes.length;nc++) {
+			var node			= this.eventsout.nodes[nc];
+			var records 	= this.eventsout.records[nc];
 			var props 		= Circular.registry.get(node);
 			
 			// {type,flag,target}
@@ -496,7 +501,7 @@ new CircularModule({
 		
 		// make hte array unsparse
 		var todo = [];
-		this.releasing.nodes.forEach(function(node) { 
+		this.eventsout.nodes.forEach(function(node) { 
 			var props = Circular.registry.get(node);
 			if (props.flags.processing) {
 				todo.push(node); 
@@ -505,16 +510,16 @@ new CircularModule({
 		});
 		if (todo.length) {
 			Circular.debug.write('recycling '+todo.length+' nodes');
-			if (Circular.debug.enabled) this.report(this.releasing);		
+			if (Circular.debug.enabled) this.report(this.eventsout);		
 			Circular.engine.recycle(todo,true);
 		}
-		this.releasing = {};
+		this.eventsout = {};
 		this.lock = false;
 		return true;
 	},
 	
 	report	: function(list) {
-		if (!list) list = this.caught;
+		if (!list) list = this.eventsin;
 		Circular.log.write('@watchdog.report======================');
 		list.nodes.forEach(function(node,idx) {
 			Circular.log.write(node.tagName,list.records[idx]);

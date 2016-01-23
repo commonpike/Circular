@@ -6,10 +6,10 @@
 new CircularModule({
 
 	name				: 'queue',
-	requires		: ['debug'],
+	requires		: ['log','debug'],
 	added				: 0,
 	handled			: 0,
-	todo	: [],
+	todo				: [],
 	
 	
 	add		: function(func) {
@@ -29,7 +29,7 @@ new CircularModule({
 				Circular.debug.write("@queue.next","all done.");
 			}
 		} else {
-			Circular.debug.write("@queue.next","dead");
+			Circular.log.warn("@queue.next","Circular died X-|");
 		}
 	}
 		

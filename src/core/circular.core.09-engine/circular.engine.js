@@ -135,7 +135,7 @@ new CircularModule({
 			Circular.log.fatal('@engine.process','no node given');
 		}
 		if (Circular.dead) {
-			Circular.log.fatal('@engine.process','Circular died :-|');
+			Circular.log.fatal('@engine.process','Circular died X-|');
 			return false;
 		}
 		if (node instanceof jQuery) node = $node.get(0);
