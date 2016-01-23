@@ -1,0 +1,213 @@
+<html>
+	<head>
+		<title>Circular.monitor</title>
+		<script src="../../../vendor/node_modules/jquery/dist/jquery.min.js"></script>
+		<script src="../../../vendor/node_modules/esprima/esprima.js"></script>
+		<script src="../../../vendor/node_modules/observe-js/src/observe.js"></script>
+
+		<script src="../../core/circular.core.00/circular.core.js"></script>
+		<script src="../../core/circular.core.01-log/circular.log.js"></script>
+		<script src="../../core/circular.core.02-debug/circular.debug.js"></script>
+		<script src="../../core/circular.core.03-queue/circular.queue.js"></script>
+		<script src="../../core/circular.core.04-context/circular.context.js"></script>
+		<script src="../../core/circular.core.05-root/circular.root.js"></script>
+		<script src="../../core/circular.core.06-content/circular.content.js"></script>
+		<script src="../../core/circular.core.07-parser/circular.parser.js"></script>
+		<script src="../../core/circular.core.08-registry/circular.registry.js"></script>
+		<script src="../../core/circular.core.09-engine/circular.engine.js"></script>
+		<script src="../../core/circular.core.10-watchdog/circular.watchdog.js"></script>
+		
+		<script src="../../base/circular.base.01-hide/circular.hide.js"></script>
+		<script src="../../base/circular.base.02-template/circular.template.js"></script>
+		<script src="../../base/circular.base.03-loop/circular.loop.js"></script>
+		
+		<script src="circular.monitor.js"></script>
+		<style type="text/css">
+			body { font-family:arial, sans-serif; }
+			
+			
+
+			#cc-monitor	{ 
+				position:fixed; top:1em; right:1em; 
+				padding:0; margin:0; list-style-type:none;
+				width:350px; 
+				background-color:black;
+				color:#ddd;
+				z-index:9999;
+				font-family: sans-serif;
+				font-size:12px;
+				line-height:20px;
+			}
+				#cc-monitor li {
+					clear:both;
+					border-top:1px solid #999;
+				}
+					
+					#cc-monitor li span.value {
+						display:block;
+						padding-left:1em;
+						min-width:1em;
+						overflow:hidden;
+						white-space:nowrap;
+						text-overflow:ellipsis;
+					}
+					#cc-monitor li span.label {
+						float:left;
+						width:95px;
+						padding-left:5px;
+					}
+						#cc-monitor li li li span.label {
+							width:90px;
+							padding-left:10px;
+						}
+					
+					#cc-monitor li span.buttons {
+						float:right;
+						width:45px;
+						padding-right:5px;
+						font-size:larger;
+						text-align:right;
+					}
+					
+					#cc-monitor li span.opener {
+						cursor:pointer;
+					}
+							
+							
+					#cc-monitor  ul {
+						background-color:rgba(255,255,255,.2);
+						clear:both;
+						padding:0; margin:0; list-style-type:none;
+						overflow:hidden;
+						max-height:0;
+						transition:max-height 1s;
+					}
+						#cc-monitor  ul.open {
+							max-height:500px;
+							overflow:auto;
+						}
+							
+			
+			
+			
+		</style>
+	</head>
+	<body cc-root>
+		<div cc-content="{{document.title}}">monitored</div> 
+		<div cc-monitor>
+			<ul id="cc-monitor">
+				<li>
+					<span class="label">Circular</span>
+					<span class="buttons">
+						&#9724; 
+						&#10073;&#10073; 
+						&#9658;
+					</span>
+					<span class="value">{{@monitor.counter}}</span>
+					<ul id="cc-monitor-modules" class="open">
+						<li id="cc-monitor-queue">
+							<span class="label">@queue</span>
+							<span class="buttons">
+								&#9724; 
+								&#10073;&#10073; 
+								&#9658;
+							</span>
+							<span class="value">{{@monitor.snapshot.queue.added}}:{{@monitor.snapshot.queue.handled}}:{{@monitor.snapshot.queue.todo.length}}</span>
+							
+							<ul>
+								<li>
+									<span class="label">#added</span>
+									<span class="value">{{@monitor.snapshot.queue.added}}</span>
+								</li>
+								<li>
+									<span class="label">#handled</span>
+									<span class="value">{{@monitor.snapshot.queue.handled}}</span>
+								</li>
+								<li>
+									<span class="label">#todo.length</span>
+									<span class="value">{{@monitor.snapshot.queue.todo.length}}</span>
+								</li>
+							</ul>
+						</li>
+						<li id="cc-monitor-engine">
+							<span class="label">@engine</span>
+							<span class="buttons">&#9760;</span>
+							<span class="value">{{@monitor.snapshot.engine.counter}}</span>
+							<ul>
+								<li>
+									<span class="label">#counter</span>
+									<span class="value">{{@monitor.snapshot.engine.counter}}</span>
+								</li>
+							</ul>
+						</li>
+						<li id="cc-monitor-registry">
+							<span class="label">@registry</span>
+							<span class="buttons">&#8853;</span>
+							<span class="value">{{@monitor.snapshot.registry.counter}}</span>
+							<ul>
+								<li>
+									<span class="label">#counter</span>
+									<span class="value">{{@monitor.snapshot.registry.counter}}</span>
+								</li>
+							</ul>
+						</li>
+						<li id="cc-monitor-watchdog">
+							<span class="label">@watchdog</span>
+							<span class="value">{{@monitor.snapshot.watchdog.countdobs}}:{{@monitor.snapshot.watchdog.countpobs}}:{{@monitor.snapshot.watchdog.eventsin.nodes.length}}</span>
+							<ul>
+								<li>
+									<span class="label">#domobservers</span>
+									<span class="value">{{@monitor.snapshot.watchdog.countdobs}}</span>
+								</li>
+								<li>
+									<span class="label">#pathobservers</span>
+									<span class="value">{{@monitor.snapshot.watchdog.countpobs}}</span>
+									<ul cc-loop="{{@monitor.snapshot.watchdog.pathobservers}}">
+										<li>
+											<span class="value" cc-loop-key cc-content="{{$(this).attr('cc-loop-key')}}"></span>
+										</li>
+									</ul>
+								</li>
+								<li>
+									<span class="label">#events</span>
+									<span class="value">{{@monitor.snapshot.watchdog.eventsin.nodes.length}}</span>
+									<ul cc-loop="{{@monitor.snapshot.watchdog.eventsin.records}}">
+										<li>
+											<span class="label"><!--{{@monitor.snapshot.watchdog.nodes[@loop.index].nodeName.toLowerCase()}}--></span>
+											<span class="value">{{#this.length}}</span>
+										
+											<ul cc-loop="{[#this]}" class="open">
+												<li>
+													<span class="label">x{[#type]}x</span>
+													<span class="value">{[#target]}:{[#flag]}</span>
+												</li>
+											</ul>
+										</li>
+									</ul-->
+								</li>
+							</ul>
+						</li>
+					</ul>
+				</li>
+			</ul>
+		</div>
+		<script>
+			$('#cc-monitor>li').on('click touchstart',function(ev) {
+				$('#cc-monitor-modules').toggleClass('open');				
+			});
+			$('#cc-monitor>li ul li').each(function() {
+				if ($('ul',this).size()) {
+					var par = this;
+					$('>.label',this).on('click touchstart',function(ev) {
+						ev.stopPropagation();
+						$('>ul',par).toggleClass('open');				
+					}).addClass('opener');
+				} 
+				$(this).on('click touchstart',function(ev) {
+					ev.stopPropagation();
+				});
+				
+			});
+		</script>
+	</body>
+</html>
