@@ -657,7 +657,7 @@ new CircularModule({
 				if (matches.length==1 && matches[0]==val) {
 					// this is a full match
 					var parent = node.parentNode;
-					if (!parent.hasattribute('cc-content')) {
+					if (!parent.hasAttribute('cc-content')) {
 						Circular.debug.write('@engine.processTextNode','setting cc-content on the parent');
 						
 						// ugly
@@ -685,7 +685,7 @@ new CircularModule({
 						// parent.removeChild(node);
 						// ah well lets already put the content in.
 						// cc-content will come again in 2 rounds
-						$(parent).html(Circular.parser.result.call(parent,val,props.outercontext));
+						$(parent).html(Circular.parser.result.call(parent,val,ccnode.outercontext));
 					
 					} else {					
 				

@@ -214,7 +214,7 @@ new CircularModule({
 										var property = {
 											'node'		:	node,
 											'type'		: 'attribute',
-											'id'			: attr.name
+											'id'			: ccattr.name
 										};
 										if (!this.pathobservers[path]) {
 											if (object !== window) {
@@ -243,12 +243,12 @@ new CircularModule({
 						},this);
 					
 					} else {
-						Circular.debug.write('@watchdog.watchdata','no paths',attr.name);
+						Circular.debug.write('@watchdog.watchdata','no paths',ccattr.name);
 					}
 
 					ccnode.flags.dataobserved=true;
 				} else {
-					Circular.debug.write('@watchdog.watchdata','no attrdomchanged',attr.name);
+					Circular.debug.write('@watchdog.watchdata','no attrdomchanged',ccattr.name);
 				}
 			},this);
 		} else {
@@ -409,10 +409,10 @@ new CircularModule({
 						if (ccnode.flags.processing) {
 							// see if there were any watchers on 'this'
 							// and notify them of these changes for the next cycle
-							ccnode.attributes.forEach(function(attr) {
-								if (attr.paths.indexOf('this')!=-1 && record.target!=attr.name) {
+							ccnode.attributes.forEach(function(ccattr) {
+								if (ccattr.paths.indexOf('this')!=-1 && record.target!=ccattr.name) {
 									Circular.debug.write('triggering catchall for path "this"',node);
-									Circular.watchdog.catch(node,'event','attrdatachanged',attr.name);
+									Circular.watchdog.catch(node,'event','attrdatachanged',ccattr.name);
 								}
 							});
 						}
