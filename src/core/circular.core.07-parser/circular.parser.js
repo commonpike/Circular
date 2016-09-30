@@ -162,27 +162,7 @@ new CircularModule({
 		
 	},
 	
-	/*val		: function(str,ctx) {
-		var parsed = this.parse(str,ctx);
-		if (parsed) {
-			return this.eval(parsed);
-		} else {
-			return str;
-		}
-	},*/
 	
-	/*expression: function(str,ctx) {
-		var parsed = this.parse(str,ctx);
-		return parsed.expression;
-	},
-	result		: function(str,ctx) {
-		var parsed = this.parse(str,ctx);
-		return parsed.expression;
-	},
-	value			: function(str,ctx) {
-		var parsed = this.parse(str,ctx);
-		return parsed.value;
-	}*/
 	
 	
 	match	: function(x) {
@@ -210,50 +190,21 @@ new CircularModule({
 		return result;
 	},
 	
-	// parse a string including {{moustaches}}, returning an array of 
-	// expression - qualified expression without {{moustaches}} in which
-	// context expressions have been replaced. or false
-	// result	- evaluated expression
-	// value - string value of result
-	// paths - paths to watch in expression
 	
-	/*parse	: function(expr,ctx) {
-		Circular.debug.write('Circular.parser.parse',expr);
-		matches = expr.match(Circular.config.exprregex);
-		if (matches) {
-			//console.log(matches[0],expr);
-			if (matches[0]===expr) {
-				// this is a single full expression "{{#foo}}"
-				parsed = expr.substring(2,expr.length-2);
-				parsed = parsed.replace(/#this/g,ctx);
-				parsed = parsed.replace(/#/g,ctx+'.');
-				parsed = parsed.replace(/@/g,'Circular.');
-				if (expr.substring(0,2)=="{[") {
-					parsed = JSON.stringify(this.eval(parsed));
-				}
-			} else {
-				// console.log(matches);
-				// this is a stringlike thing, "foo {{#bar}}"
-				var parsed = expr.replace(Circular.config.exprregex,function(match,inner) {
-					inner = inner.replace(/#this/g,ctx);
-					inner = inner.replace(/#/g,ctx+'.');
-					inner = inner.replace(/@/g,'Circular.');
-					if (match.substring(0,2)=="{[") {
-						return '"+'+JSON.stringify(this.eval(inner))+'+"';
-					} else {
-						return '"+('+inner+')+"';
-					}
-				});
-				// tell eval that this is a stringthing
-				parsed = '"'+parsed+'"';
-			}
-			Circular.debug.write("Circular.parser.parse",expr,ctx,parsed);
-			return parsed;
-		} else {
-			Circular.debug.write('Circular.parser.parse','no match');
-		}
-		return '';
-	},*/
+	
+	result	: function(expr,ctx) {
+		// parse a single expression
+		parsed = this.parse(expr,ctx);
+		return this.eval(parsed);
+	},
+	
+	parse	: function(expr,ctx) {
+		// parse a single expression
+		parsed = expr.replace(/#this/g,ctx);
+		parsed = parsed.replace(/#/g,ctx+'.');
+		parsed = parsed.replace(/@/g,'Circular.');
+		return parsed;
+	},
 	
 	parseAttribute	: function(ccattr,ctx) {
 		Circular.debug.write('Circular.parser.parseAttribute',ccattr.original);
@@ -265,11 +216,10 @@ new CircularModule({
 			
 			
 				// this is a single full expression "{{#foo}}"
+
 				var orgexpr	= ccattr.expression;
-				ccattr.expression = ccattr.original.substring(2,ccattr.original.length-2);
-				ccattr.expression = ccattr.expression.replace(/#this/g,ctx);
-				ccattr.expression = ccattr.expression.replace(/#/g,ctx+'.');
-				ccattr.expression = ccattr.expression.replace(/@/g,'Circular.');
+				var stripped = ccattr.original.substring(2,ccattr.original.length-2);
+				ccattr.expression = this.parse(stripped,ctx);
 				if (!ccattr.flags.parsed || ccattr.expression!=orgexpr) {
 					// the expression is new or changed. need to get paths
 					if (ccattr.original.substring(0,2)=="{{") {
@@ -287,13 +237,11 @@ new CircularModule({
 				var watches = [];
 				var orgexpr	= ccattr.expression;
 				ccattr.expression = ccattr.original.replace(Circular.config.exprregex,function(match,inner) {
-					inner = inner.replace(/#this/g,ctx);
-					inner = inner.replace(/#/g,ctx+'.');
-					inner = inner.replace(/@/g,'Circular.');
+					parsed = Circular.parser.parse(inner,ctx);
 					if (match.substring(0,2)=="{{") {
-						watches.push(inner);
+						watches.push(parsed);
 					}
-					return '"+('+inner+')+"';
+					return '"+('+parsed+')+"';
 				});
 				// tell eval that this is a stringthing
 				ccattr.expression = '"'+ccattr.expression+'"';

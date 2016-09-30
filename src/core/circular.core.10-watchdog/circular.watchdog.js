@@ -17,7 +17,8 @@ new CircularModule({
 	
 	
 	
-	domobserver : null,
+	domobserver 		:	null,
+	countdobs				: 0,
 	
 	pathobservers		: {
 	
@@ -31,8 +32,9 @@ new CircularModule({
 		//  .. 
 	
 	},
-	
-	caught	: {
+	countpobs				: 0,
+
+	eventsin	: {
 		nodes		: [
 			// Node,Node,..
 		],
@@ -44,8 +46,8 @@ new CircularModule({
 		]
 	},
 	
-	releasing	: {
-		// copy of caught on release()
+	eventsout	: {
+		// copy of eventsin on release()
 	},
 	
 	
@@ -76,6 +78,7 @@ new CircularModule({
 		if (node instanceof jQuery) node = node.get(0);
 		this.watchdom(node,ccnode);
 		this.watchdata(node,ccnode);
+
 		
 		// unset the flags youve set before recycle
 		ccnode.flags['processing'] = false;
@@ -89,8 +92,9 @@ new CircularModule({
 			ccnode.attributes[ac].flags['attrdatachanged'] = false;
 		}
 		ccnode.flags['watched'] = true;
-		// no need to do this here
-		// Circular.registry.set(node,ccnode);
+		// needed if watch is called from outside ..
+		Circular.registry.set(node,ccnode);
+
 	},
 	
 	
@@ -105,7 +109,9 @@ new CircularModule({
 				characterData	: true,
 				subtree				: false
 			});
+
 			ccnode.flags.domobserved=true;
+			this.countdobs++;
 			// no need to do this here
 			// Circular.registry.set(node,ccnode);
 		}
@@ -148,13 +154,15 @@ new CircularModule({
 		
 	},
 	
+
 	watchdata	: function(node,ccnode) {
-		if (ccnode.flags.attrdomchanged) {
+		if (ccnode.flags.attrdomchanged || ccnode.flags.attrsetchanged) {
 			Circular.debug.write('@watchdog.watchdata',node,ccnode);
 			
 			ccnode.attributes.forEach(function(ccattr,idx) {
 				if (ccattr.flags.attrdomchanged) {
 					if (ccattr.paths && ccattr.paths.length) {
+						
 						var ignorepaths = [];
 						if (!ccattr.oldpaths) ccattr.oldpaths = [];
 						
@@ -176,6 +184,7 @@ new CircularModule({
 														Circular.debug.write('@watchdog.watchdata','closing pathobserver',oldpath);
 														this.pathobservers[oldpath].observer.close();
 														delete this.pathobservers[oldpath];
+														this.countpobs--;
 													}
 												}
 											}
@@ -212,6 +221,7 @@ new CircularModule({
 												'observer'	: new PathObserver(object,subpath),
 												'properties': [property]
 											};
+											this.countpobs++;
 											this.pathobservers[path].observer.open(function(newvalue,oldvalue) {
 												Circular.watchdog.ondatachange(path,newvalue,oldvalue)
 											});
@@ -228,10 +238,18 @@ new CircularModule({
 								Circular.debug.write('@watchdog.watchdata','path already watched',path);
 							}
 						},this);
+					
+					} else {
+						Circular.debug.write('@watchdog.watchdata','no paths',attr.name);
 					}
+
 					ccnode.flags.dataobserved=true;
+				} else {
+					Circular.debug.write('@watchdog.watchdata','no attrdomchanged',attr.name);
 				}
 			},this);
+		} else {
+			Circular.debug.write('@watchdog.watchdata','no attrdomchanged in node',node.tagName);
 		}
 	},
 	
@@ -268,15 +286,15 @@ new CircularModule({
 		Circular.debug.write('@watchdog.catch',node,type,flag,target);
 		clearTimeout(this.timer);
 		
-		var nodeidx = this.caught.nodes.indexOf(node);
+		var nodeidx = this.eventsin.nodes.indexOf(node);
 		if (nodeidx==-1) {
-			nodeidx=this.caught.nodes.length;
-			this.caught.nodes.push(node);
+			nodeidx=this.eventsin.nodes.length;
+			this.eventsin.nodes.push(node);
 		}
-		if (!this.caught.records[nodeidx]) {
-			this.caught.records[nodeidx] = [];
+		if (!this.eventsin.records[nodeidx]) {
+			this.eventsin.records[nodeidx] = [];
 		}
-		this.caught.records[nodeidx].push({type:type,flag:flag,target:target});
+		this.eventsin.records[nodeidx].push({type:type,flag:flag,target:target});
 		
 		
 		this.timer = setTimeout(function () {
@@ -302,13 +320,14 @@ new CircularModule({
 			return false;
 		}
 		this.lock = true;
-		$.extend(true,this.releasing,this.caught);
-		this.caught.nodes = [];
-		this.caught.records = [];
+		$.extend(true,this.eventsout,this.eventsin);
+		this.eventsin.nodes = [];
+		this.eventsin.records = [];
 		
-		for (var nc=0;nc<this.releasing.nodes.length;nc++) {
-			var node			= this.releasing.nodes[nc];
-			var records 	= this.releasing.records[nc];
+
+		for (var nc=0;nc<this.eventsout.nodes.length;nc++) {
+			var node			= this.eventsout.nodes[nc];
+			var records 	= this.eventsout.records[nc];
 			var ccnode 		= Circular.registry.get(node);
 			
 			// {type,flag,target}
@@ -487,7 +506,8 @@ new CircularModule({
 		
 		// make hte array unsparse
 		var todo = [];
-		this.releasing.nodes.forEach(function(node) { 
+
+		this.eventsout.nodes.forEach(function(node) { 
 			var ccnode = Circular.registry.get(node);
 			if (ccnode.flags.processing) {
 				todo.push(node); 
@@ -496,20 +516,21 @@ new CircularModule({
 		});
 		if (todo.length) {
 			Circular.debug.write('recycling '+todo.length+' nodes');
-			if (Circular.debug.enabled) this.report(this.releasing);		
+			if (Circular.debug.enabled) this.report(this.eventsout);		
 			Circular.engine.recycle(todo,true);
 		}
-		this.releasing = {};
+		this.eventsout = {};
 		this.lock = false;
 		return true;
 	},
 	
 	report	: function(list) {
-		if (!list) list = this.caught;
-		Circular.log.write('@watchdog.report');
+		if (!list) list = this.eventsin;
+		Circular.log.write('@watchdog.report======================');
 		list.nodes.forEach(function(node,idx) {
 			Circular.log.write(node.tagName,list.records[idx]);
 		},this);
+		Circular.log.write('======================================');
 	}
 
 	

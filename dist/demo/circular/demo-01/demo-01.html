@@ -28,9 +28,10 @@
 	</head>
 	<body cc-root cc-context='Control.currentpage'>
 		<nav cc-loop="{{Model.pages}}">
-			<a class="{{(Control.currentpage==#this)?'current':''}}"
+			<a class="{{(Control.currentpage==#this)?'current':''}}" 
 				onclick="Control.goto('{[@loop.key]}')">
-				{{#title}}</a>
+					{{#title}}
+			</a>
 			<span cc-hide="{[@loop.last]}">|</span>
 		</nav>
 		<section>

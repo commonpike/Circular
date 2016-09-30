@@ -19,6 +19,7 @@ new CircularModule({
 	key			: undefined,
 	first		: false,
 	last		: false,
+	greedy	: true, // eat whitespace when creating template
 	
 	in	: function(ccattr,node,ccnode) {
 
@@ -40,7 +41,7 @@ new CircularModule({
 		if (!$template.size()) {
 			Circular.debug.write('@loop.in','creating template');
 			Circular.watchdog.pass(node,'contentchanged');
-			if ($node.children().size()==1 && $node.contents().size()==1) {
+			if ($node.children().size()==1 && ($node.contents().size()==1 || this.greedy)) {
 				$template = $node.children().addClass('cc-loop-template').attr('cc-template','');
 			} else {
 				Circular.debug.write('@loop.in','adding template wrapper');
@@ -77,7 +78,7 @@ new CircularModule({
 			this.key = keys[kc];
 			this.last = (kc==keys.length-1);
 			var context = '('+ccattr.expression+')["'+keys[kc]+'"]';
-			var itemid = nodeid+'-item-'+keys[kc];
+			var itemid = nodeid+'-item-'+(kc+this.offset);
 			
 			// you cant do this. if there are expressions
 			// anywhere inside the template that are not being
@@ -106,7 +107,7 @@ new CircularModule({
 					.removeattr('cc-template')
 					.addClass('cc-loop-item')
 					.attr('id',itemid);
-				Circular.engine.process($item.get(0),context);
+				Circular.engine.process($item,context);
 				
 			//}
 			this.first = false;
