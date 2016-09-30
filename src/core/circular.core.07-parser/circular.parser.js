@@ -139,9 +139,9 @@ new CircularModule({
 		} else {
 		
 			// unknown garbage. dig deeper.
-			var props = Object.getOwnPropertyNames(tree);
-			for (var pc=0; pc<props.length; pc++) {
-				var key = props[pc];
+			var ccnode = Object.getOwnPropertyNames(tree);
+			for (var pc=0; pc<ccnode.length; pc++) {
+				var key = ccnode[pc];
 				if (typeof tree[key] == 'object') {
 					if (Array.isArray(tree[key])) {
 						for (var kc=0;kc<tree[key].length;kc++) {
@@ -255,27 +255,27 @@ new CircularModule({
 		return '';
 	},*/
 	
-	parseAttribute	: function(attr,ctx) {
-		Circular.debug.write('Circular.parser.parseAttribute',attr.original);
+	parseAttribute	: function(ccattr,ctx) {
+		Circular.debug.write('Circular.parser.parseAttribute',ccattr.original);
 		
-		var matches = attr.original.match(Circular.config.exprregex);
+		var matches = ccattr.original.match(Circular.config.exprregex);
 		if (matches) {
-			//console.log(matches[0],attr.original);
-			if (matches[0]===attr.original) {
+			//console.log(matches[0],ccattr.original);
+			if (matches[0]===ccattr.original) {
 			
 			
 				// this is a single full expression "{{#foo}}"
-				var orgexpr	= attr.expression;
-				attr.expression = attr.original.substring(2,attr.original.length-2);
-				attr.expression = attr.expression.replace(/#this/g,ctx);
-				attr.expression = attr.expression.replace(/#/g,ctx+'.');
-				attr.expression = attr.expression.replace(/@/g,'Circular.');
-				if (!attr.flags.parsed || attr.expression!=orgexpr) {
+				var orgexpr	= ccattr.expression;
+				ccattr.expression = ccattr.original.substring(2,ccattr.original.length-2);
+				ccattr.expression = ccattr.expression.replace(/#this/g,ctx);
+				ccattr.expression = ccattr.expression.replace(/#/g,ctx+'.');
+				ccattr.expression = ccattr.expression.replace(/@/g,'Circular.');
+				if (!ccattr.flags.parsed || ccattr.expression!=orgexpr) {
 					// the expression is new or changed. need to get paths
-					if (attr.original.substring(0,2)=="{{") {
+					if (ccattr.original.substring(0,2)=="{{") {
 						// slice the old saucage for the watchdog
-						if (attr.paths) attr.oldpaths = attr.paths.slice(0);
-						attr.paths 	= this.getPaths(attr.expression);
+						if (ccattr.paths) ccattr.oldpaths = ccattr.paths.slice(0);
+						ccattr.paths 	= this.getPaths(ccattr.expression);
 					}	
 				}
 				
@@ -285,8 +285,8 @@ new CircularModule({
 				// console.log(matches);
 				
 				var watches = [];
-				var orgexpr	= attr.expression;
-				attr.expression = attr.original.replace(Circular.config.exprregex,function(match,inner) {
+				var orgexpr	= ccattr.expression;
+				ccattr.expression = ccattr.original.replace(Circular.config.exprregex,function(match,inner) {
 					inner = inner.replace(/#this/g,ctx);
 					inner = inner.replace(/#/g,ctx+'.');
 					inner = inner.replace(/@/g,'Circular.');
@@ -296,29 +296,29 @@ new CircularModule({
 					return '"+('+inner+')+"';
 				});
 				// tell eval that this is a stringthing
-				attr.expression = '"'+attr.expression+'"';
+				ccattr.expression = '"'+ccattr.expression+'"';
 				
-				if (!attr.flags.parsed || attr.expression!=orgexpr) {
+				if (!ccattr.flags.parsed || ccattr.expression!=orgexpr) {
 					// the expression is new or changed. need to get paths
-					if (attr.paths) attr.oldpaths = attr.paths.slice(0); // copy
-					attr.paths = [];
+					if (ccattr.paths) ccattr.oldpaths = ccattr.paths.slice(0); // copy
+					ccattr.paths = [];
 					for (var wc=0; wc<watches.length;wc++) {
-						attr.paths = attr.paths.concat(this.getPaths(watches[wc]));
+						ccattr.paths = ccattr.paths.concat(this.getPaths(watches[wc]));
 					}
 				}
 			}
 			
-			attr.flags.parsed = true;
-			Circular.debug.write("Circular.parser.parseAttribute",attr.original,ctx,attr.expression);
+			ccattr.flags.parsed = true;
+			Circular.debug.write("Circular.parser.parseAttribute",ccattr.original,ctx,ccattr.expression);
 			return true;
 			
 		} else {
 			Circular.debug.write('Circular.parser.parseAttribute','no match');
-			if (attr.expression) {
+			if (ccattr.expression) {
 				// the expression is new or changed. need to remove paths
-				attr.expression = '';
-				if (attr.paths) attr.oldpaths = attr.paths.slice(0);
-				attr.paths 	= [];
+				ccattr.expression = '';
+				if (ccattr.paths) ccattr.oldpaths = ccattr.paths.slice(0);
+				ccattr.paths 	= [];
 			}
 			
 		}

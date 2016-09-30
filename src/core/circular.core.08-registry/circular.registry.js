@@ -8,7 +8,7 @@ new CircularModule({
 	requires	: ['log','debug'],
 	counter	: 0,
 	
-	newProperties 	: function() {
+	newCCNode 	: function() {
 		return {
 			'flags'	: {
 				'registered'				: false,
@@ -30,11 +30,11 @@ new CircularModule({
 			'outercontext'	: '',
 			'innercontext'	: '',
 			'attributes'		: [],		// todo: reverse naming
-			'name2attr'			: {}		// todo: reverse naming
+			'name2ccattr'			: {}		// todo: reverse naming
 		};
 	} ,
 	
-	newAttribute 	: function(name) {
+	newCCattribute 	: function(name) {
 		return {
 			'name'				: name,
 			'module'			: '',
@@ -59,40 +59,40 @@ new CircularModule({
 	},
 
 	lock	: function(node) {
-		var props = this.get(node,true);
-		props.flags.locked=true;
-		this.set(node,props);
+		var ccnode = this.get(node,true);
+		ccnode.flags.locked=true;
+		this.set(node,ccnode);
 	},
 	
 	unlock	: function(node) {
-		props = $(node).data('cc-properties');
-		props.flags.locked=false;
-		$(node).data('cc-properties',props);
+		ccnode = $(node).data('cc-properties');
+		ccnode.flags.locked=false;
+		$(node).data('cc-properties',ccnode);
 	},
 	
-	set	: function(node,props,watch) {
+	set	: function(node,ccnode,watch) {
 		Circular.debug.write('@registry.set');
-		if (!props.flags.registered) {
-			props.flags.registered = true;
+		if (!ccnode.flags.registered) {
+			ccnode.flags.registered = true;
 			this.counter++;
 		}
-		for (var ac=0;ac<props.attributes.length;ac++) {
-			props.attributes[ac].flags.registered=true;
+		for (var ac=0;ac<ccnode.attributes.length;ac++) {
+			ccnode.attributes[ac].flags.registered=true;
 		}
 		if (watch) {
 			Circular.debug.write('@registry.set','watch',node);
-			Circular.watchdog.watch(node,props);
+			Circular.watchdog.watch(node,ccnode);
 		}
-		$(node).data('cc-properties',props);
+		$(node).data('cc-properties',ccnode);
 	},
 	
 	get	: function(node,force) {
 		// Circular.debug.write('Circular.registry.get');
 		// this should perhaps return a deep copy instead ..
-		var props = $(node).data('cc-properties');
-		if (!props) props = this.newProperties();
-		if (!props.flags.locked || force) {
-			return props;
+		var ccnode = $(node).data('cc-properties');
+		if (!ccnode) ccnode = this.newCCNode();
+		if (!ccnode.flags.locked || force) {
+			return ccnode;
 		} else {
 			Circular.log.error('@registry.get','Node is locked',node);
 		}

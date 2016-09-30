@@ -12,9 +12,9 @@ new CircularModule({
 
 	orgattr			: 'cc-template-origin',
 	
-	in	: function(attr,node,props) {
+	in	: function(ccattr,node,ccnode) {
 		Circular.debug.write('@template.in',node);
-		var tplsel = attr.value;
+		var tplsel = ccattr.value;
 		var $node = $(node);
 		if (tplsel) {
 			// include the template if it isnt already
@@ -24,8 +24,8 @@ new CircularModule({
 					Circular.watchdog.pass(node,'contentchanged');
 					$node.empty().addClass('cc-template-included');
 					$tpl.clone().appendTo($node)
-						.removeAttr('id')
-						.removeAttr('cc-template')
+						.removeattr('id')
+						.removeattr('cc-template')
 						.attr(this.orgattr,tplsel)
 						.removeClass('cc-template')
 						.addClass('cc-template-clone');

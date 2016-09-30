@@ -70,34 +70,34 @@ new CircularModule({
 		this.pathobservers = {};
 	},
 	
-	watch	: function (node,props) {
+	watch	: function (node,ccnode) {
 		Circular.debug.write('@watchdog.watch');
-		if (!props) props = Circular.registry.get(node);
+		if (!ccnode) ccnode = Circular.registry.get(node);
 		if (node instanceof jQuery) node = node.get(0);
-		this.watchdom(node,props);
-		this.watchdata(node,props);
+		this.watchdom(node,ccnode);
+		this.watchdata(node,ccnode);
 		
 		// unset the flags youve set before recycle
-		props.flags['processing'] = false;
-		props.flags['attrsetchanged'] = false;
-		props.flags['contentchanged'] = false;
-		props.flags['contextchanged'] = false;
-		props.flags['attrdomchanged'] = false;
-		props.flags['attrdatachanged'] = false;
-		for (var ac=0; ac<props.attributes.length; ac++) {
-			props.attributes[ac].flags['attrdomchanged'] = false;
-			props.attributes[ac].flags['attrdatachanged'] = false;
+		ccnode.flags['processing'] = false;
+		ccnode.flags['attrsetchanged'] = false;
+		ccnode.flags['contentchanged'] = false;
+		ccnode.flags['contextchanged'] = false;
+		ccnode.flags['attrdomchanged'] = false;
+		ccnode.flags['attrdatachanged'] = false;
+		for (var ac=0; ac<ccnode.attributes.length; ac++) {
+			ccnode.attributes[ac].flags['attrdomchanged'] = false;
+			ccnode.attributes[ac].flags['attrdatachanged'] = false;
 		}
-		props.flags['watched'] = true;
+		ccnode.flags['watched'] = true;
 		// no need to do this here
-		// Circular.registry.set(node,props);
+		// Circular.registry.set(node,ccnode);
 	},
 	
 	
 	
-	watchdom	: function(node,props) {
-		if (!props.flags.domobserved) {
-			Circular.debug.write('@watchdog.watchdom',props);
+	watchdom	: function(node,ccnode) {
+		if (!ccnode.flags.domobserved) {
+			Circular.debug.write('@watchdog.watchdom',ccnode);
 			this.domobserver.observe(node, { 
 				attributes				: true, 
 				attributeOldValue	: true,
@@ -105,9 +105,9 @@ new CircularModule({
 				characterData	: true,
 				subtree				: false
 			});
-			props.flags.domobserved=true;
+			ccnode.flags.domobserved=true;
 			// no need to do this here
-			// Circular.registry.set(node,props);
+			// Circular.registry.set(node,ccnode);
 		}
 	},
 	
@@ -148,21 +148,21 @@ new CircularModule({
 		
 	},
 	
-	watchdata	: function(node,props) {
-		if (props.flags.attrdomchanged) {
-			Circular.debug.write('@watchdog.watchdata',node,props);
+	watchdata	: function(node,ccnode) {
+		if (ccnode.flags.attrdomchanged) {
+			Circular.debug.write('@watchdog.watchdata',node,ccnode);
 			
-			props.attributes.forEach(function(attr,idx) {
-				if (attr.flags.attrdomchanged) {
-					if (attr.paths && attr.paths.length) {
+			ccnode.attributes.forEach(function(ccattr,idx) {
+				if (ccattr.flags.attrdomchanged) {
+					if (ccattr.paths && ccattr.paths.length) {
 						var ignorepaths = [];
-						if (!attr.oldpaths) attr.oldpaths = [];
+						if (!ccattr.oldpaths) ccattr.oldpaths = [];
 						
 						// remove old paths
-						if (attr.oldpaths.length) {
-							attr.oldpaths.forEach(function(oldpath) {
+						if (ccattr.oldpaths.length) {
+							ccattr.oldpaths.forEach(function(oldpath) {
 								if (this.pathobservers[oldpath]) {
-									if (attr.paths.indexOf(oldpath)==-1) {
+									if (ccattr.paths.indexOf(oldpath)==-1) {
 										Circular.debug.write('@watchdog.watchdata','removing  path',oldpath);
 										var object=null,subpath='';
 										var split = oldpath.indexOf('.');
@@ -170,7 +170,7 @@ new CircularModule({
 										if (subpath) {
 											for (var pc=0;pc<this.pathobservers[oldpath].properties.length;pc++) {
 												var property = this.pathobservers[oldpath].properties[pc];
-												if (property && property.node==node && property.type=='attribute' && property.id == attr.name) {
+												if (property && property.node==node && property.type=='attribute' && property.id == ccattr.name) {
 													delete this.pathobservers[oldpath].properties[pc];
 													if (!this.pathobservers[oldpath].properties.length) {
 														Circular.debug.write('@watchdog.watchdata','closing pathobserver',oldpath);
@@ -185,12 +185,12 @@ new CircularModule({
 									}
 								}
 							},this);
-							attr.oldpaths = [];
+							ccattr.oldpaths = [];
 						} 
 						
 						// add new paths
-						attr.paths.forEach(function(path) {
-							if (attr.oldpaths.indexOf(path)==-1) {
+						ccattr.paths.forEach(function(path) {
+							if (ccattr.oldpaths.indexOf(path)==-1) {
 								Circular.debug.write('@watchdog.watchdata','adding path',path);
 								var object=null,subpath='';
 								var split = path.indexOf('.');
@@ -204,7 +204,7 @@ new CircularModule({
 									var property = {
 										'node'		:	node,
 										'type'		: 'attribute',
-										'id'			: attr.name
+										'id'			: ccattr.name
 									};
 									if (!this.pathobservers[path]) {
 										if (object !== window) {
@@ -229,7 +229,7 @@ new CircularModule({
 							}
 						},this);
 					}
-					props.flags.dataobserved=true;
+					ccnode.flags.dataobserved=true;
 				}
 			},this);
 		}
@@ -309,7 +309,7 @@ new CircularModule({
 		for (var nc=0;nc<this.releasing.nodes.length;nc++) {
 			var node			= this.releasing.nodes[nc];
 			var records 	= this.releasing.records[nc];
-			var props 		= Circular.registry.get(node);
+			var ccnode 		= Circular.registry.get(node);
 			
 			// {type,flag,target}
 			for (var rc=0; rc<records.length;rc++) {
@@ -319,64 +319,64 @@ new CircularModule({
 					case 'event' :
 						switch (record.flag) {
 						
-							// attr events
+							// ccattr events
 							case 'attrdomchanged':
 							case 'attrdatachanged':
 								if (record.target) {
-									if (props.name2attr[record.target]) {
+									if (ccnode.name2ccattr[record.target]) {
 									
-										if (props.name2attr[record.target].flags[record.flag+':i']) {
-											Circular.debug.write('@watchdog.release','attr ignoring flag',record.flag);
+										if (ccnode.name2ccattr[record.target].flags[record.flag+':i']) {
+											Circular.debug.write('@watchdog.release','ccattr ignoring flag',record.flag);
 											break;
 										}
-										if (props.name2attr[record.target].flags[record.flag+':p']) {
-											Circular.debug.write('@watchdog.release','attr passing flag',record.flag);
-											props.name2attr[record.target].flags[record.flag+':p']--;
+										if (ccnode.name2ccattr[record.target].flags[record.flag+':p']) {
+											Circular.debug.write('@watchdog.release','ccattr passing flag',record.flag);
+											ccnode.name2ccattr[record.target].flags[record.flag+':p']--;
 											break;
 										}
 										Circular.debug.write('@watchdog.release',record.flag,record.target,node);
-										props.name2attr[record.target].flags[record.flag]=true;
-										props.flags[record.flag]=true;
-										props.flags.processing=true;
+										ccnode.name2ccattr[record.target].flags[record.flag]=true;
+										ccnode.flags[record.flag]=true;
+										ccnode.flags.processing=true;
 									} else {
 										Circular.debug.write('@watchdog.release','unregistered target '+record.target,record);
 									}
 								} else {
-									Circular.log.error('@watchdog.release','attr event target missing ',record);
+									Circular.log.error('@watchdog.release','ccattr event target missing ',record);
 								}
 								break;
 							
 							// node events
 							case 'contentchanged':
 							
-								if (props.flags['contentchanged:i']) {
+								if (ccnode.flags['contentchanged:i']) {
 									Circular.debug.write('@watchdog.release','node ignoring contentchanged');
 									break;
 								}
-								if (props.flags['contentchanged:p']) {
+								if (ccnode.flags['contentchanged:p']) {
 									Circular.debug.write('@watchdog.release','node passing contentchanged');
-									props.flags['contentchanged:p']--;
+									ccnode.flags['contentchanged:p']--;
 									break;
 								}
 								Circular.debug.write('@watchdog.release','contentchanged',record,node);
-								props.flags['contentchanged']=true;
-								props.flags.processing=true;
+								ccnode.flags['contentchanged']=true;
+								ccnode.flags.processing=true;
 								break;
 								
 							case 'attrsetchanged':
 							
-								if (props.flags['attrsetchanged:i']) {
+								if (ccnode.flags['attrsetchanged:i']) {
 									Circular.debug.write('@watchdog.release','node ignoring attrsetchanged');
 									break;
 								}
-								if (props.flags['attrsetchanged:p']) {
+								if (ccnode.flags['attrsetchanged:p']) {
 									Circular.debug.write('@watchdog.release','node passing attrsetchanged');
-									props.flags['attrsetchanged:p']--;
+									ccnode.flags['attrsetchanged:p']--;
 									break;
 								}
 								Circular.debug.write('@watchdog.release','attrsetchanged',record,node);
-								props.flags['attrsetchanged']=true;
-								props.flags.processing=true;
+								ccnode.flags['attrsetchanged']=true;
+								ccnode.flags.processing=true;
 								break;
 								
 							default:
@@ -387,27 +387,27 @@ new CircularModule({
 					case 'pass' :
 						switch (record.flag) {
 						
-							// attr events
+							// ccattr events
 							case 'attrdomchanged':
 							case 'attrdatachanged':
 								if (record.target) {
-									if (props.name2attr[record.target]) {
-										props.name2attr[record.target].flags[record.flag+':p']++;
+									if (ccnode.name2ccattr[record.target]) {
+										ccnode.name2ccattr[record.target].flags[record.flag+':p']++;
 									} else {
 										Circular.debug.write('@watchdog.release','unregistered target '+record.target,record);
 									}
 								} else {
-									Circular.log.error('@watchdog.release','attr event target missing ',record);
+									Circular.log.error('@watchdog.release','ccattr event target missing ',record);
 								}
 								break;
 							
 							// node events
 							case 'contentchanged':
-								props.flags['contentchanged:p']++;
+								ccnode.flags['contentchanged:p']++;
 								break;
 							
 							case 'attrsetchanged':
-								props.flags['attrsetchanged:p']++;
+								ccnode.flags['attrsetchanged:p']++;
 								break;
 								
 								
@@ -419,27 +419,27 @@ new CircularModule({
 					case 'ignore' :
 						switch (record.flag) {
 						
-							// attr events
+							// ccattr events
 							case 'attrdomchanged':
 							case 'attrdatachanged':
 							
 								if (record.target) {
-									if (props.name2attr[record.target]) {
-										props.name2attr[record.target].flags[record.flag+':i']=true;
+									if (ccnode.name2ccattr[record.target]) {
+										ccnode.name2ccattr[record.target].flags[record.flag+':i']=true;
 									} else {
 										Circular.debug.write('@watchdog.release','unregistered target '+record.target,record);
 									}
 								} else {
-									Circular.log.error('@watchdog.release','attr event target missing ',record);
+									Circular.log.error('@watchdog.release','ccattr event target missing ',record);
 								}
 								break;
 
 							case 'contentchanged':
-								props.flags['contentchanged:i']=true;
+								ccnode.flags['contentchanged:i']=true;
 								break;
 								
 							case 'attrsetchanged':
-								props.flags['attrsetchanged:i']=true;
+								ccnode.flags['attrsetchanged:i']=true;
 								break;
 								
 							default:
@@ -450,23 +450,23 @@ new CircularModule({
 					case 'unignore' :
 						switch (record.flag) {
 						
-							// attr events
+							// ccattr events
 							case 'attrdomchanged':
 							case 'attrdatachanged':
 							
 								if (record.target) {
-									if (props.name2attr[record.target]) {
-										props.name2attr[record.target].flags[record.flag+':i']=false;
+									if (ccnode.name2ccattr[record.target]) {
+										ccnode.name2ccattr[record.target].flags[record.flag+':i']=false;
 									} else {
 										Circular.debug.write('@watchdog.release','unregistered target '+record.target,record);
 									}
 								} else {
-									Circular.log.error('@watchdog.release','attr event target missing ',record);
+									Circular.log.error('@watchdog.release','ccattr event target missing ',record);
 								}
 								break;
 
 							case 'contentchanged':
-								props.flags['contentchanged:i']=false;
+								ccnode.flags['contentchanged:i']=false;
 								break;
 								
 							default:
@@ -480,16 +480,16 @@ new CircularModule({
 			}
 			
 			// todo: we're not storing the pass and un/ignore flags ?
-			if (props.flags.processing) {
-				Circular.registry.set(node,props);
+			if (ccnode.flags.processing) {
+				Circular.registry.set(node,ccnode);
 			}
 		};
 		
 		// make hte array unsparse
 		var todo = [];
 		this.releasing.nodes.forEach(function(node) { 
-			var props = Circular.registry.get(node);
-			if (props.flags.processing) {
+			var ccnode = Circular.registry.get(node);
+			if (ccnode.flags.processing) {
 				todo.push(node); 
 				Circular.registry.lock(node);
 			}
