@@ -18,18 +18,18 @@ new CircularModule({
 	in	: function(ccattr,node,ccnode) {
 		
 		ccattr.before = this.get();
-		if (ccattr.expression) {
-			Circular.debug.write('mod.context.in','setting context expr',attr.expression);
-			console.log(attr);
-			if (typeof ccattr.result=='string') {
-				Circular.debug.write('mod.context.in','using value',ccattr.value);
-				this.set(ccattr.value);
+		if (ccattr.props.expression) {
+			Circular.debug.write('mod.context.in','setting context expr',ccattr.props.expression);
+			//console.log(attr);
+			if (typeof ccattr.props.result=='string') {
+				Circular.debug.write('mod.context.in','using value',ccattr.props.value);
+				this.set(ccattr.props.value);
 			} else {
-				this.set(ccattr.expression);
+				this.set(ccattr.props.expression);
 			}
 		} else {
-			Circular.debug.write('mod.context.in','setting context value',ccattr.value);
-			this.set(ccattr.value);
+			Circular.debug.write('mod.context.in','setting context value',ccattr.props.value);
+			this.set(ccattr.props.value);
 
 		}
 	},

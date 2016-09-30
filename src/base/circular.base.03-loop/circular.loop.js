@@ -67,12 +67,12 @@ new CircularModule({
 		// see what we have to loop
 		var keys = [];
 		if (!this.limit) {
-			keys = Object.keys(ccattr.result).slice(this.offset);
+			keys = Object.keys(ccattr.props.result).slice(this.offset);
 		} else {
-			keys = Object.keys(ccattr.result).slice(this.offset,this.offset+this.limit);
+			keys = Object.keys(ccattr.props.result).slice(this.offset,this.offset+this.limit);
 		}
 		
-		Circular.debug.write('@loop.in',ccattr.result,keys,'offset '+this.offset+', limit '+this.limit);
+		Circular.debug.write('@loop.in',ccattr.props.result,keys,'offset '+this.offset+', limit '+this.limit);
 		
 		this.index 	= 1;
 		this.first 	= true;		

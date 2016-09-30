@@ -27,23 +27,17 @@ new CircularModule({
 				'attrdomchanged'		: true,
 				'attrdatachanged'		: true
 			},
-			'outercontext'	: '',
-			'innercontext'	: '',
-			'attributes'		: [],		// todo: reverse naming
-			'name2ccattr'			: {}		// todo: reverse naming
+			'props'	: {
+				'outercontext'	: '',
+				'innercontext'	: ''
+			},
+			'ccattrs'								:	{},		// attrs by name
+			'ccattrlist'						: [],		// attrs by index
 		};
 	} ,
 	
 	newCCattribute 	: function(name) {
 		return {
-			'name'				: name,
-			'module'			: '',
-			'original'		: '',
-			'expression'	: '',
-			'result'			: undefined,
-			'value'				: '',
-			'oldpaths'		: [],
-			'paths'				: [],		
 			'flags'			: {
 				'parsed'						: false,
 				'registered'				: false,
@@ -54,7 +48,18 @@ new CircularModule({
 				'attrdatachanged:p'	: 0,
 				'attrdatachanged:i'	: false,
 				'breaking'					: false
-			}
+			},
+			'props'			: {
+				'name'				: name,
+				'module'			: '',
+				'original'		: '',
+				'expression'	: '',
+				'result'			: undefined,
+				'value'				: ''
+			},
+			'oldpaths'		: [],
+			'paths'				: [],		
+
 		}
 	},
 
@@ -77,8 +82,8 @@ new CircularModule({
 			ccnode.flags.registered = true;
 			this.counter++;
 		}
-		for (var ac=0;ac<ccnode.attributes.length;ac++) {
-			ccnode.attributes[ac].flags.registered=true;
+		for (var ac=0;ac<ccnode.ccattrlist.length;ac++) {
+			ccnode.ccattrlist[ac].flags.registered=true;
 		}
 		if (watch) {
 			Circular.debug.write('@registry.set','watch',node);

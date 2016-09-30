@@ -12,8 +12,8 @@ new CircularModule({
 
 	in	: function(ccattr,node,ccnode) {
 		Circular.debug.write('@hide.in',node);
-		if (Circular.parser.boolish(ccattr.value)) {
-			if (Circular.modules.attr2cname[ccattr.name]=='cc-show') {
+		if (Circular.parser.boolish(ccattr.props.value)) {
+			if (Circular.modules.attr2cname[ccattr.props.name]=='cc-show') {
 				this.show(node);
 				return true;
 			} else {
@@ -21,7 +21,7 @@ new CircularModule({
 				return false;
 			}
 		} else {
-			if (Circular.modules.attr2cname[ccattr.name]=='cc-show') {
+			if (Circular.modules.attr2cname[ccattr.props.name]=='cc-show') {
 				this.hide(node);
 				return false;
 			} else {

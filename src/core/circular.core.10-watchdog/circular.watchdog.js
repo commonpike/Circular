@@ -87,9 +87,9 @@ new CircularModule({
 		ccnode.flags['contextchanged'] = false;
 		ccnode.flags['attrdomchanged'] = false;
 		ccnode.flags['attrdatachanged'] = false;
-		for (var ac=0; ac<ccnode.attributes.length; ac++) {
-			ccnode.attributes[ac].flags['attrdomchanged'] = false;
-			ccnode.attributes[ac].flags['attrdatachanged'] = false;
+		for (var ac=0; ac<ccnode.ccattrlist.length; ac++) {
+			ccnode.ccattrlist[ac].flags['attrdomchanged'] = false;
+			ccnode.ccattrlist[ac].flags['attrdatachanged'] = false;
 		}
 		ccnode.flags['watched'] = true;
 		// needed if watch is called from outside ..
@@ -159,7 +159,7 @@ new CircularModule({
 		if (ccnode.flags.attrdomchanged || ccnode.flags.attrsetchanged) {
 			Circular.debug.write('@watchdog.watchdata',node,ccnode);
 			
-			ccnode.attributes.forEach(function(ccattr,idx) {
+			ccnode.ccattrlist.forEach(function(ccattr,idx) {
 				if (ccattr.flags.attrdomchanged) {
 					if (ccattr.paths && ccattr.paths.length) {
 						
@@ -178,7 +178,7 @@ new CircularModule({
 										if (subpath) {
 											for (var pc=0;pc<this.pathobservers[oldpath].properties.length;pc++) {
 												var property = this.pathobservers[oldpath].properties[pc];
-												if (property && property.node==node && property.type=='attribute' && property.id == ccattr.name) {
+												if (property && property.node==node && property.type=='attribute' && property.id == ccattr.props.name) {
 													delete this.pathobservers[oldpath].properties[pc];
 													if (!this.pathobservers[oldpath].properties.length) {
 														Circular.debug.write('@watchdog.watchdata','closing pathobserver',oldpath);
@@ -214,7 +214,7 @@ new CircularModule({
 										var property = {
 											'node'		:	node,
 											'type'		: 'attribute',
-											'id'			: ccattr.name
+											'id'			: ccattr.props.name
 										};
 										if (!this.pathobservers[path]) {
 											if (object !== window) {
@@ -243,12 +243,12 @@ new CircularModule({
 						},this);
 					
 					} else {
-						Circular.debug.write('@watchdog.watchdata','no paths',ccattr.name);
+						Circular.debug.write('@watchdog.watchdata','no paths',ccattr.props.name);
 					}
 
 					ccnode.flags.dataobserved=true;
 				} else {
-					Circular.debug.write('@watchdog.watchdata','no attrdomchanged',ccattr.name);
+					Circular.debug.write('@watchdog.watchdata','no attrdomchanged',ccattr.props.name);
 				}
 			},this);
 		} else {
@@ -345,19 +345,19 @@ new CircularModule({
 							case 'attrdomchanged':
 							case 'attrdatachanged':
 								if (record.target) {
-									if (ccnode.name2ccattr[record.target]) {
+									if (ccnode.ccattrs[record.target]) {
 									
-										if (ccnode.name2ccattr[record.target].flags[record.flag+':i']) {
+										if (ccnode.ccattrs[record.target].flags[record.flag+':i']) {
 											Circular.debug.write('@watchdog.release','ccattr ignoring flag',record.flag);
 											break;
 										}
-										if (ccnode.name2ccattr[record.target].flags[record.flag+':p']) {
+										if (ccnode.ccattrs[record.target].flags[record.flag+':p']) {
 											Circular.debug.write('@watchdog.release','ccattr passing flag',record.flag);
-											ccnode.name2ccattr[record.target].flags[record.flag+':p']--;
+											ccnode.ccattrs[record.target].flags[record.flag+':p']--;
 											break;
 										}
 										Circular.debug.write('@watchdog.release',record.flag,record.target,node);
-										ccnode.name2ccattr[record.target].flags[record.flag]=true;
+										ccnode.ccattrs[record.target].flags[record.flag]=true;
 										ccnode.flags[record.flag]=true;
 										ccnode.flags.processing=true;
 									} else {
@@ -409,10 +409,10 @@ new CircularModule({
 						if (ccnode.flags.processing) {
 							// see if there were any watchers on 'this'
 							// and notify them of these changes for the next cycle
-							ccnode.attributes.forEach(function(ccattr) {
-								if (ccattr.paths.indexOf('this')!=-1 && record.target!=ccattr.name) {
+							ccnode.ccattrlist.forEach(function(ccattr) {
+								if (ccattr.paths.indexOf('this')!=-1 && record.target!=ccattr.props.name) {
 									Circular.debug.write('triggering catchall for path "this"',node);
-									Circular.watchdog.catch(node,'event','attrdatachanged',ccattr.name);
+									Circular.watchdog.catch(node,'event','attrdatachanged',ccattr.props.name);
 								}
 							});
 						}
@@ -426,8 +426,8 @@ new CircularModule({
 							case 'attrdomchanged':
 							case 'attrdatachanged':
 								if (record.target) {
-									if (ccnode.name2ccattr[record.target]) {
-										ccnode.name2ccattr[record.target].flags[record.flag+':p']++;
+									if (ccnode.ccattrs[record.target]) {
+										ccnode.ccattrs[record.target].flags[record.flag+':p']++;
 									} else {
 										Circular.debug.write('@watchdog.release','unregistered target '+record.target,record);
 									}
@@ -460,8 +460,8 @@ new CircularModule({
 							case 'attrdatachanged':
 							
 								if (record.target) {
-									if (ccnode.name2ccattr[record.target]) {
-										ccnode.name2ccattr[record.target].flags[record.flag+':i']=true;
+									if (ccnode.ccattrs[record.target]) {
+										ccnode.ccattrs[record.target].flags[record.flag+':i']=true;
 									} else {
 										Circular.debug.write('@watchdog.release','unregistered target '+record.target,record);
 									}
@@ -494,8 +494,8 @@ new CircularModule({
 							case 'attrdatachanged':
 							
 								if (record.target) {
-									if (ccnode.name2ccattr[record.target]) {
-										ccnode.name2ccattr[record.target].flags[record.flag+':i']=false;
+									if (ccnode.ccattrs[record.target]) {
+										ccnode.ccattrs[record.target].flags[record.flag+':i']=false;
 									} else {
 										Circular.debug.write('@watchdog.release','unregistered target '+record.target,record);
 									}
