@@ -22,7 +22,7 @@ new CircularModule({
 	last		: false,
 	greedy	: true, // eat whitespace when creating template
 	
-	in	: function(attr,node,props) {
+	in	: function(ccattr,node,ccnode) {
 
 		Circular.debug.write('@loop.in',node);
 		
@@ -67,12 +67,12 @@ new CircularModule({
 		// see what we have to loop
 		var keys = [];
 		if (!this.limit) {
-			keys = Object.keys(attr.result).slice(this.offset);
+			keys = Object.keys(ccattr.result).slice(this.offset);
 		} else {
-			keys = Object.keys(attr.result).slice(this.offset,this.offset+this.limit);
+			keys = Object.keys(ccattr.result).slice(this.offset,this.offset+this.limit);
 		}
 		
-		Circular.debug.write('@loop.in',attr.result,keys,'offset '+this.offset+', limit '+this.limit);
+		Circular.debug.write('@loop.in',ccattr.result,keys,'offset '+this.offset+', limit '+this.limit);
 		
 		this.index 	= 1;
 		this.first 	= true;		
@@ -81,7 +81,7 @@ new CircularModule({
 			Circular.debug.write('@loop.in','index '+this.index,keys[kc]);
 			this.key = keys[kc];
 			this.last = (kc==keys.length-1);
-			
+
 			//var context = '{{#'+keys[kc]+'}}';
 			var context = "{{#this['"+keys[kc]+"']}}";
 			

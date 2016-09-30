@@ -35,7 +35,7 @@ var Circular = {
 		},
 		
 		attr2cname				: {
-			// normalized attr names
+			// normalized ccattr names
 		},
 		
 		add	: function(mod) {
@@ -221,8 +221,8 @@ function CircularModule(def) {
 
 	if (def.name) {
 	
-		if (!def.in)					def.in 	= function(attr,node,props) { return true; }
-		if (!def.out) 				def.out = function(attr,node,props) { return true; }	
+		if (!def.in)					def.in 	= function(ccattr,node,ccnode) { return true; }
+		if (!def.out) 				def.out = function(ccattr,node,ccnode) { return true; }	
 		if (!def.requires)		def.requires = [];
 		if (!def.attributes)	def.attributes = ['cc-'+def.name];
 		if (!def.override)		def.override = false;

@@ -57,11 +57,11 @@
 
 	new CircularModule({
 		name	: 'alert',
-		in		: function(attr,node,props) {
-			alert('in: '+attr.value)
+		in		: function(ccattr,node,ccnode) {
+			alert('in: '+ccattr.value)
 		},
-		out		: function(attr,node,props) {
-			alert('out: '+attr.value)
+		out		: function(ccattr,node,ccnode) {
+			alert('out: '+ccattr.value)
 		}
 	});
 
@@ -74,19 +74,19 @@
 
 *methods:*
 
-	in		: function(attr,node,props)
-	out		: function(attr,node,props)
+	in		: function(ccattr,node,ccnode)
+	out		: function(ccattr,node,ccnode)
 
 *arguments:*
 
-- **attr:** (*type:* object)
+- **ccattr:** (*type:* object)
 	an object describing the attribute that triggered this method. see the
 	registry module for a detailed description of its format
 
 - **node:** (*type:* html dom node)
 	the node containing the attribute
 
-- **props:** (*type:* object)
+- **ccnode:** (*type:* object)
 	'live' properties of the node as they are being processed
 
 *return value:*

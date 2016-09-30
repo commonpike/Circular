@@ -27,7 +27,7 @@
 
 ----
 
-###@alert.in(attr,node,props)
+###@alert.in(ccattr,node,ccnode)
 
 *description:*
 
@@ -35,9 +35,9 @@
 	
 *arguments:*
 	
-- **attr:** information about the current attribute
+- **ccattr:** information about the current attribute
 - **node:** the current html dom node
-- **props:** circular properties of the current node
+- **ccnode:** circular properties of the current node
 			
 *return value:* 
 
@@ -45,16 +45,16 @@
 		
 ----
 
-###@alert.out(attr,node,props)
+###@alert.out(ccattr,node,ccnode)
 
 *description:*
 >processes the attribute on the way out
 	
 *arguments:*
 	
-- **attr:** information about the current attribute
+- **ccattr:** information about the current attribute
 - **node:** the current html dom node
-- **props:** circular properties of the current node
+- **ccnode:** circular properties of the current node
 			
 *return value:* 
 

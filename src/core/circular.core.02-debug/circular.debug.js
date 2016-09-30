@@ -18,16 +18,16 @@ new CircularModule({
 		}
 	},
 	
-	in	: function(attr,node,props) {
+	in	: function(ccattr,node,ccnode) {
 		this.write('mod.debug',node);
-		attr.outer = this.enabled;
-		if (Circular.parser) this.toggle(Circular.parser.boolish(attr.value));
-		else this.toggle(!attr.original || attr.result); // simpleparse
+		ccattr.outer = this.enabled;
+		if (Circular.parser) this.toggle(Circular.parser.boolish(ccattr.value));
+		else this.toggle(!ccattr.original || ccattr.result); // simpleparse
 	},
 	
-	out	: function(attr,node,props) {
-		this.toggle(attr.outer);
-		delete attr.outer;
+	out	: function(ccattr,node,ccnode) {
+		this.toggle(ccattr.outer);
+		delete ccattr.outer;
 	},
 	
 	toggle: function(state) 	{ 

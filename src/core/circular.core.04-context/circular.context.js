@@ -15,28 +15,29 @@ new CircularModule({
 		this.set(Circular.config.rootcontext);
 	},
 	
-	in	: function(attr,node,props) {
+	in	: function(ccattr,node,ccnode) {
 		
-		attr.before = this.get();
-		if (attr.expression) {
+		ccattr.before = this.get();
+		if (ccattr.expression) {
 			Circular.debug.write('mod.context.in','setting context expr',attr.expression);
 			console.log(attr);
-			if (typeof attr.result=='string') {
-				Circular.debug.write('mod.context.in','using value',attr.value);
-				this.set(attr.value);
+			if (typeof ccattr.result=='string') {
+				Circular.debug.write('mod.context.in','using value',ccattr.value);
+				this.set(ccattr.value);
 			} else {
-				this.set(attr.expression);
+				this.set(ccattr.expression);
 			}
 		} else {
-			Circular.debug.write('mod.context.in','setting context value',attr.value);
-			this.set(attr.value);
+			Circular.debug.write('mod.context.in','setting context value',ccattr.value);
+			this.set(ccattr.value);
+
 		}
 	},
 	
-	out	: function(attr,node,props) {
+	out	: function(ccattr,node,ccnode) {
 		Circular.debug.write('mod.context.out','resetting context');
-		this.set(attr.before);
-		delete attr.before;
+		this.set(ccattr.before);
+		delete ccattr.before;
 	},
 	
 	set		: function(context) {
