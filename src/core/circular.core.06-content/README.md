@@ -2,7 +2,7 @@
 
 *description:*
 
-> The content module provides an attribute `cc-content`, that will print its value to the content of the node, overwriting anything that is in it. It is ued by Circular itself to generated `<span>` tags from expressions that float around in plain text. It's also usefull if you want to write expressions for your content but don't want the expressions visible before Circular gets around to parse the node.
+> The content module provides an attribute `cc-content`, that will print its value to the content of the node, overwriting anything that is in it. It is used by Circular itself to generate `<span>` tags from expressions that float around in plain text. It's also usefull if you want to write expressions for your content but don't want the expressions visible before Circular gets around to parse the node.
 
 
 ----

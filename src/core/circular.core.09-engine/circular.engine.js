@@ -138,7 +138,8 @@ new CircularModule({
 			Circular.log.fatal('@engine.process','Circular died X-|');
 			return false;
 		}
-		if (node instanceof jQuery) node = $node.get(0);
+		// cruft
+		// if (node instanceof jQuery) node = $node.get(0);
 		this.counter++;
 		
 		var props = Circular.registry.get(node,true);
@@ -543,7 +544,7 @@ new CircularModule({
 				// or  a string containing matches 
 				
 				if (attr.expression) {
-					var result = Circular.parser.eval(attr.expression);
+					var result = Circular.parser.eval.call(node,attr.expression);
 					
 					if (result!=attr.result) {
 					
@@ -681,7 +682,7 @@ new CircularModule({
 						// parent.removeChild(node);
 						// ah well lets already put the content in.
 						// cc-content will come again in 2 rounds
-						$(parent).html(Circular.parser.result(val,props.outercontext));
+						$(parent).html(Circular.parser.result.call(parent,val,props.outercontext));
 					
 					} else {					
 				

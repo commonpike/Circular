@@ -1,7 +1,6 @@
-<!DOCTYPE html>
 <html>
 	<head>
-		<title>Hello | Goodbye</title>
+		<title>Circular.context</title>
 		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
 		<script>
 		
@@ -36,59 +35,27 @@
 			}
 			
 		</script>
+		<style type="text/css">body { font-family: sans-serif; }</style>
 		<script>
-		
-			var Model = {
-				menu	: [
-						{ 
-							title	: 'Hello',
-							link	: 'hello'
-						},
-						{
-							title	: 'Goodbye',
-							link	: 'goodbye'
-						}
-				], 
-				pages	: {
-					hello 		: {
-						title : 'Hello World',
-						content	: 'Hello happy World'
-					},
-					goodbye 		: {
-						title 	: 'Goodbye World',
-						content	: 'Goodbye gruel world'
+			var Data = {
+				page : {
+					message : 'Welcome aboard',
+					user 		: 'Data.user.current'
+				},
+				user : {
+					current : {
+						name : 'passenger'
 					}
 				}
-				
 			}
-			
-			var Control = {
-				currentpage	: null,
-				goto	: function(page) {
-					this.currentpage=Model.pages[page];
-				}
-			}
-			
-			Control.goto('hello');
-			
-				
 		</script>
 	</head>
-	<body cc-root cc-context="Control.currentpage">
-	
-		<nav>
-				<a href="#" onclick="Control.goto('hello')">Hello</a> |
-				<a href="#" onclick="Control.goto('goodbye')">Goodbye</a>
-		</nav>
-		
-		<h1>{{#title}}</h1>
-		
-		<p>
-		
-			{{#content}}
-			
-		</p>
-		
-		
+	<body cc-root cc-debug>
+		<p cc-context="Data.page">
+			<span>{{#message}}</span>, 
+			<span cc-context="{{#user}}">
+				<span cc-content="{{#name}}"></span>
+			</span>
+		</p> 
 	</body>
 </html>

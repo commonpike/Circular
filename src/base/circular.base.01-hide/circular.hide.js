@@ -8,7 +8,7 @@ new CircularModule({
 	name				: 'hide',
 	attributes	: ['cc-hide','cc-show'],
 	requires		: ['debug','engine'],
-	css					: '.cc-hide { display:none; }',
+	css					: '.cc-hide { display:none!important; }',
 
 	in	: function(attr,node,props) {
 		Circular.debug.write('@hide.in',node);

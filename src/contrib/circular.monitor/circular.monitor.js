@@ -8,39 +8,65 @@ new CircularModule({
 	name			: 'monitor',
 	counter		: 0,
 	timer			: null,
-	interval	: 3000,
-	gougeon		: false,
+	interval	: 2500,
+	biason		: true,
+	paused		: false,
 	
-	data			: {
-		'queue' 		: Circular.queue,
-		'engine' 		: Circular.engine,
-		'registry' 	: Circular.registry,
-		'watchdog' 	: Circular.watchdog
+	config			: {
+		monitor : { 
+			observe	: {
+				queue 		: [
+					'added',
+					'handled',
+					'todo'
+				],
+				engine 		: [
+					'counter'
+				],
+				registry 	: [
+					'counter'
+				],
+				watchdog 	: [
+					'pathobservers',
+					'countdobs',
+					'countpobs',
+					'eventsin'
+				]
+			},
+			biasone		: {
+				queue	: {
+					added		: 12,
+					handled	: 12
+				},
+				engine	: {
+					counter	: 228
+				},
+				registry	: {
+					counter 	: 21
+				},
+				watchdog	: {
+					countdobs	: 21,
+					countpobs	: 0
+				}
+			},
+			
+			biaseach		: {
+				queue	: {
+					added		: 2,
+					handled	: 2
+				},
+				engine	: {
+					counter	: 10 // confusing
+				}
+			}
+		}
 	},
+	
+	data 			: { },
+	
 	snapshot	: { },
 	
-	gaugeone		: {
-		engine	: {
-			counter	: 180
-		},
-		registry	: {
-			counter 	: 16
-		},
-		watchdog	: {
-			countdobs	: 15,
-			countpobs	: 9
-		}
-	},
 	
-	gaugerun		: {
-		queue	: {
-			added		: 2,
-			handled	: 2
-		},
-		engine	: {
-			counter	: 9 // confusing
-		}
-	},
 	
 	in	: function(attr,node,props) {
 		//alert('in: '+attr.result||attr.value)
@@ -55,47 +81,74 @@ new CircularModule({
 	},
 
 	step	: function() {
+		if (Circular.dead) this.stop();
+		
+		this.harvest();
 		
 		this.snapshot = JSON.parse(JSON.stringify(this.data,function(key, value) {
   		if (value instanceof PathObserver) return undefined;
   		return value;
 		}));
 		
-		if (this.counter && this.gaugeon) {
-			this.gauge(this.gaugeone,this.snapshot,true);
-			this.gauge(this.gaugerun,this.snapshot,false);
+		// clean up 
+		this.snapshot.watchdog.paths = [];
+		for (path in this.snapshot.watchdog.pathobservers) {
+			if (path.indexOf('Circular.monitor')!=0) {
+				this.snapshot.watchdog.paths.push(path);
+			}
+		}
+		if (this.counter && this.biason) {
+			this.bias(this.config.monitor.biasone,this.snapshot,true);
+			this.bias(this.config.monitor.biaseach,this.snapshot,false);
 		}
 		
 		this.counter++;
 
 	},
 	
-	gauge	: function(gauge,snap,once) {
-		for (key in gauge) {
-			if (typeof gauge[key] == 'object') {
+	harvest	: function(keys,src,dst) {
+		//Circular.log.write('@monitor.harvest ',keys,src,dst);
+		if (!keys) keys = this.config.monitor.observe;
+		if (!src) src		= Circular;
+		if (!dst) dst 	= this.data;
+		for (key in keys) {
+			if (typeof keys[key] == 'string') {
+				dst[keys[key]]=src[keys[key]];
+			} else {
+				dst[key] = {};
+				Circular.monitor.harvest(keys[key],src[key],dst[key]);
+			}
+		}
+	},
+	
+	bias	: function(bias,snap,once) {
+		for (key in bias) {
+			if (typeof bias[key] == 'object') {
 				if (!snap[key]) {
-					Circular.log.error('@monitor.gauge','no snapshot entry for '+ key);
+					Circular.log.error('@monitor.bias','no snapshot entry for '+ key);
 				} else {
-					this.gauge(gauge[key],snap[key],once);
+					this.bias(bias[key],snap[key],once);
 				}
 			} else {
 				if (!snap[key]) {
-					Circular.log.error('@monitor.gauge','no snapshot entry for '+ key);
+					Circular.log.error('@monitor.bias','no snapshot entry for '+ key);
 				} else {
-					if (once) snap[key] -= gauge[key];
-					else snap[key] -= gauge[key]*this.counter;
+					if (once) snap[key] -= bias[key];
+					else snap[key] -= bias[key]*this.counter;
 				}
 			}
 		}
 	},
 	
 	start	: function() {
+		this.paused = false;
 		clearInterval(this.timer);
 		this.timer = setInterval(function() { 
 			Circular.monitor.step();
 		},this.interval);
 	},
 	stop	: function() {
+		this.paused = true;
 		clearInterval(this.timer);
 	}
 		

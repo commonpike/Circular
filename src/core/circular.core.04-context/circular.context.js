@@ -16,12 +16,19 @@ new CircularModule({
 	},
 	
 	in	: function(attr,node,props) {
-		Circular.debug.write('mod.context.in','setting context',attr.value);
+		
 		attr.before = this.get();
 		if (attr.expression) {
-			this.set(attr.expression);
+			Circular.debug.write('mod.context.in','setting context expr',attr.expression);
+			console.log(attr);
+			if (typeof attr.result=='string') {
+				Circular.debug.write('mod.context.in','using value',attr.value);
+				this.set(attr.value);
+			} else {
+				this.set(attr.expression);
+			}
 		} else {
-			Circular.debug.write('mod.context.in','No expression, using value');
+			Circular.debug.write('mod.context.in','setting context value',attr.value);
 			this.set(attr.value);
 		}
 	},

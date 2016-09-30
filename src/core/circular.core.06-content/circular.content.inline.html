@@ -1,7 +1,5 @@
-<!DOCTYPE html>
 <html>
 	<head>
-		<title>Hello | Goodbye</title>
 		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
 		<script>
 		
@@ -39,56 +37,16 @@
 		<script>
 		
 			var Model = {
-				menu	: [
-						{ 
-							title	: 'Hello',
-							link	: 'hello'
-						},
-						{
-							title	: 'Goodbye',
-							link	: 'goodbye'
-						}
-				], 
-				pages	: {
-					hello 		: {
-						title : 'Hello World',
-						content	: 'Hello happy World'
-					},
-					goodbye 		: {
-						title 	: 'Goodbye World',
-						content	: 'Goodbye gruel world'
-					}
-				}
-				
-			}
-			
-			var Control = {
-				currentpage	: null,
-				goto	: function(page) {
-					this.currentpage=Model.pages[page];
+				currentpage	:  {
+					title : 'Hello World'
 				}
 			}
 			
-			Control.goto('hello');
+			Circular.init();
 			
-				
 		</script>
 	</head>
-	<body cc-root cc-context="Control.currentpage">
-	
-		<nav>
-				<a href="#" onclick="Control.goto('hello')">Hello</a> |
-				<a href="#" onclick="Control.goto('goodbye')">Goodbye</a>
-		</nav>
-		
+	<body cc-context="{{Model.currentpage}}">
 		<h1>{{#title}}</h1>
-		
-		<p>
-		
-			{{#content}}
-			
-		</p>
-		
-		
 	</body>
 </html>

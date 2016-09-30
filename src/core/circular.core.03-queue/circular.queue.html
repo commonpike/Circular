@@ -1,8 +1,6 @@
-<!DOCTYPE html>
 <html>
 	<head>
-		<title>Hello | Goodbye</title>
-		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+		<title>Circular.queue</title>
 		<script>
 		
 			
@@ -37,58 +35,33 @@
 			
 		</script>
 		<script>
-		
-			var Model = {
-				menu	: [
-						{ 
-							title	: 'Hello',
-							link	: 'hello'
-						},
-						{
-							title	: 'Goodbye',
-							link	: 'goodbye'
-						}
-				], 
-				pages	: {
-					hello 		: {
-						title : 'Hello World',
-						content	: 'Hello happy World'
-					},
-					goodbye 		: {
-						title 	: 'Goodbye World',
-						content	: 'Goodbye gruel world'
-					}
-				}
-				
+			
+			function add1() {
+				Circular.debug.on();
+				Circular.queue.add(function() { alert(1); });
+			}
+			function add2() {
+				Circular.debug.on();
+				Circular.queue.add(function() { alert(1); });
+				Circular.queue.add(function() { alert(2); });
+			}
+			function add3() {
+				Circular.debug.on();
+				Circular.queue.add(function() { alert(1); });
+				Circular.queue.add(function() { alert(2); });
+				Circular.queue.add(function() { alert(3); });
 			}
 			
-			var Control = {
-				currentpage	: null,
-				goto	: function(page) {
-					this.currentpage=Model.pages[page];
-				}
-			}
 			
-			Control.goto('hello');
-			
-				
 		</script>
+		<style type="text/css">
+			body { font-family: sans-serif; }
+		</style>
 	</head>
-	<body cc-root cc-context="Control.currentpage">
-	
-		<nav>
-				<a href="#" onclick="Control.goto('hello')">Hello</a> |
-				<a href="#" onclick="Control.goto('goodbye')">Goodbye</a>
-		</nav>
-		
-		<h1>{{#title}}</h1>
-		
-		<p>
-		
-			{{#content}}
-			
-		</p>
-		
-		
+	<body>
+		<b>Open your console and click one of the buttons below:</b><br>
+		<button onclick="add1()">Add one</button>
+		<button onclick="add2()">Add two</button>
+		<button onclick="add3()">Add three</button>
 	</body>
 </html>

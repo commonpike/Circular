@@ -58,40 +58,42 @@
 		
 		<div cc-loop="{{Model.winners}}" cc-loop-limit="{{Control.limit}}" cc-loop-offset="{{Control.offset}}">
 
-			<h1 cc-show="{[@loop.first]}">First</h1>
-			<h2 cc-show="{[@loop.index==1]}">Second</h2>
-			<h3 cc-show="{[@loop.index==2]}">Third</h3>
-			<h4 cc-show="{[@loop.index==3]}">Fourth</h4>
-			<h5 cc-show="{[@loop.index==4]}">Fifth</h5>
-			<h6 cc-show="{[@loop.index==5]}">Sixth</h6>
+			<h1 cc-loop-first cc-loop-show="first">First</h1>
+			<h2 cc-loop-show="2">Second</h2>
+			<h3 cc-loop-show="3">Third</h3>
+			<h4 cc-loop-show="4">Fourth</h4>
+			<h5 cc-loop-key cc-loop-show="5">Fifth</h5>
+			<h6 cc-loop-show="6">Sixth</h6>
 				
 			<span class="winner" id="oneliner">
 				
 				<i cc-show="{{true}}">{{#name}}</i> (<b>{{#date}}</b>)<br>
 			</span>
-			<hr cc-hide="{[@loop.last]}">
+			<hr cc-loop-hide="last">
 			
 		</div>
 		
 		<hr>
 		
-		<div  cc-loop='{[{"a":1,"b":"2",c:3}]}'><span>
-			{[@loop.key]}:{{#this}} 
-			<b cc-hide="{[@loop.last]}">|</b>
-		</span></div>
+		<div  cc-loop='{[{"a":1,"b":"2",c:3}]}'>
+			<span cc-loop-key>
+				{{$this.parent().attr('cc-loop-key')}}:{{#this}} 
+				<b cc-loop-last cc-loop-hide="last">|</b>
+			</span>
+		</div>
 		
 		<hr>
 		
 		<div  cc-loop="{[[4,5,'6']]}"><span>
 			{{#this}} 
-			<b cc-hide="{[@loop.last]}">|</b>
+			<b cc-loop-last cc-loop-hide="last">|</b>
 		</span></div>
 		
 		<hr>
 	
 		<div>
-			{[Control.start.getTime()]}<br>
-			{[(new Date()).getTime()]}
+			start {[Control.start.getTime()]}<br>
+			finish {[(new Date()).getTime()]}
 		</div>	
 		
 	</body>

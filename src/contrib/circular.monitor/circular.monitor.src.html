@@ -38,6 +38,9 @@
 				font-size:12px;
 				line-height:20px;
 			}
+			#cc-monitor [onclick] {
+				cursor:pointer;
+			}
 				#cc-monitor li {
 					clear:both;
 					border-top:1px solid #999;
@@ -63,7 +66,7 @@
 					
 					#cc-monitor li span.buttons {
 						float:right;
-						width:45px;
+						width:60px;
 						padding-right:5px;
 						font-size:larger;
 						text-align:right;
@@ -87,9 +90,141 @@
 							overflow:auto;
 						}
 							
-			
-			
-			
+			#cc-monitor i.icon {
+				display: inline-block;
+				position:relative;
+    		width: 16px;
+    		height: 16px;
+    		line-height: 16px;
+		    top: 2px;
+    	}
+				#cc-monitor i.icon:before, i.icon:after {
+					content: "";
+					position: absolute;
+					top: 50%;
+					left: 0;
+					margin: -8px 0 0;
+					background: #000;
+				}
+					#cc-monitor .icon.play:before {
+							width:16px;
+							height:16px;
+							/* css3 */
+							-webkit-border-radius:16px;
+							-moz-border-radius:16px;
+							border-radius:16px;
+					}
+					#cc-monitor .icon.play:after {
+							left:7px;
+							border:4px solid transparent;
+							border-left-color:#fff;
+							margin-top:-4px;
+							background:transparent;
+					}
+					#cc-monitor .icon.pause:before {
+						width:16px;
+						height:16px;
+						/* css3 */
+						-webkit-border-radius:16px;
+						-moz-border-radius:16px;
+						border-radius:16px;
+					}
+					
+					#cc-monitor .icon.pause:after {
+							left:5px;
+							width:2px;
+							height:8px;
+							border:2px solid #fff;
+							border-width:0 2px;
+							margin-top:-4px;
+							background:transparent;
+					}
+					#cc-monitor .icon.stop:before {
+							width:16px;
+							height:16px;
+							/* css3 */
+							-webkit-border-radius:16px;
+							-moz-border-radius:16px;
+							border-radius:16px;
+					}
+					
+					#cc-monitor .icon.stop:after {
+							left:5px;
+							width:6px;
+							height:6px;
+							margin-top:-3px;
+							background:#fff;
+					}
+					#cc-monitor .icon.kill:before {
+							left:3px;
+							width:10px;
+							height:10px;
+							border:3px solid #C00000;
+							margin-top:-8px;
+							background:transparent;
+							/* css3 */
+							-webkit-border-radius:16px;
+							-moz-border-radius:16px;
+							border-radius:16px;
+					}
+					
+					#cc-monitor .icon.kill:after {
+							left:6px;
+							width:11px;
+							height:3px;
+							margin-top:-2px;
+							background:#C00000;
+							/* css3 */
+							-webkit-transform:rotate(-45deg);
+							-moz-transform:rotate(-45deg);
+							-ms-transform:rotate(-45deg);
+							-o-transform:rotate(-45deg);
+							transform:rotate(-45deg);
+					}
+					#cc-monitor .icon.search:before {
+							width:6px;
+							height:6px;
+							border:3px solid #fff;
+							background:transparent;
+							/* css3 */
+							-webkit-border-radius:12px;
+							-moz-border-radius:12px;
+							border-radius:12px;
+					}
+					
+					#cc-monitor .icon.search:after {
+							left:10px;
+							width:3px;
+							height:7px;
+							margin-top:0;
+							/* css3 */
+							-webkit-transform:rotate(-45deg);
+							-moz-transform:rotate(-45deg);
+							-ms-transform:rotate(-45deg);
+							-o-transform:rotate(-45deg);
+							transform:rotate(-45deg);
+							background-color:#fff;
+					}
+					#cc-monitor .icon.step {
+						border-radius:16px;
+						background-color:black;
+					}
+					#cc-monitor .icon.step:before {
+							left:10px;
+							width:1px;
+							height:8px;
+							margin-top:-4px;
+							background-color:#fff;
+					}
+					
+					#cc-monitor .icon.step:after {
+							left:5px;
+							border:4px solid transparent;
+							border-left-color:#fff;
+							margin-top:-4px;
+							background:transparent;
+					}
+
 		</style>
 	</head>
 	<body cc-root>
@@ -99,18 +234,26 @@
 				<li>
 					<span class="label">Circular</span>
 					<span class="buttons">
-						&#9724; 
-						&#10073;&#10073; 
-						&#9658;
+						<i class="icon kill" onclick="Circular.die(); $('#cc-monitor-dead').text('dead')"></i>
 					</span>
-					<span class="value">{{@monitor.counter}}</span>
+					<span id="cc-monitor-dead" class="value" cc-content="{{!@dead?'alive':'dead'}}"></span>
 					<ul id="cc-monitor-modules" class="open">
+						<li>
+							<span class="label">@monitor</span>
+							<span class="buttons">
+								
+								<i cc-hide="{{@monitor.paused}}" class="icon pause" onclick="Circular.monitor.stop()"></i>
+								<i cc-show="{{@monitor.paused}}" class="icon step" onclick="Circular.monitor.step()"></i>
+								<i cc-show="{{@monitor.paused}}" class="icon play" onclick="Circular.monitor.start()"></i>
+							</span>
+							<span class="value">{{@monitor.counter}}</span>
+						</li>	
 						<li id="cc-monitor-queue">
 							<span class="label">@queue</span>
 							<span class="buttons">
-								&#9724; 
-								&#10073;&#10073; 
-								&#9658;
+								<i cc-hide="{{@queue.paused}}" class="icon pause" onclick="Circular.queue.pause(true)"></i>
+								<i cc-show="{{@queue.paused}}" class="icon step" onclick="Circular.queue.next()"></i>
+								<i cc-show="{{@queue.paused}}" class="icon play" onclick="Circular.queue.pause(false)"></i>
 							</span>
 							<span class="value">{{@monitor.snapshot.queue.added}}:{{@monitor.snapshot.queue.handled}}:{{@monitor.snapshot.queue.todo.length}}</span>
 							
@@ -131,7 +274,6 @@
 						</li>
 						<li id="cc-monitor-engine">
 							<span class="label">@engine</span>
-							<span class="buttons">&#9760;</span>
 							<span class="value">{{@monitor.snapshot.engine.counter}}</span>
 							<ul>
 								<li>
@@ -142,7 +284,9 @@
 						</li>
 						<li id="cc-monitor-registry">
 							<span class="label">@registry</span>
-							<span class="buttons">&#8853;</span>
+							<span class="buttons">
+								<i class="icon search"></i>
+							</span>
 							<span class="value">{{@monitor.snapshot.registry.counter}}</span>
 							<ul>
 								<li>
@@ -153,7 +297,7 @@
 						</li>
 						<li id="cc-monitor-watchdog">
 							<span class="label">@watchdog</span>
-							<span class="value">{{@monitor.snapshot.watchdog.countdobs}}:{{@monitor.snapshot.watchdog.countpobs}}:{{@monitor.snapshot.watchdog.eventsin.nodes.length}}</span>
+							<span class="value">{{@monitor.snapshot.watchdog.countdobs}}:{{@monitor.snapshot.watchdog.paths.length}}:{{@monitor.snapshot.watchdog.eventsin.records.length}}</span>
 							<ul>
 								<li>
 									<span class="label">#domobservers</span>
@@ -161,19 +305,19 @@
 								</li>
 								<li>
 									<span class="label">#pathobservers</span>
-									<span class="value">{{@monitor.snapshot.watchdog.countpobs}}</span>
-									<ul cc-loop="{{@monitor.snapshot.watchdog.pathobservers}}">
+									<span class="value">{{@monitor.snapshot.watchdog.paths.length}}</span>
+									<ul cc-loop="{{@monitor.snapshot.watchdog.paths}}">
 										<li>
-											<span class="value" cc-loop-key cc-content="{{$(this).attr('cc-loop-key')}}"></span>
+											<span class="value" cc-content="{{#this}} x"></span>
 										</li>
 									</ul>
 								</li>
 								<li>
 									<span class="label">#events</span>
-									<span class="value">{{@monitor.snapshot.watchdog.eventsin.nodes.length}}</span>
-									<ul cc-loop="{{@monitor.snapshot.watchdog.eventsin.records}}">
+									<span class="value">{{@monitor.snapshot.watchdog.eventsin.records.length}}</span>
+									<!--ul cc-loop="{{@monitor.snapshot.watchdog.eventsin.records}}">
 										<li>
-											<span class="label"><!--{{@monitor.snapshot.watchdog.nodes[@loop.index].nodeName.toLowerCase()}}--></span>
+											<span class="label">{{@monitor.snapshot.watchdog.nodes[@loop.index].nodeName.toLowerCase()}}</span>
 											<span class="value">{{#this.length}}</span>
 										
 											<ul cc-loop="{[#this]}" class="open">
@@ -187,6 +331,7 @@
 								</li>
 							</ul>
 						</li>
+
 					</ul>
 				</li>
 			</ul>
@@ -206,7 +351,9 @@
 				$(this).on('click touchstart',function(ev) {
 					ev.stopPropagation();
 				});
-				
+				$('>.buttons',this).on('click touchstart',function(ev) {
+					ev.stopPropagation();
+				});
 			});
 		</script>
 	</body>

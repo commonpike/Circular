@@ -100,7 +100,7 @@ new CircularModule({
 	
 	watchdom	: function(node,props) {
 		if (!props.flags.domobserved) {
-			Circular.debug.write('@watchdog.watchdom',props);
+			Circular.debug.write('@watchdog.watchdom',node,props);
 			this.domobserver.observe(node, { 
 				attributes				: true, 
 				attributeOldValue	: true,
@@ -198,39 +198,41 @@ new CircularModule({
 						attr.paths.forEach(function(path) {
 							if (attr.oldpaths.indexOf(path)==-1) {
 								Circular.debug.write('@watchdog.watchdata','adding path',path);
-								var object=null,subpath='';
-								var split = path.indexOf('.');
-								if (split==-1) {
-									Circular.log.warn('@watchdog.watchdata','observe cannot be called on the global proxy object',path);
-								} else {
-									object 	= Circular.parser.eval(path.substring(0,split));
-									subpath = path.substring(split+1)
-								}
-								if (object && subpath) {
-									var property = {
-										'node'		:	node,
-										'type'		: 'attribute',
-										'id'			: attr.name
-									};
-									if (!this.pathobservers[path]) {
-										if (object !== window) {
-											this.pathobservers[path] = {
-												'observer'	: new PathObserver(object,subpath),
-												'properties': [property]
-											};
-											this.countpobs++;
-											this.pathobservers[path].observer.open(function(newvalue,oldvalue) {
-												Circular.watchdog.ondatachange(path,newvalue,oldvalue)
-											});
+								if (path!='this') {
+									var object=null,subpath='';
+									var split = path.indexOf('.');
+									if (split==-1) {
+										Circular.log.warn('@watchdog.watchdata','observe cannot be called on the global proxy object',path);
+									} else {
+										object 	= Circular.parser.eval(path.substring(0,split));
+										subpath = path.substring(split+1)
+									}
+									if (object && subpath) {
+										var property = {
+											'node'		:	node,
+											'type'		: 'attribute',
+											'id'			: attr.name
+										};
+										if (!this.pathobservers[path]) {
+											if (object !== window) {
+												this.pathobservers[path] = {
+													'observer'	: new PathObserver(object,subpath),
+													'properties': [property]
+												};
+												this.countpobs++;
+												this.pathobservers[path].observer.open(function(newvalue,oldvalue) {
+													Circular.watchdog.ondatachange(path,newvalue,oldvalue)
+												});
+											} else {
+												Circular.log.warn('@watchdog.watchdata','observe cannot be called on the global proxy object',path);
+											}
 										} else {
-											Circular.log.warn('@watchdog.watchdata','observe cannot be called on the global proxy object',path);
+											this.pathobservers[path].properties.push(property);
 										}
 									} else {
-										this.pathobservers[path].properties.push(property);
+										Circular.log.error('@watchdog.watchdata','cant split path ',path);
 									}
-								} else {
-									Circular.log.error('@watchdog.watchdata','cant split path ',path);
-								}
+								} // this
 							} else {
 								Circular.debug.write('@watchdog.watchdata','path already watched',path);
 							}
@@ -360,23 +362,8 @@ new CircularModule({
 								}
 								break;
 							
-							// node events
-							case 'contentchanged':
 							
-								if (props.flags['contentchanged:i']) {
-									Circular.debug.write('@watchdog.release','node ignoring contentchanged');
-									break;
-								}
-								if (props.flags['contentchanged:p']) {
-									Circular.debug.write('@watchdog.release','node passing contentchanged');
-									props.flags['contentchanged:p']--;
-									break;
-								}
-								Circular.debug.write('@watchdog.release','contentchanged',record,node);
-								props.flags['contentchanged']=true;
-								props.flags.processing=true;
-								break;
-								
+							// node events								
 							case 'attrsetchanged':
 							
 								if (props.flags['attrsetchanged:i']) {
@@ -393,9 +380,37 @@ new CircularModule({
 								props.flags.processing=true;
 								break;
 								
+							case 'contentchanged':
+							
+								if (props.flags['contentchanged:i']) {
+									Circular.debug.write('@watchdog.release','node ignoring contentchanged');
+									break;
+								}
+								if (props.flags['contentchanged:p']) {
+									Circular.debug.write('@watchdog.release','node passing contentchanged');
+									props.flags['contentchanged:p']--;
+									break;
+								}
+								Circular.debug.write('@watchdog.release','contentchanged',record,node);
+								props.flags['contentchanged']=true;
+								props.flags.processing=true;
+								break;
+								
 							default:
 								Circular.log.error('@watchdog.release','unknown flag '+record.flag,record);
 						}
+						
+						if (props.flags.processing) {
+							// see if there were any watchers on 'this'
+							// and notify them of these changes for the next cycle
+							props.attributes.forEach(function(attr) {
+								if (attr.paths.indexOf('this')!=-1 && record.target!=attr.name) {
+									Circular.debug.write('triggering catchall for path "this"',node);
+									Circular.watchdog.catch(node,'event','attrdatachanged',attr.name);
+								}
+							});
+						}
+						
 						break;
 						
 					case 'pass' :
@@ -416,13 +431,15 @@ new CircularModule({
 								break;
 							
 							// node events
+							case 'attrsetchanged':
+								props.flags['attrsetchanged:p']++;
+								break;
+								
 							case 'contentchanged':
 								props.flags['contentchanged:p']++;
 								break;
 							
-							case 'attrsetchanged':
-								props.flags['attrsetchanged:p']++;
-								break;
+						
 								
 								
 							default:
@@ -448,13 +465,16 @@ new CircularModule({
 								}
 								break;
 
+							// node events
+							case 'attrsetchanged':
+								props.flags['attrsetchanged:i']=true;
+								break;
+								
 							case 'contentchanged':
 								props.flags['contentchanged:i']=true;
 								break;
 								
-							case 'attrsetchanged':
-								props.flags['attrsetchanged:i']=true;
-								break;
+						
 								
 							default:
 								Circular.log.error('@watchdog.release','unknown flag '+record.flag,record);
@@ -479,6 +499,11 @@ new CircularModule({
 								}
 								break;
 
+							// node events
+							case 'attrsetchanged':
+								props.flags['attrsetchanged:i']=false;
+								break;
+								
 							case 'contentchanged':
 								props.flags['contentchanged:i']=false;
 								break;
@@ -512,6 +537,7 @@ new CircularModule({
 			Circular.debug.write('recycling '+todo.length+' nodes');
 			if (Circular.debug.enabled) this.report(this.eventsout);		
 			Circular.engine.recycle(todo,true);
+			
 		}
 		this.eventsout = {};
 		this.lock = false;

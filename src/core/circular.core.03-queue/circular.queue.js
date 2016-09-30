@@ -1,6 +1,9 @@
 
 /* ----------------------
 	queue
+	
+	todo: add pause 
+	
 ----------------------- */
 
 new CircularModule({
@@ -10,7 +13,7 @@ new CircularModule({
 	added				: 0,
 	handled			: 0,
 	todo				: [],
-	
+	paused			: false,
 	
 	add		: function(func) {
 		Circular.debug.write("@queue.add",this.added++);
@@ -31,6 +34,11 @@ new CircularModule({
 		} else {
 			Circular.log.warn("@queue.next","Circular died X-|");
 		}
+	},
+	
+	pause	: function(p) {
+		this.paused = !!p;
 	}
+			
 		
 });

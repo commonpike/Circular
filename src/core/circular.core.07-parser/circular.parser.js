@@ -56,6 +56,11 @@ new CircularModule({
 			Circular.debug.write('Circular.parser.recursePaths','adding identifier '+tree.name);
 			paths.push(Circular.config.rootscope+'.'+tree.name);
 
+		} else if (tree.type=="ThisExpression") {
+		
+			// ignore any subpaths of 'this'
+			paths.push('this');
+			
 		} else if (tree.type =='MemberExpression') {
 		
 			// member expression
@@ -83,6 +88,13 @@ new CircularModule({
 						paths.push(Circular.config.rootscope+'.'+tree.object.name+path);
 					}
 					
+				} else if (tree.object.type=='ThisExpression') {
+					
+					Circular.log.write('Circular.parser.recursePaths','adding path this, ignoring subs');
+					
+					// ignore any subpaths of 'this'
+					paths.push('this');
+					
 				} else {
 					if (tree.object.type=='MemberExpression') {
 						
@@ -108,6 +120,12 @@ new CircularModule({
 					Circular.debug.write('Circular.parser.recursePaths','adding identifier '+tree.object.name);
 					paths.push(Circular.config.rootscope+'.'+tree.object.name);
 					this.recursePaths(tree.property);	
+					
+				} else if (tree.object.type=='ThisExpression') {
+					
+					Circular.log.write('Circular.parser.recursePaths','adding path this');
+					paths.push('this');
+					// dont recurse this
 					
 				} else {
 				
@@ -137,6 +155,8 @@ new CircularModule({
 			this.recursePaths(tree.right,paths);
 			
 		} else {
+		
+			Circular.debug.write('Circular.parser.recursePaths','other tree.type ',tree.type);
 		
 			// unknown garbage. dig deeper.
 			var props = Object.getOwnPropertyNames(tree);
@@ -191,16 +211,18 @@ new CircularModule({
 	},
 	
 	
-	
+	// if you want the result in the context of a node,
+	// call it like @parser.result.call(node,expr,ctx)	
 	result	: function(expr,ctx) {
 		// parse a single expression
-		parsed = this.parse(expr,ctx);
-		return this.eval(parsed);
+		var parsed = Circular.parser.parse(expr,ctx);
+		return Circular.parser.eval.call(this,parsed);
 	},
 	
 	parse	: function(expr,ctx) {
 		// parse a single expression
-		parsed = expr.replace(/#this/g,ctx);
+		parsed = expr.replace(/\$this/g,'$(this)');
+		parsed = parsed.replace(/#this/g,ctx);
 		parsed = parsed.replace(/#/g,ctx+'.');
 		parsed = parsed.replace(/@/g,'Circular.');
 		return parsed;
@@ -275,6 +297,9 @@ new CircularModule({
 	
 	// evaluates a qualified expression.
 	// this does nothing special, but try,catch.
+	// if you want to eval this in the context of a node,
+	// call it like parser.eval.call(node,expr)
+	
 	eval	: function(expr) {
 		Circular.debug.write('Circular.parser.eval');
 		var value = Circular.config.evalfail;
