@@ -5,7 +5,7 @@ var Circular = {
 	----------------------- */
 	
 	config	: {
-		version				: '0.1.5',
+		version				: '0.1.6',
 		autoinit			:	 true,
 		dataprefix		: 'data-'
 	},
@@ -120,7 +120,6 @@ var Circular = {
 					
 					for (var ac=0; ac<mod.attributes.length;ac++) {
 						var attrname = mod.attributes[ac];
-						this.attr2idx[attrname]=idx;
 						this.attr2idx[attrname]=idx;
 						this.attr2cname[attrname]=attrname;
 						this.attr2cname[Circular.config.dataprefix+attrname]=attrname;
