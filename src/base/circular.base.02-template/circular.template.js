@@ -14,7 +14,7 @@ new CircularModule({
 	
 	in	: function(ccattr,node,ccnode) {
 		Circular.debug.write('@template.in',node);
-		var tplsel = ccattr.props.value;
+		var tplsel = ccattr.content.value;
 		var $node = $(node);
 		if (tplsel) {
 			// include the template if it isnt already

@@ -7,7 +7,7 @@ new CircularModule({
 	name	: 'log',
 	
 	in		: function(ccattr,node,ccnode) {
-		this.info(ccattr.props.value);
+		this.info(ccattr.content.value);
 	},
 	
 	write		: function() {

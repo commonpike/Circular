@@ -229,25 +229,25 @@ new CircularModule({
 	},
 	
 	parseAttribute	: function(ccattr,ctx) {
-		Circular.debug.write('Circular.parser.parseAttribute',ccattr.props.original);
+		Circular.debug.write('Circular.parser.parseAttribute',ccattr.content.original);
 		
-		var matches = ccattr.props.original.match(Circular.config.exprregex);
+		var matches = ccattr.content.original.match(Circular.config.exprregex);
 		if (matches) {
-			//console.log(matches[0],ccattr.props.original);
-			if (matches[0]===ccattr.props.original) {
+			//console.log(matches[0],ccattr.content.original);
+			if (matches[0]===ccattr.content.original) {
 			
 			
 				// this is a single full expression "{{#foo}}"
 
-				var orgexpr	= ccattr.props.expression;
-				var stripped = ccattr.props.original.substring(2,ccattr.props.original.length-2);
-				ccattr.props.expression = this.parse(stripped,ctx);
-				if (!ccattr.flags.parsed || ccattr.props.expression!=orgexpr) {
-					// the expression is new or changed. need to get paths
-					if (ccattr.props.original.substring(0,2)=="{{") {
+				var orgexpr	= ccattr.content.expression;
+				var stripped = ccattr.content.original.substring(2,ccattr.content.original.length-2);
+				ccattr.content.expression = this.parse(stripped,ctx);
+				if (!ccattr.flags.parsed || ccattr.content.expression!=orgexpr) {
+					// the expression is new or changed. need to get content.paths
+					if (ccattr.content.original.substring(0,2)=="{{") {
 						// slice the old saucage for the watchdog
-						if (ccattr.paths) ccattr.oldpaths = ccattr.paths.slice(0);
-						ccattr.paths 	= this.getPaths(ccattr.props.expression);
+						if (ccattr.content.paths) ccattr.content.oldpaths = ccattr.content.paths.slice(0);
+						ccattr.content.paths 	= this.getPaths(ccattr.content.expression);
 					}	
 				}
 				
@@ -257,8 +257,8 @@ new CircularModule({
 				// console.log(matches);
 				
 				var watches = [];
-				var orgexpr	= ccattr.props.expression;
-				ccattr.props.expression = ccattr.props.original.replace(Circular.config.exprregex,function(match,inner) {
+				var orgexpr	= ccattr.content.expression;
+				ccattr.content.expression = ccattr.content.original.replace(Circular.config.exprregex,function(match,inner) {
 					parsed = Circular.parser.parse(inner,ctx);
 					if (match.substring(0,2)=="{{") {
 						watches.push(parsed);
@@ -266,29 +266,29 @@ new CircularModule({
 					return '"+('+parsed+')+"';
 				});
 				// tell eval that this is a stringthing
-				ccattr.props.expression = '"'+ccattr.props.expression+'"';
+				ccattr.content.expression = '"'+ccattr.content.expression+'"';
 				
-				if (!ccattr.flags.parsed || ccattr.props.expression!=orgexpr) {
-					// the expression is new or changed. need to get paths
-					if (ccattr.paths) ccattr.oldpaths = ccattr.paths.slice(0); // copy
-					ccattr.paths = [];
+				if (!ccattr.flags.parsed || ccattr.content.expression!=orgexpr) {
+					// the expression is new or changed. need to get content.paths
+					if (ccattr.content.paths) ccattr.content.oldpaths = ccattr.content.paths.slice(0); // copy
+					ccattr.content.paths = [];
 					for (var wc=0; wc<watches.length;wc++) {
-						ccattr.paths = ccattr.paths.concat(this.getPaths(watches[wc]));
+						ccattr.content.paths = ccattr.content.paths.concat(this.getPaths(watches[wc]));
 					}
 				}
 			}
 			
 			ccattr.flags.parsed = true;
-			Circular.debug.write("Circular.parser.parseAttribute",ccattr.props.original,ctx,ccattr.props.expression);
+			Circular.debug.write("Circular.parser.parseAttribute",ccattr.content.original,ctx,ccattr.content.expression);
 			return true;
 			
 		} else {
 			Circular.debug.write('Circular.parser.parseAttribute','no match');
-			if (ccattr.props.expression) {
-				// the expression is new or changed. need to remove paths
-				ccattr.props.expression = '';
-				if (ccattr.paths) ccattr.oldpaths = ccattr.paths.slice(0);
-				ccattr.paths 	= [];
+			if (ccattr.content.expression) {
+				// the expression is new or changed. need to remove content.paths
+				ccattr.content.expression = '';
+				if (ccattr.content.paths) ccattr.content.oldpaths = ccattr.content.paths.slice(0);
+				ccattr.content.paths 	= [];
 			}
 			
 		}

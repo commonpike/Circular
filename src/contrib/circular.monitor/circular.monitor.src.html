@@ -297,7 +297,7 @@
 						</li>
 						<li id="cc-monitor-watchdog">
 							<span class="label">@watchdog</span>
-							<span class="value">{{@monitor.snapshot.watchdog.countdobs}}:{{@monitor.snapshot.watchdog.paths.length}}:{{@monitor.snapshot.watchdog.eventsin.records.length}}</span>
+							<span class="value">{{@monitor.snapshot.watchdog.countdobs}}:{{@monitor.snapshot.watchdog.content.paths.length}}:{{@monitor.snapshot.watchdog.eventsin.records.length}}</span>
 							<ul>
 								<li>
 									<span class="label">#domobservers</span>
@@ -305,8 +305,8 @@
 								</li>
 								<li>
 									<span class="label">#pathobservers</span>
-									<span class="value">{{@monitor.snapshot.watchdog.paths.length}}</span>
-									<ul cc-loop="{{@monitor.snapshot.watchdog.paths}}">
+									<span class="value">{{@monitor.snapshot.watchdog.content.paths.length}}</span>
+									<ul cc-loop="{{@monitor.snapshot.watchdog.content.paths}}">
 										<li>
 											<span class="value" cc-content="{{#this}} x"></span>
 										</li>
