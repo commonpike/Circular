@@ -24,7 +24,7 @@
 
 ----
 
-###@monitor.in(attr,node,props)
+###@monitor.in(attr,node,properties)
 
 *description:*
 
@@ -34,7 +34,7 @@
 	
 - **attr:** information about the current attribute
 - **node:** the current html dom node
-- **props:** circular properties of the current node
+- **properties:** circular properties of the current node
 			
 *return value:* 
 
@@ -42,7 +42,7 @@
 		
 ----
 
-###@monitor.out(attr,node,props)
+###@monitor.out(attr,node,properties)
 
 *description:*
 >processes the attribute on the way out
@@ -51,7 +51,7 @@
 	
 - **attr:** information about the current attribute
 - **node:** the current html dom node
-- **props:** circular properties of the current node
+- **properties:** circular properties of the current node
 			
 *return value:* 
 

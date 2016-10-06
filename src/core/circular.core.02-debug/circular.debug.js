@@ -21,8 +21,8 @@ new CircularModule({
 	in	: function(ccattr,node,ccnode) {
 		this.write('mod.debug',node);
 		ccattr.outer = this.enabled;
-		if (Circular.parser) this.toggle(Circular.parser.boolish(ccattr.props.value));
-		else this.toggle(!ccattr.props.original || ccattr.props.result); // simpleparse
+		if (Circular.parser) this.toggle(Circular.parser.boolish(ccattr.content.value));
+		else this.toggle(!ccattr.content.original || ccattr.content.result); // simpleparse
 	},
 	
 	out	: function(ccattr,node,ccnode) {

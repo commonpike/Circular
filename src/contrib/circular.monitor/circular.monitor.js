@@ -68,14 +68,14 @@ new CircularModule({
 	
 	
 	
-	in	: function(attr,node,props) {
+	in	: function(attr,node,properties) {
 		//alert('in: '+attr.result||attr.value)
 		//return false;
 		this.step();
 		this.start();
 	},
 
-	out	: function(attr,node,props) {
+	out	: function(attr,node,properties) {
 		//alert('out: '+attr.result||attr.value)
 		
 	},
@@ -91,10 +91,10 @@ new CircularModule({
 		}));
 		
 		// clean up 
-		this.snapshot.watchdog.paths = [];
+		this.snapshot.watchdog.content.paths = [];
 		for (path in this.snapshot.watchdog.pathobservers) {
 			if (path.indexOf('Circular.monitor')!=0) {
-				this.snapshot.watchdog.paths.push(path);
+				this.snapshot.watchdog.content.paths.push(path);
 			}
 		}
 		if (this.counter && this.biason) {

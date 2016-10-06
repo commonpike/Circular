@@ -20,19 +20,19 @@ new CircularModule({
 				'processedout'			: false,
 				'attrsetchanged'		: true,
 				'contentchanged'		: true,
-				'contentchanged:p'	: 0,
 				'contentchanged:i'	: false,
 				'contentchanged'		: true,
 				'contextchanged'		: true,
 				'attrdomchanged'		: true,
 				'attrdatachanged'		: true
 			},
-			'props'	: {
+			'properties'	: {
 				'outercontext'	: '',
-				'innercontext'	: ''
+				'innercontext'	: '',
+				'contentchanged:p'	: 0
 			},
-			'ccattrs'								:	{},		// attrs by name
-			'ccattrlist'						: [],		// attrs by index
+			'attributes'								:	{},		// attrs by name -> attributes
+			'index'						: [],		// attrs by index -> indexed
 		};
 	} ,
 	
@@ -42,24 +42,25 @@ new CircularModule({
 				'parsed'						: false,
 				'registered'				: false,
 				'attrdomchanged'		: true,
-				'attrdomchanged:p'	: 0,
 				'attrdomchanged:i'	: false,
 				'attrdatachanged'		: true,
-				'attrdatachanged:p'	: 0,
 				'attrdatachanged:i'	: false,
 				'breaking'					: false
 			},
-			'props'			: {
-				'name'				: name,
-				'module'			: '',
-				'original'		: '',
-				'expression'	: '',
-				'result'			: undefined,
-				'value'				: ''
+			'properties'			: {
+				'name'							: name,
+				'module'						: '',
+				'attrdomchanged:p'	: 0,
+				'attrdatachanged:p'	: 0
 			},
-			'oldpaths'		: [],
-			'paths'				: [],		
-
+			'content'	: {
+				'original'					: '',
+				'expression'				: '',
+				'result'						: undefined,
+				'value'							: '',
+				'oldpaths'					: [],
+				'paths'							: []
+			}
 		}
 	},
 
@@ -82,8 +83,8 @@ new CircularModule({
 			ccnode.flags.registered = true;
 			this.counter++;
 		}
-		for (var ac=0;ac<ccnode.ccattrlist.length;ac++) {
-			ccnode.ccattrlist[ac].flags.registered=true;
+		for (var ac=0;ac<ccnode.index.length;ac++) {
+			ccnode.index[ac].flags.registered=true;
 		}
 		if (watch) {
 			Circular.debug.write('@registry.set','watch',node);
