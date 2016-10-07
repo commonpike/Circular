@@ -13,7 +13,7 @@ new CircularModule({
 	in	: function(ccattr,node,ccnode) {
 		Circular.debug.write('@hide.in',node);
 		if (Circular.parser.boolish(ccattr.content.value)) {
-			if (Circular.modules.attr2cname[ccattr.properties.name]=='cc-show') {
+			if (Circular.modules.unprefix(ccattr.properties.name)=='cc-show') {
 				this.show(node);
 				return true;
 			} else {
@@ -21,7 +21,7 @@ new CircularModule({
 				return false;
 			}
 		} else {
-			if (Circular.modules.attr2cname[ccattr.properties.name]=='cc-show') {
+			if (Circular.modules.unprefix(ccattr.properties.name)=='cc-show') {
 				this.hide(node);
 				return false;
 			} else {

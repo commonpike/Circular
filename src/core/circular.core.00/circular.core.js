@@ -5,9 +5,8 @@ var Circular = {
 	----------------------- */
 	
 	config	: {
-		version				: '0.1.6',
-		autoinit			:	 true,
-		dataprefix		: 'data-'
+		version					: '0.1.6',
+		autoinit				:	true
 	},
 	
 	// status
@@ -20,6 +19,8 @@ var Circular = {
 	
 	modules : {
 		
+		attrprefix		: 'cc-',
+		rxattrprefix	: /^cc-/,
 		
 		stack	: [
 			// this is where the circularmodules are stored
@@ -34,8 +35,19 @@ var Circular = {
 			// map module names to modules
 		},
 		
-		attr2cname				: {
-			// normalized ccattr names
+		
+		prefix	: function(attrname) {
+			if (this.attrprefix!='cc-') {
+				return attrname.replace(/^cc-/,this.attrprefix);
+			}
+			return attrname;
+		},
+		
+		unprefix	: function(attrname) {
+			if (this.attrprefix!='cc-') {
+				return attrname.replace(this.rxattrprefix,'cc-');
+			}
+			return attrname;
 		},
 		
 		add	: function(mod) {
@@ -121,8 +133,6 @@ var Circular = {
 					for (var ac=0; ac<mod.attributes.length;ac++) {
 						var attrname = mod.attributes[ac];
 						this.attr2idx[attrname]=idx;
-						this.attr2cname[attrname]=attrname;
-						this.attr2cname[Circular.config.dataprefix+attrname]=attrname;
 					}
 					
 					Circular[mod.name]=this.stack[idx];
@@ -145,6 +155,18 @@ var Circular = {
 			
 			if (Circular.debug) Circular.debug.write('Circular.modules.init');
 						
+			// optionally rewrite cc- attributes
+			if (!config.attrprefix) config.attrprefix='cc-';
+			if (config.attrprefix!='cc-') {
+				this.attrprefix 	= config.attrprefix;
+				this.rxattrprefix = new RegExp('^'+config.attrprefix);
+				for (var attrname in this.attr2idx) {
+					console.log(attrname,this.prefix(attrname));
+					this.attr2idx[this.prefix(attrname)] = this.attr2idx[attrname];
+					delete this.attr2idx[attrname];
+				}
+			}
+			
 			// create a stylesheet, add all css and config
 			var css = '';
 			this.stack.forEach(function(mod) {

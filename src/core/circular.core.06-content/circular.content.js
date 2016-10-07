@@ -15,7 +15,7 @@ new CircularModule({
 		if (val==undefined) val = ccattr.content.value;
 		Circular.debug.write('@content.in','setting content',val);
 		node.textContent=val;
-		$(node).addClass('cc-content-generated');
+		//$(node).addClass('cc-content-generated');
 	}
 
 		

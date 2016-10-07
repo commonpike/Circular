@@ -22,10 +22,7 @@ new CircularModule({
 	start				: function() {
 		Circular.debug.write('@engine.start ');
 		var rootsel = Circular.config.rootselector;
-		if (!rootsel) {
-			rootsel = '[cc-root],';
-			rootsel += '['+Circular.config.dataprefix+'cc-root]';
-		}
+		if (!rootsel) rootsel = '['+Circular.modules.prefix('cc-root')+']';
 		var $root = $(rootsel);
 		if (!$root.size()) $root = $('html');
 		this.recycle($root,true);
@@ -213,9 +210,9 @@ new CircularModule({
 
 		if (ccnode.flags.contextchanged || ccnode.flags.attrsetchanged || ccnode.flags.attrdomchanged || ccnode.flags.attrdatachanged) {
 		
-			//if (ccnode.flags.attrdomchanged || ccnode.flags.attrsetchanged ) {
+			if (ccnode.flags.attrdomchanged || ccnode.flags.attrsetchanged ) {
 				this.indexAttributes(node,ccnode);
-			//}
+			}
 			
 			if (ccnode.index.length) {
 			
@@ -384,8 +381,7 @@ new CircularModule({
 			// else, create a new property from this attribute
 			if (!ccattr) ccattr = Circular.registry.newCCattribute(attrname);
 			
-			var ccattrcname = Circular.modules.attr2cname[attrname];
-			var modidx = Circular.modules.attr2idx[ccattrcname];
+			var modidx = Circular.modules.attr2idx[attrname];
 			if (modidx!==undefined) {
 				var modname = Circular.modules.stack[modidx].name;
 				if (this.indexModuleAttribute(node,ccattr,modname)) {
@@ -448,7 +444,7 @@ new CircularModule({
 			// is always registered for just being one. 
 			
 			if (!ccattr.flags.registered) {
-				ccattr.properties.name		= Circular.modules.attr2cname[ccattr.properties.name];
+				//ccattr.properties.name		= Circular.modules.prefix(ccattr.properties.name);
 				ccattr.properties.module 	= modname;
 			}
 			var original 	= node.getAttribute(ccattr.properties.name);
@@ -474,11 +470,12 @@ new CircularModule({
 		// false if it shouldnt
 		
 		if (ccattr.flags.attrdomchanged) {
-			Circular.debug.write('@engine.indexAttribute','attrdomchanged',ccattr.content.original);
+
+			Circular.debug.write('@engine.indexAttribute','attrdomchanged',node,ccattr);
 			
 			var expression = '', original = '';
 			
-			if (ccattr.properties.name.indexOf('-debug')==-1) { // hm
+			//if (ccattr.properties.name.indexOf('-debug')==-1) { // hm
 			
 				// the dom changed, so ignore what was registered:
 				ccattr.content.original = node.getAttribute(ccattr.properties.name);
@@ -489,10 +486,10 @@ new CircularModule({
 				
 				if (Circular.parser.parseAttribute(ccattr,Circular.context.get())) {
 
-					if (Circular.debug.enabled && ccattr.properties.name!='cc-debug') {
-						if (ccattr.properties.name.indexOf('cc-')==0) node.setAttribute('cc-'+ccattr.properties.name.substring(3)+'-debug',ccattr.content.original);
-						else node.setAttribute('cc-'+ccattr.properties.name+'-debug',ccattr.content.original);
-					}
+					//if (Circular.debug.enabled && ccattr.properties.name!='cc-debug') {
+					//	if (ccattr.properties.name.indexOf('cc-')==0) node.setAttribute('cc-'+ccattr.properties.name.substring(3)+'-debug',ccattr.content.original);
+					//	else node.setAttribute('cc-'+ccattr.properties.name+'-debug',ccattr.content.original);
+					//}
 			
 					return true;
 					
@@ -503,17 +500,17 @@ new CircularModule({
 					//alert('forget '+node.nodeName+'.'+ccattr.properties.name);
 					
 					
-					if (Circular.debug.enabled) {
-						if (ccattr.properties.name.indexOf('cc-')==0) node.removeAttribute('cc-'+ccattr.properties.name.substring(3)+'-debug');
-						else node.removeAttribute('cc-'+ccattr.properties.name+'-debug');
-					}
+					//if (Circular.debug.enabled) {
+					//	if (ccattr.properties.name.indexOf('cc-')==0) node.removeAttribute('cc-'+ccattr.properties.name.substring(3)+'-debug');
+					//	else node.removeAttribute('cc-'+ccattr.properties.name+'-debug');
+					//}
 					return false;
 
 				}
-			} else {
+			//} else {
 				// dont register debug attributes
-				return false;
-			}
+			//	return false;
+			//}
 		} else {
 		
 			
