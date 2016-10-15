@@ -147,7 +147,7 @@ new CircularModule({
 			if (context != ccnode.properties.outercontext) {
 				Circular.debug.write('@engine.process','context changed',ccnode.properties.outercontext,context,node);
 				ccnode.properties.outercontext = context;
-				ccnode.flags.contextchanged=true;
+				ccnode.flags.ocontextchanged=true;
 			} else {
 				Circular.debug.write('@engine.process','context not changed');
 			}
@@ -203,12 +203,90 @@ new CircularModule({
 		
 	},
 
+	/*
+
+		processElementNode(node,ccnode)
+		
+			
+			if ccnode.flags.pristine
+				indexAttributes()
+				if ccnode.index.length
+					this.processAttributesIn(node,ccnode);
+					Circular.registry.set(node,ccnode,true);
+					if (ccnode.flags.recurse) 
+						this.processChildren(node,ccnode.properties.innercontext);
+					this.processAttributesOut(node,ccnode);
+					Circular.registry.set(node,ccnode,true);
+				else
+					// no need to register. recurse
+					this.processChildren(node,ccnode.properties.outercontext);
+					
+					
+			else if ccnode.flags.attrsetchanged
+				indexAttributes
+				if ccnode.index.length
+					this.processAttributesIn(node,ccnode);
+					Circular.registry.set(node,ccnode,true);
+					if (ccnode.flags.recurse && (innercontextchanged || flags.contentchanged)) 
+						this.processChildren(node,ccnode.properties.innercontext);
+					this.processAttributesOut(node,ccnode);
+					Circular.registry.set(node,ccnode,true);
+				else
+					ccnode.properties.innercontext=ccnode.properties.outercontext
+					Circular.registry.set(node,ccnode,true);
+					this.processChildren(node,ccnode.properties.innercontext);
+					
+					
+			else if ccnode.flags.attrdomchanged
+				if ccnode.index.length
+					this.processAttributesIn(node,ccnode);
+					Circular.registry.set(node,ccnode,true);
+					if (ccnode.flags.recurse && (innercontextchanged || flags.contentchanged)) 
+						this.processChildren(node,ccnode.properties.innercontext);
+					this.processAttributesOut(node,ccnode);
+					Circular.registry.set(node,ccnode,true);
+				else
+					huh
+					
+			else if ccnode.flags.attrdatachanged
+				if ccnode.index.length
+					this.processAttributesIn(node,ccnode);
+					Circular.registry.set(node,ccnode,true);
+					if (ccnode.flags.recurse && (innercontextchanged || flags.contentchanged)) 
+						this.processChildren(node,ccnode.properties.innercontext);
+					this.processAttributesOut(node,ccnode);
+					Circular.registry.set(node,ccnode,true);
+				else 
+					huh
+				
+			else if ccnode.flags.ocontextchanged
+				if ccnode.index.length
+					this.processAttributesIn(node,ccnode);
+					Circular.registry.set(node,ccnode,true);
+					if (ccnode.flags.recurse && (innercontextchanged || flags.contentchanged)) 
+						this.processChildren(node,ccnode.properties.innercontext);
+					this.processAttributesOut(node,ccnode);
+					Circular.registry.set(node,ccnode,true);
+				else
+					// may ignore. events should be triggered
+					// to children, too
+			
+			else if ccnode.flags.contentchanged
+				if ccnode.index.length
+					if (ccnode.flags.recurse) 
+						this.processChildren(node,ccnode.properties.innercontext);
+				else
+					this.processChildren(node,ccnode.properties.innercontext);
+			
+	
+	*/
+
 	processElementNode				: function(node,ccnode) {
 		Circular.debug.write('@engine.processElementNode');
 
 		var newcontext = false;
 
-		if (ccnode.flags.contextchanged || ccnode.flags.attrsetchanged || ccnode.flags.attrdomchanged || ccnode.flags.attrdatachanged) {
+		if (ccnode.flags.ocontextchanged || ccnode.flags.attrsetchanged || ccnode.flags.attrdomchanged || ccnode.flags.attrdatachanged) {
 		
 			if (ccnode.flags.attrdomchanged || ccnode.flags.attrsetchanged ) {
 				this.indexAttributes(node,ccnode);
@@ -532,6 +610,9 @@ new CircularModule({
 		
 		//console.log('processAttributesIn',node,attributes);
 		
+		// optimist
+		ccnode.flags.recurse = true;
+		
 		for (var dc=0; dc<ccnode.index.length; dc++) {
 		
 			var ccattr = ccnode.index[dc];
@@ -582,21 +663,27 @@ new CircularModule({
 					var ok = func.call(mod,ccattr,node,ccnode);
 					if (ok===false) {
 						ccattr.flags.breaking=true;
+						ccnode.flags.recurse = false;
 						break;
 					} else {
 						ccattr.flags.breaking=false;
+						ccnode.flags.recurse = true;
 					}
 				}
 			} 
 			
-			
+			var context = Circular.context.get();
+			if (context!=ccnode.properties.innercontext) {
+				ccnode.properties.innercontext=context;
+				ccnode.flags.icontextchanged=true;
+			}
 				
 		}
 		
 		// return true if none (or only the last one)
 		// is breaking. returning false will stop
 		// recursion down the node.
-		return dc==ccnode.index.length;
+		return ccnode.flags.recurse;
 			
 		
 	},
