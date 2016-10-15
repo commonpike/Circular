@@ -42,7 +42,7 @@ new CircularModule({
 			// {type:type,flag:flag,target:target},
 			// {type:pass,flag:attrdatachanged,target:class},..
 			// {type:event,flag:attrdatachanged,target:class},..
-			// {type:ignore,flag:contextchanged,target:*},..
+			// {type:ignore,flag:ocontextchanged,target:*},..
 		]
 	},
 	
@@ -81,11 +81,12 @@ new CircularModule({
 
 		
 		// unset the flags youve set before recycle
-		ccnode.flags['processing'] = false;
-		ccnode.flags['attrsetchanged'] = false;
-		ccnode.flags['contentchanged'] = false;
-		ccnode.flags['contextchanged'] = false;
-		ccnode.flags['attrdomchanged'] = false;
+		ccnode.flags['processing'] 			= false;
+		ccnode.flags['attrsetchanged'] 	= false;
+		ccnode.flags['contentchanged'] 	= false;
+		ccnode.flags['ocontextchanged'] = false;
+		ccnode.flags['icontextchanged'] = false;
+		ccnode.flags['attrdomchanged'] 	= false;
 		ccnode.flags['attrdatachanged'] = false;
 		for (var ac=0; ac<ccnode.index.length; ac++) {
 			ccnode.index[ac].flags['attrdomchanged'] = false;

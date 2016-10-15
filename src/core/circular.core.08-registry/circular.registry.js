@@ -11,6 +11,7 @@ new CircularModule({
 	newCCNode 	: function() {
 		return {
 			'flags'	: {
+				'pristine'					: true,
 				'registered'				: false,
 				'watched'						: false,
 				'domobserved'				: false,
@@ -22,16 +23,18 @@ new CircularModule({
 				'contentchanged'		: true,
 				'contentchanged:i'	: false,
 				'contentchanged'		: true,
-				'contextchanged'		: true,
+				'ocontextchanged'		: true,
+				'icontextchanged'		: true,
 				'attrdomchanged'		: true,
-				'attrdatachanged'		: true
+				'attrdatachanged'		: true,
+				'recurse'						: true
 			},
 			'properties'	: {
 				'outercontext'	: '',
 				'innercontext'	: '',
 				'contentchanged:p'	: 0
 			},
-			'attributes'								:	{},		// attrs by name -> attributes
+			'attributes'			:	{},		// attrs by name -> attributes
 			'index'						: [],		// attrs by index -> indexed
 		};
 	} ,
@@ -71,15 +74,16 @@ new CircularModule({
 	},
 	
 	unlock	: function(node) {
-		ccnode = $(node).data('cc-properties');
+		ccnode = $(node).data('cc-node');
 		ccnode.flags.locked=false;
-		$(node).data('cc-properties',ccnode);
+		$(node).data('cc-node',ccnode);
 	},
 	
 
 	set	: function(node,ccnode,watch) {
 		//Circular.debug.write('@registry.set');
 		if (!ccnode.flags.registered) {
+			ccnode.flags.pristine = false;
 			ccnode.flags.registered = true;
 			this.counter++;
 		}
@@ -90,13 +94,13 @@ new CircularModule({
 			Circular.debug.write('@registry.set','watch',node);
 			Circular.watchdog.watch(node,ccnode);
 		}
-		$(node).data('cc-properties',ccnode);
+		$(node).data('cc-node',ccnode);
 	},
 	
 	get	: function(node,readonly) {
 		// Circular.debug.write('Circular.registry.get');
 		// this should perhaps return a deep copy instead ..
-		var ccnode = $(node).data('cc-properties');
+		var ccnode = $(node).data('cc-node');
 		if (!ccnode) ccnode = this.newCCNode();
 		if (!ccnode.flags.locked || readonly) {
 			return ccnode;
