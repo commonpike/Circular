@@ -205,78 +205,124 @@ new CircularModule({
 
 	/*
 
-		processElementNode(node,ccnode)
+		processElementNode	: function(node,ccnode) {
 		
+			Circular.debug.write('@engine.processElementNode',node.nodeName);
 			
-			if ccnode.flags.pristine
-				indexAttributes()
-				if ccnode.index.length
+			if (ccnode.flags.pristine) {
+			
+				Circular.debug.write('@engine.processElementNode','ccnode.flags.pristine');
+				
+				this.indexAttributes(node,ccnode);
+				if (ccnode.index.length) {
 					this.processAttributesIn(node,ccnode);
 					Circular.registry.set(node,ccnode,true);
-					if (ccnode.flags.recurse) 
+					if (ccnode.flags.recurse) {
 						this.processChildren(node,ccnode.properties.innercontext);
+					} else Circular.debug.write('@engine.processElementNode','flags.recurse=false');
 					this.processAttributesOut(node,ccnode);
 					Circular.registry.set(node,ccnode,true);
-				else
-					// no need to register. recurse
-					this.processChildren(node,ccnode.properties.outercontext);
+					return true;
+				} else {
+					// no need to register. just recurse
+					Circular.debug.write('@engine.processElementNode','no attributes, not registering');
+					ccnode.properties.innercontext = ccnode.properties.outercontext;
+					this.processChildren(node,ccnode.properties.innercontext);
+				}
+			
 					
 					
-			else if ccnode.flags.attrsetchanged
-				indexAttributes
-				if ccnode.index.length
+			} else if (ccnode.flags.attrsetchanged) {
+			
+				Circular.debug.write('@engine.processElementNode','ccnode.flags.attrsetchanged');
+				
+				this.indexAttributes(node,ccnode);
+				if (ccnode.index.length) {
 					this.processAttributesIn(node,ccnode);
 					Circular.registry.set(node,ccnode,true);
-					if (ccnode.flags.recurse && (innercontextchanged || flags.contentchanged)) 
-						this.processChildren(node,ccnode.properties.innercontext);
+					if (ccnode.flags.recurse) {
+						if (ccnode.flags.icontextchanged || ccnode.flags.contentchanged) {
+							this.processChildren(node,ccnode.properties.innercontext);
+						} else Circular.debug.write('@engine.processElementNode','no need to recurse');
+					}  else Circular.debug.write('@engine.processElementNode','flags.recurse=false');
 					this.processAttributesOut(node,ccnode);
 					Circular.registry.set(node,ccnode,true);
-				else
-					ccnode.properties.innercontext=ccnode.properties.outercontext
+				} else {
+					ccnode.properties.innercontext=ccnode.properties.outercontext;
 					Circular.registry.set(node,ccnode,true);
 					this.processChildren(node,ccnode.properties.innercontext);
+				}
 					
-					
-			else if ccnode.flags.attrdomchanged
-				if ccnode.index.length
-					this.processAttributesIn(node,ccnode);
-					Circular.registry.set(node,ccnode,true);
-					if (ccnode.flags.recurse && (innercontextchanged || flags.contentchanged)) 
-						this.processChildren(node,ccnode.properties.innercontext);
-					this.processAttributesOut(node,ccnode);
-					Circular.registry.set(node,ccnode,true);
-				else
-					huh
-					
-			else if ccnode.flags.attrdatachanged
-				if ccnode.index.length
-					this.processAttributesIn(node,ccnode);
-					Circular.registry.set(node,ccnode,true);
-					if (ccnode.flags.recurse && (innercontextchanged || flags.contentchanged)) 
-						this.processChildren(node,ccnode.properties.innercontext);
-					this.processAttributesOut(node,ccnode);
-					Circular.registry.set(node,ccnode,true);
-				else 
-					huh
+			} else if (ccnode.flags.attrdomchanged) {
+			
+				Circular.debug.write('@engine.processElementNode','ccnode.flags.attrdomchanged');
 				
-			else if ccnode.flags.ocontextchanged
-				if ccnode.index.length
+				if (ccnode.index.length) {
 					this.processAttributesIn(node,ccnode);
 					Circular.registry.set(node,ccnode,true);
-					if (ccnode.flags.recurse && (innercontextchanged || flags.contentchanged)) 
-						this.processChildren(node,ccnode.properties.innercontext);
+					if (ccnode.flags.recurse) {
+						if (ccnode.flags.icontextchanged || ccnode.flags.contentchanged) { 
+							this.processChildren(node,ccnode.properties.innercontext);
+						} else Circular.debug.write('@engine.processElementNode','no need to recurse');
+					}  else Circular.debug.write('@engine.processElementNode','flags.recurse=false');
 					this.processAttributesOut(node,ccnode);
 					Circular.registry.set(node,ccnode,true);
-				else
+				} else {
+					Circular.log.error('@engine.processElementNode','attrdomchanged, but no attributes');
+				}
+					
+			} else if (ccnode.flags.attrdatachanged) {
+			
+				Circular.debug.write('@engine.processElementNode','ccnode.flags.attrdatachanged');
+				
+				if (ccnode.index.length) {
+					this.processAttributesIn(node,ccnode);
+					Circular.registry.set(node,ccnode,true);
+					if (ccnode.flags.recurse) {
+						if (ccnode.flags.icontextchanged || ccnode.flags.contentchanged) { 
+							this.processChildren(node,ccnode.properties.innercontext);
+						} else Circular.debug.write('@engine.processElementNode','no need to recurse');
+					}  else Circular.debug.write('@engine.processElementNode','flags.recurse=false');
+					this.processAttributesOut(node,ccnode);
+					Circular.registry.set(node,ccnode,true);
+				} else {
+					Circular.log.error('@engine.processElementNode','attrdatachanged, but no attributes');
+				}
+				
+			} else if (ccnode.flags.ocontextchanged) {
+			
+				Circular.debug.write('@engine.processElementNode','ccnode.flags.ocontextchanged');
+				
+				if (ccnode.index.length) {
+					this.processAttributesIn(node,ccnode);
+					Circular.registry.set(node,ccnode,true);
+					if (ccnode.flags.recurse) {
+						if (ccnode.flags.icontextchanged || ccnode.flags.contentchanged) {
+							this.processChildren(node,ccnode.properties.innercontext);
+						} else Circular.debug.write('@engine.processElementNode','no need to recurse');
+					}  else Circular.debug.write('@engine.processElementNode','flags.recurse=false');
+					this.processAttributesOut(node,ccnode);
+					Circular.registry.set(node,ccnode,true);
+				
+				} else {
+					
 					// may ignore. events should be triggered
 					// to children, too
 			
-			else if ccnode.flags.contentchanged
-				if ccnode.index.length
-					if (ccnode.flags.recurse) 
+				}
+				
+			} else if (ccnode.flags.contentchanged) {
+			
+				Circular.debug.write('@engine.processElementNode','ccnode.flags.contentchanged');
+				
+				if (ccnode.index.length) {
+					if (ccnode.flags.recurse) {
 						this.processChildren(node,ccnode.properties.innercontext);
-				else
+					}  else Circular.debug.write('@engine.processElementNode','flags.recurse=false');
+				} else {
 					this.processChildren(node,ccnode.properties.innercontext);
+				}
+			}
 			
 	
 	*/
@@ -305,18 +351,20 @@ new CircularModule({
 				Circular.debug.write('@engine.processElementNode','processed attrs in',node);
 
 
-				var innercontext = Circular.context.get();
-				if (ccnode.properties.innercontext!=innercontext) {
-					newcontext = ccnode.properties.innercontext = innercontext;
-				}
+				//var innercontext = Circular.context.get();
+				//if (ccnode.properties.innercontext!=innercontext) {
+				//	newcontext = ccnode.properties.innercontext = innercontext;
+				//}
 				
 				// register changes now, so the watchdog can
 				// observe changes made by children
 				Circular.registry.set(node,ccnode,true);
 				
-				if ( recurse &&  ( newcontext || ccnode.flags.contentchanged ) ) {
+				if ( ccnode.flags.recurse && ( ccnode.flags.icontextchanged || ccnode.flags.contentchanged ) ) {
 					this.processChildren(node,newcontext);
-				} 
+				} else {
+					Circular.log.info('@engine.processElementNode','not recursing',ccnode,ccnode.flags.recurse ,ccnode.flags.icontextchanged,ccnode.flags.contentchanged);
+				}
 				
 				Circular.debug.write('@engine.processElementNode','processing attrs out ..',node);
 				this.processAttributesOut(node,ccnode);
@@ -332,12 +380,12 @@ new CircularModule({
 				// after looking at the attributes,
 				// there was nothing particular, but
 				
-				var innercontext = Circular.context.get();
-				if (ccnode.properties.innercontext!=innercontext) {
-					newcontext = ccnode.properties.innercontext = innercontext;
-				}
+				//var innercontext = Circular.context.get();
+				//if (ccnode.properties.innercontext!=innercontext) {
+				//	newcontext = ccnode.properties.innercontext = innercontext;
+				//}
 				
-				if (newcontext || ccnode.flags.contentchanged) {
+				if (ccnode.flags.icontextchanged || ccnode.flags.contentchanged) {
 					
 					
 					
