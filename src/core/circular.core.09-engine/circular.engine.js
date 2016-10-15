@@ -344,6 +344,60 @@ new CircularModule({
 		
 	},
 	
+	indexAttributesNew	: function(node,ccnode) {
+		Circular.debug.write('@engine.indexAttributes');
+		
+		// loop all the nodes attributes
+		// see if they contain expression or 
+		// if they are modules. other attributes
+		// are ignored.
+
+		// the order is important here. 
+		// modules should go first, so there are
+		// executed before normal attributes. also,
+		// the mods need to be sorted in the
+		// order they were created ..
+		
+		// if the node was registered in a previous
+		// cycle, use the original values from there
+		
+		if (!ccnode.flags.registered) {
+			// index all attributes
+			
+			var index = [];
+			for(var ac=0; ac<node.attributes.length;ac++) {
+				
+				var attrname 	= node.attributes[ac].name;
+				var attridx  	= Circular.modules.attridx[attrname];
+				if (attridx) {
+					// this is a module attribute
+					var ccattr 		= Circular.registry.newCCattribute(attrname);
+					ccnode.attributes[attrname] = ccattr;
+					index[attridx] = ccattr;
+				} else {
+				
+				}
+			}
+			// reindex
+			ccnode.index = index.filter(function(val){return val});
+				
+				
+		} else {
+		
+			if (ccnode.flags.attrsetchanged) {
+				// index all attributes, but keep the old ones
+				
+			} else if (ccnode.flags.attrdomchanged) {
+				// find which attributes domchanged
+				// and reindex those
+
+			} else {
+				Circular.log.error('@engine.indexAttributes','no need to index?')
+			}
+			
+		}
+	}, 
+	
 	indexAttributes	: function(node,ccnode) {
 		Circular.debug.write('@engine.indexAttributes');
 		
@@ -361,6 +415,7 @@ new CircularModule({
 		// if the node was registered in a previous
 		// cycle, use the original values from there
 		
+
 		var regattrs = ccnode.index;
 		var attributes = [], plain = [], mods = [];
 		
