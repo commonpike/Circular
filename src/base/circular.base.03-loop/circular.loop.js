@@ -24,7 +24,7 @@ new CircularModule({
 	
 	in	: function(ccattr,node,ccnode) {
 
-		Circular.debug.write('@loop.in',node);
+		Circular.log.debug('@loop.in',node);
 		
 		var $node = $(node);
 		
@@ -44,12 +44,12 @@ new CircularModule({
 		// find a template or make one
 		var $template = $node.children('.cc-loop-template');
 		if (!$template.size()) {
-			Circular.debug.write('@loop.in','creating template');
+			Circular.log.debug('@loop.in','creating template');
 			Circular.watchdog.pass(node,'contentchanged');
 			if ($node.children().size()==1 && ($node.contents().size()==1 || this.greedy)) {
 				$template = $node.children().addClass('cc-loop-template');
 			} else {
-				Circular.debug.write('@loop.in','adding template wrapper');
+				Circular.log.debug('@loop.in','adding template wrapper');
 				$node.contents().wrapAll('<div  class="cc-loop-template"></div>');
 				$template = $node.children('.cc-loop-template');
 			}
@@ -72,13 +72,13 @@ new CircularModule({
 			keys = Object.keys(ccattr.content.result).slice(this.offset,this.offset+this.limit);
 		}
 		
-		Circular.debug.write('@loop.in',ccattr.content.result,keys,'offset '+this.offset+', limit '+this.limit);
+		Circular.log.debug('@loop.in',ccattr.content.result,keys,'offset '+this.offset+', limit '+this.limit);
 		
 		this.index 	= 1;
 		this.first 	= true;		
 		var $curr = null;
 		for (var kc=0; kc<keys.length; kc++) {
-			Circular.debug.write('@loop.in','index '+this.index,keys[kc]);
+			Circular.log.debug('@loop.in','index '+this.index,keys[kc]);
 			this.key = keys[kc];
 			this.last = (kc==keys.length-1);
 
@@ -90,7 +90,7 @@ new CircularModule({
 			$item = $node.children('#'+itemid+'.cc-loop-item');
 			if (!$item.size()) {
 				// clone the template 
-				Circular.debug.write('@loop.in','creating new item '+itemid);
+				Circular.log.debug('@loop.in','creating new item '+itemid);
 				$item = $template.clone()
 					.removeClass('cc-loop-template')
 					.addClass('cc-loop-item')
@@ -103,7 +103,7 @@ new CircularModule({
 			} else {
 			
 				//	we already have it. just move it in place 
-				Circular.debug.write('@loop.in','moving old item '+itemid);
+				Circular.log.debug('@loop.in','moving old item '+itemid);
 				$item.removeClass('cc-loop-cached');
 				if (!$curr) $item.appendTo($node);
 				else $item.insertAfter($curr)
@@ -130,11 +130,11 @@ new CircularModule({
 				attr('cc-loop-last','');
 		});
 		
-		Circular.debug.write('@loop.in done');
+		Circular.log.debug('@loop.in done');
 	},
 	
 	process	: function($item) {
-		Circular.debug.write('@loop.process',$item);
+		Circular.log.debug('@loop.process',$item);
 		var loop = this;
 		
 		$item.filter('[cc-loop-first]').add($('[cc-loop-first]',$item)).each(function() {

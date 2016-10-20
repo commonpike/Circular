@@ -13,7 +13,7 @@ new CircularModule({
 	orgattr			: 'cc-template-origin',
 	
 	in	: function(ccattr,node,ccnode) {
-		Circular.debug.write('@template.in',node);
+		Circular.log.debug('@template.in',node);
 		var tplsel = ccattr.content.value;
 		var $node = $(node);
 		if (tplsel) {
@@ -33,12 +33,12 @@ new CircularModule({
 					Circular.log.error('@template.in','no such template',tplsel);
 				}
 			} else {
-				Circular.debug.write('@template.in','already included');
+				Circular.log.debug('@template.in','already included');
 			}
 			
 		} else {
 			// this is a template, ignore
-			Circular.debug.write('@template.in','is a template');
+			Circular.log.debug('@template.in','is a template');
 			$node.addClass('cc-template');
 			return false;
 		}

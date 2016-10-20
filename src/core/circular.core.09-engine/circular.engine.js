@@ -6,7 +6,7 @@
 new CircularModule({
 
 	name				: 'engine',	
-	requires		: ['root','context','content','log','debug','registry'],
+	requires		: ['root','context','content','log','registry'],
 	config			: { 
 		rootselector 	: '',
 		greedy				: false, // trim whitespace from inline expressions
@@ -20,7 +20,7 @@ new CircularModule({
 	},
 	
 	start				: function() {
-		Circular.debug.write('@engine.start ');
+		Circular.log.debug('@engine.start ');
 		var rootsel = Circular.config.rootselector;
 		if (!rootsel) rootsel = '['+Circular.modules.prefix('cc-root')+']';
 		var $root = $(rootsel);
@@ -29,7 +29,7 @@ new CircularModule({
 	},
 	
 	recycle	: function(nodes,now) {
-		Circular.debug.write('@engine.recycle ');
+		Circular.log.debug('@engine.recycle ');
 		if (nodes instanceof jQuery) {
 			nodes = nodes.toArray();
 		} else if (!Array.isArray(nodes)) {
@@ -56,10 +56,10 @@ new CircularModule({
 		nodes.forEach(function(node) {
 			var ccnode = Circular.registry.get(node,true);
 			if (ccnode.flags.locked) {
-				Circular.debug.write('@engine.recycle ','Recycling',node);
+				Circular.log.debug('@engine.recycle ','Recycling',node);
 				this.process(node);
 			} else {
-				Circular.debug.write('@engine.recycle ','Node was already recycled',node,ccnode);
+				Circular.log.debug('@engine.recycle ','Node was already recycled',node,ccnode);
 			}
 		},this);
 
@@ -103,7 +103,7 @@ new CircularModule({
 	},
 	
 	getContext	: function(node) {
-		Circular.debug.write('@engine.getContext',node.nodeName);
+		Circular.log.debug('@engine.getContext',node.nodeName);
 		// you rarely need this. while cycling the document,
 		// the context is passed to the process() method or
 		// taken from @context.current. only when out of a 
@@ -128,7 +128,7 @@ new CircularModule({
 	
 	process			: function (node,context) {
 		if (node instanceof jQuery) node = node.get(0);
-		Circular.debug.write('@engine.process',node.nodeName,context);
+		Circular.log.debug('@engine.process',node.nodeName,context);
 		if (!node) {
 			Circular.log.fatal('@engine.process','no node given');
 		}
@@ -145,20 +145,20 @@ new CircularModule({
 		
 		if (context) {
 			if (context != ccnode.properties.outercontext) {
-				Circular.debug.write('@engine.process','context changed',ccnode.properties.outercontext,context,node);
+				Circular.log.debug('@engine.process','context changed',ccnode.properties.outercontext,context,node);
 				ccnode.properties.outercontext = context;
 				ccnode.flags.ocontextchanged=true;
 			} else {
-				Circular.debug.write('@engine.process','context not changed');
+				Circular.log.debug('@engine.process','context not changed');
 			}
 		} else {
 			if (!ccnode.properties.outercontext) {
-				Circular.debug.write('@engine.process','no context, searching',node);
+				Circular.log.debug('@engine.process','no context, searching',node);
 				//ccnode.properties.outercontext = Circular.context.get();
 				ccnode.properties.outercontext = this.getContext(node);
-				Circular.debug.write('@engine.process','found context',ccnode.properties.outercontext);
+				Circular.log.debug('@engine.process','found context',ccnode.properties.outercontext);
 			} else {
-				Circular.debug.write('@engine.process','no context: using stored',ccnode.properties.outercontext,node);
+				Circular.log.debug('@engine.process','no context: using stored',ccnode.properties.outercontext,node);
 			}
 		}
 		Circular.context.set(ccnode.properties.outercontext);
@@ -168,9 +168,9 @@ new CircularModule({
 			case Node.ELEMENT_NODE:
 			
 				if (this.processElementNode(node,ccnode)) {
-					Circular.debug.write('@engine.process','registered',node);
+					Circular.log.debug('@engine.process','registered',node);
 				} else {
-					Circular.debug.write('@engine.process','ignored',node);
+					Circular.log.debug('@engine.process','ignored',node);
 				}
 
 				break;
@@ -178,21 +178,21 @@ new CircularModule({
 			case Node.TEXT_NODE:
 			
 				if (this.processTextNode(node,ccnode)) {
-					Circular.debug.write('@engine.process','processed',node);
+					Circular.log.debug('@engine.process','processed',node);
 				} else {
-					Circular.debug.write('@engine.process','ignored',node);
+					Circular.log.debug('@engine.process','ignored',node);
 				}
 				
 				break;
 				
 			case Node.COMMENT_NODE:
 			
-				Circular.debug.write('@engine.process ','ignoring comments '+node.nodeType);
+				Circular.log.debug('@engine.process ','ignoring comments '+node.nodeType);
 				break;
 				
 			default:
 			
-				Circular.debug.write('@engine.process ','ignoring node type '+node.nodeType);
+				Circular.log.debug('@engine.process ','ignoring node type '+node.nodeType);
 		}
 		
 		// if it was registered along the way,
@@ -203,132 +203,133 @@ new CircularModule({
 		
 	},
 
-	/*
 
-		processElementNode	: function(node,ccnode) {
+	processElementNode	: function(node,ccnode) {
+	
+		Circular.log.debug('@engine.processElementNode',node.nodeName);
 		
-			Circular.debug.write('@engine.processElementNode',node.nodeName);
+		if (ccnode.flags.pristine) {
+		
+			Circular.log.debug('@engine.processElementNode','ccnode.flags.pristine');
 			
-			if (ccnode.flags.pristine) {
-			
-				Circular.debug.write('@engine.processElementNode','ccnode.flags.pristine');
+			this.indexAttributes(node,ccnode);
+			if (ccnode.index.length) {
+				this.processAttributesIn(node,ccnode);
+				Circular.registry.set(node,ccnode,true);
+				if (ccnode.flags.recurse) {
+					this.processChildren(node,ccnode.properties.innercontext);
+				} else Circular.log.debug('@engine.processElementNode','flags.recurse=false');
+				this.processAttributesOut(node,ccnode);
+				Circular.registry.set(node,ccnode,true);
+				return true;
+			} else {
+				// no need to register. just recurse
+				Circular.log.debug('@engine.processElementNode','no attributes, not registering');
+				ccnode.properties.innercontext = ccnode.properties.outercontext;
+				this.processChildren(node,ccnode.properties.innercontext);
+			}
+		
 				
-				this.indexAttributes(node,ccnode);
-				if (ccnode.index.length) {
-					this.processAttributesIn(node,ccnode);
-					Circular.registry.set(node,ccnode,true);
-					if (ccnode.flags.recurse) {
+				
+		} else if (ccnode.flags.attrsetchanged) {
+		
+			Circular.log.debug('@engine.processElementNode','ccnode.flags.attrsetchanged');
+			
+			this.indexAttributes(node,ccnode);
+			if (ccnode.index.length) {
+				this.processAttributesIn(node,ccnode);
+				Circular.registry.set(node,ccnode,true);
+				if (ccnode.flags.recurse) {
+					if (ccnode.flags.icontextchanged || ccnode.flags.contentchanged) {
 						this.processChildren(node,ccnode.properties.innercontext);
-					} else Circular.debug.write('@engine.processElementNode','flags.recurse=false');
-					this.processAttributesOut(node,ccnode);
-					Circular.registry.set(node,ccnode,true);
-					return true;
-				} else {
-					// no need to register. just recurse
-					Circular.debug.write('@engine.processElementNode','no attributes, not registering');
-					ccnode.properties.innercontext = ccnode.properties.outercontext;
-					this.processChildren(node,ccnode.properties.innercontext);
-				}
+					} else Circular.log.debug('@engine.processElementNode','no need to recurse');
+				}  else Circular.log.debug('@engine.processElementNode','flags.recurse=false');
+				this.processAttributesOut(node,ccnode);
+				Circular.registry.set(node,ccnode,true);
+			} else {
+				ccnode.properties.innercontext=ccnode.properties.outercontext;
+				Circular.registry.set(node,ccnode,true);
+				this.processChildren(node,ccnode.properties.innercontext);
+			}
+				
+		} else if (ccnode.flags.attrdomchanged) {
+		
+			Circular.log.debug('@engine.processElementNode','ccnode.flags.attrdomchanged');
 			
-					
-					
-			} else if (ccnode.flags.attrsetchanged) {
-			
-				Circular.debug.write('@engine.processElementNode','ccnode.flags.attrsetchanged');
-				
-				this.indexAttributes(node,ccnode);
-				if (ccnode.index.length) {
-					this.processAttributesIn(node,ccnode);
-					Circular.registry.set(node,ccnode,true);
-					if (ccnode.flags.recurse) {
-						if (ccnode.flags.icontextchanged || ccnode.flags.contentchanged) {
-							this.processChildren(node,ccnode.properties.innercontext);
-						} else Circular.debug.write('@engine.processElementNode','no need to recurse');
-					}  else Circular.debug.write('@engine.processElementNode','flags.recurse=false');
-					this.processAttributesOut(node,ccnode);
-					Circular.registry.set(node,ccnode,true);
-				} else {
-					ccnode.properties.innercontext=ccnode.properties.outercontext;
-					Circular.registry.set(node,ccnode,true);
-					this.processChildren(node,ccnode.properties.innercontext);
-				}
-					
-			} else if (ccnode.flags.attrdomchanged) {
-			
-				Circular.debug.write('@engine.processElementNode','ccnode.flags.attrdomchanged');
-				
-				if (ccnode.index.length) {
-					this.processAttributesIn(node,ccnode);
-					Circular.registry.set(node,ccnode,true);
-					if (ccnode.flags.recurse) {
-						if (ccnode.flags.icontextchanged || ccnode.flags.contentchanged) { 
-							this.processChildren(node,ccnode.properties.innercontext);
-						} else Circular.debug.write('@engine.processElementNode','no need to recurse');
-					}  else Circular.debug.write('@engine.processElementNode','flags.recurse=false');
-					this.processAttributesOut(node,ccnode);
-					Circular.registry.set(node,ccnode,true);
-				} else {
-					Circular.log.error('@engine.processElementNode','attrdomchanged, but no attributes');
-				}
-					
-			} else if (ccnode.flags.attrdatachanged) {
-			
-				Circular.debug.write('@engine.processElementNode','ccnode.flags.attrdatachanged');
-				
-				if (ccnode.index.length) {
-					this.processAttributesIn(node,ccnode);
-					Circular.registry.set(node,ccnode,true);
-					if (ccnode.flags.recurse) {
-						if (ccnode.flags.icontextchanged || ccnode.flags.contentchanged) { 
-							this.processChildren(node,ccnode.properties.innercontext);
-						} else Circular.debug.write('@engine.processElementNode','no need to recurse');
-					}  else Circular.debug.write('@engine.processElementNode','flags.recurse=false');
-					this.processAttributesOut(node,ccnode);
-					Circular.registry.set(node,ccnode,true);
-				} else {
-					Circular.log.error('@engine.processElementNode','attrdatachanged, but no attributes');
-				}
-				
-			} else if (ccnode.flags.ocontextchanged) {
-			
-				Circular.debug.write('@engine.processElementNode','ccnode.flags.ocontextchanged');
-				
-				if (ccnode.index.length) {
-					this.processAttributesIn(node,ccnode);
-					Circular.registry.set(node,ccnode,true);
-					if (ccnode.flags.recurse) {
-						if (ccnode.flags.icontextchanged || ccnode.flags.contentchanged) {
-							this.processChildren(node,ccnode.properties.innercontext);
-						} else Circular.debug.write('@engine.processElementNode','no need to recurse');
-					}  else Circular.debug.write('@engine.processElementNode','flags.recurse=false');
-					this.processAttributesOut(node,ccnode);
-					Circular.registry.set(node,ccnode,true);
-				
-				} else {
-					
-					// may ignore. events should be triggered
-					// to children, too
-			
-				}
-				
-			} else if (ccnode.flags.contentchanged) {
-			
-				Circular.debug.write('@engine.processElementNode','ccnode.flags.contentchanged');
-				
-				if (ccnode.index.length) {
-					if (ccnode.flags.recurse) {
+			this.indexAttributes(node,ccnode);
+			if (ccnode.index.length) {
+				this.processAttributesIn(node,ccnode);
+				Circular.registry.set(node,ccnode,true);
+				if (ccnode.flags.recurse) {
+					if (ccnode.flags.icontextchanged || ccnode.flags.contentchanged) { 
 						this.processChildren(node,ccnode.properties.innercontext);
-					}  else Circular.debug.write('@engine.processElementNode','flags.recurse=false');
-				} else {
-					this.processChildren(node,ccnode.properties.innercontext);
-				}
+					} else Circular.log.debug('@engine.processElementNode','no need to recurse');
+				}  else Circular.log.debug('@engine.processElementNode','flags.recurse=false');
+				this.processAttributesOut(node,ccnode);
+				Circular.registry.set(node,ccnode,true);
+			} else {
+				Circular.log.error('@engine.processElementNode','attrdomchanged, but no attributes');
+			}
+				
+		} else if (ccnode.flags.attrdatachanged) {
+		
+			Circular.log.debug('@engine.processElementNode','ccnode.flags.attrdatachanged');
+			
+			if (ccnode.index.length) {
+				this.processAttributesIn(node,ccnode);
+				Circular.registry.set(node,ccnode,true);
+				if (ccnode.flags.recurse) {
+					if (ccnode.flags.icontextchanged || ccnode.flags.contentchanged) { 
+						this.processChildren(node,ccnode.properties.innercontext);
+					} else Circular.log.debug('@engine.processElementNode','no need to recurse');
+				}  else Circular.log.debug('@engine.processElementNode','flags.recurse=false');
+				this.processAttributesOut(node,ccnode);
+				Circular.registry.set(node,ccnode,true);
+			} else {
+				Circular.log.error('@engine.processElementNode','attrdatachanged, but no attributes');
 			}
 			
-	
-	*/
+		} else if (ccnode.flags.ocontextchanged) {
+		
+			Circular.log.debug('@engine.processElementNode','ccnode.flags.ocontextchanged');
+			
+			if (ccnode.index.length) {
+				this.processAttributesIn(node,ccnode);
+				Circular.registry.set(node,ccnode,true);
+				if (ccnode.flags.recurse) {
+					if (ccnode.flags.icontextchanged || ccnode.flags.contentchanged) {
+						this.processChildren(node,ccnode.properties.innercontext);
+					} else Circular.log.debug('@engine.processElementNode','no need to recurse');
+				}  else Circular.log.debug('@engine.processElementNode','flags.recurse=false');
+				this.processAttributesOut(node,ccnode);
+				Circular.registry.set(node,ccnode,true);
+			
+			} else {
+				
+				ccnode.properties.innercontext=ccnode.properties.outercontext;
+				Circular.registry.set(node,ccnode,true);
+				this.processChildren(node,ccnode.properties.innercontext);
+		
+			}
+			
+		} else if (ccnode.flags.contentchanged) {
+		
+			Circular.log.debug('@engine.processElementNode','ccnode.flags.contentchanged');
+			
+			if (ccnode.index.length) {
+				if (ccnode.flags.recurse) {
+					this.processChildren(node,ccnode.properties.innercontext);
+				}  else Circular.log.debug('@engine.processElementNode','flags.recurse=false');
+			} else {
+				this.processChildren(node,ccnode.properties.innercontext);
+			}
+		}
+		
+	},
 
-	processElementNode				: function(node,ccnode) {
-		Circular.debug.write('@engine.processElementNode');
+	/*
+		oldProcessElementNode				: function(node,ccnode) {
+		Circular.log.debug('@engine.processElementNode');
 
 		var newcontext = false;
 
@@ -340,7 +341,7 @@ new CircularModule({
 			
 			if (ccnode.index.length) {
 			
-				Circular.debug.write('@engine.processElementNode','processing attrs in ..',node);
+				Circular.log.debug('@engine.processElementNode','processing attrs in ..',node);
 				
 				// evaluate and fill out attrs, execute modules
 				// this will return false if one of the modules
@@ -348,7 +349,7 @@ new CircularModule({
 				
 				var recurse = this.processAttributesIn(node,ccnode);
 				
-				Circular.debug.write('@engine.processElementNode','processed attrs in',node);
+				Circular.log.debug('@engine.processElementNode','processed attrs in',node);
 
 
 				//var innercontext = Circular.context.get();
@@ -366,9 +367,9 @@ new CircularModule({
 					Circular.log.info('@engine.processElementNode','not recursing',ccnode,ccnode.flags.recurse ,ccnode.flags.icontextchanged,ccnode.flags.contentchanged);
 				}
 				
-				Circular.debug.write('@engine.processElementNode','processing attrs out ..',node);
+				Circular.log.debug('@engine.processElementNode','processing attrs out ..',node);
 				this.processAttributesOut(node,ccnode);
-				Circular.debug.write('@engine.processElementNode','processed attrs out',node);
+				Circular.log.debug('@engine.processElementNode','processed attrs out',node);
 				
 				// register the final version
 				Circular.registry.set(node,ccnode,true);
@@ -396,12 +397,12 @@ new CircularModule({
 						Circular.registry.set(node,ccnode,true);
 					} 
 					
-					Circular.debug.write('@engine.processElementNode','processing content',node);
+					Circular.log.debug('@engine.processElementNode','processing content',node);
 					
 					this.processChildren(node,newcontext);
 					
 					
-					Circular.debug.write('@engine.processElementNode','processed content',node);
+					Circular.log.debug('@engine.processElementNode','processed content',node);
 					
 					// and the final version
 					
@@ -444,11 +445,11 @@ new CircularModule({
 					Circular.registry.set(node,ccnode,true);
 				} 
 				
-				Circular.debug.write('@engine.processElementNode','processing content',node);
+				Circular.log.debug('@engine.processElementNode','processing content',node);
 				
 				this.processChildren(node,newcontext);
 				
-				Circular.debug.write('@engine.processElementNode','processed content',node);
+				Circular.log.debug('@engine.processElementNode','processed content',node);
 				
 				// and the final version
 				if (ccnode.flags.registered) {
@@ -469,9 +470,10 @@ new CircularModule({
 		}
 		
 	},
+	*/
 	
 	indexAttributesNew	: function(node,ccnode) {
-		Circular.debug.write('@engine.indexAttributes');
+		Circular.log.debug('@engine.indexAttributes');
 		
 		// loop all the nodes attributes
 		// see if they contain expression or 
@@ -481,51 +483,82 @@ new CircularModule({
 		// the order is important here. 
 		// modules should go first, so there are
 		// executed before normal attributes. also,
-		// the mods need to be sorted in the
-		// order they were created ..
+		// the module attribute should have their own order
 		
 		// if the node was registered in a previous
 		// cycle, use the original values from there
 		
-		if (!ccnode.flags.registered) {
+		if (ccnode.flags.pristine) {
 			// index all attributes
 			
-			var index = [];
+			var modattrs = [], plainattrs = [];
 			for(var ac=0; ac<node.attributes.length;ac++) {
 				
 				var attrname 	= node.attributes[ac].name;
 				var attridx  	= Circular.modules.attridx[attrname];
-				if (attridx) {
-					// this is a module attribute
-					var ccattr 		= Circular.registry.newCCattribute(attrname);
+				if (attridx!==undefined) {
+					Circular.log.debug('@engine.indexAttributes','pristine','adding mod',attrname,attridx);
+					var ccattr 				= Circular.registry.newCCattribute(attrname);
+					ccattr.original 	= node.attributes[ac].value;
 					ccnode.attributes[attrname] = ccattr;
-					index[attridx] = ccattr;
+					modattrs[attridx] = ccattr;
+				} else if (Circular.parser.isExpression(node.attributes[ac].value)) {
+					Circular.log.debug('@engine.indexAttributes','pristine','adding plain',attrname);
+					var ccattr 				= Circular.registry.newCCattribute(attrname);
+					ccattr.original 	= node.attributes[ac].value;
+					ccnode.attributes[attrname] = ccattr;
+					plainattrs.push(ccattr);
 				} else {
-				
+					Circular.log.debug('@engine.indexAttributes','pristine','ignoring attr',attrname);
 				}
 			}
 			// reindex
-			ccnode.index = index.filter(function(val){return val});
+			ccnode.index = modattrs.filter(function(val){return val});
+			ccnode.index.concat(plainattrs);
 				
-				
-		} else {
-		
-			if (ccnode.flags.attrsetchanged) {
+		} else if (ccnode.flags.attrsetchanged) {
 				// index all attributes, but keep the old ones
 				
-			} else if (ccnode.flags.attrdomchanged) {
-				// find which attributes domchanged
-				// and reindex those
-
-			} else {
-				Circular.log.error('@engine.indexAttributes','no need to index?')
+			var modattrs = [], plainattrs = [];
+			for(var ac=0; ac<node.attributes.length;ac++) {
+				
+				var attrname 	= node.attributes[ac].name;
+				if (!ccnode.attributes[attrname]) {
+					var attridx  	= Circular.modules.attridx[attrname];
+					if (attridx!==undefined) {
+						Circular.log.debug('@engine.indexAttributes','attrsetchanged','adding new mod',attrname,attridx);
+						var ccattr 				= Circular.registry.newCCattribute(attrname);
+						ccattr.original 	= node.attributes[ac].value;
+						ccnode.attributes[attrname] = ccattr;
+						modattrs[attridx] = ccattr;
+					} else if (Circular.parser.isExpression(node.attributes[ac].value)) {
+						Circular.log.debug('@engine.indexAttributes','attrsetchanged','adding new plain',attrname);
+						var ccattr 				= Circular.registry.newCCattribute(attrname);
+						ccattr.original 	= node.attributes[ac].value;
+						ccnode.attributes[attrname] = ccattr;
+						plainattrs.push(ccattr);
+					} else {
+						Circular.log.debug('@engine.indexAttributes','attrsetchanged','ignoring new attr',attrname);
+					}
+				}
 			}
+			// reindex
+			ccnode.index = modattrs.filter(function(val){return val});
+			ccnode.index.concat(plainattrs);
 			
+		} else if (ccnode.flags.attrdomchanged) {
+			// find which attributes domchanged
+			// and reindex those
+
+		} else {
+			Circular.log.error('@engine.indexAttributes','no need to index?')
 		}
+			
+		
 	}, 
 	
 	indexAttributes	: function(node,ccnode) {
-		Circular.debug.write('@engine.indexAttributes');
+		Circular.log.debug('@engine.indexAttributes');
 		
 		// loop all the nodes attributes
 		// see if they contain expression or 
@@ -583,14 +616,14 @@ new CircularModule({
 		ccnode.index = attributes.concat(plain);
 		
 		// now put the watches in place
-		Circular.debug.write('@engine.indexAttributes','attributes pre',ccnode.index);
+		Circular.log.debug('@engine.indexAttributes','attributes pre',ccnode.index);
 		for (var pc=0; pc < ccnode.index.length; pc++) {
 			if (ccnode.index[pc].watches) {
 				for (var wc=0; wc<ccnode.index[pc].watches.length;wc++) {
-					Circular.debug.write('@engine.indexAttributes','moving watch',ccnode.index[pc].watches[wc]);
+					Circular.log.debug('@engine.indexAttributes','moving watch',ccnode.index[pc].watches[wc]);
 					for (var pc2=0; pc2 < ccnode.index.length; pc2++) {
 						if (ccnode.index[pc2].name==ccnode.index[pc].watches[wc]) {
-							Circular.debug.write('@engine.indexAttributes','found watch',ccnode.index[pc].watches[wc]);
+							Circular.log.debug('@engine.indexAttributes','found watch',ccnode.index[pc].watches[wc]);
 							// move ccnode.index[pc2] before ccnode.index[pc]
 							ccnode.index.splice(pc,0,ccnode.index.splice(pc2,1)[0]);
 							if (pc2>pc) pc++;
@@ -600,7 +633,7 @@ new CircularModule({
 				}
 			}
 		}
-		Circular.debug.write('@engine.indexAttributes','attributes post',ccnode.index);
+		Circular.log.debug('@engine.indexAttributes','attributes post',ccnode.index);
 		
 		// map them by name - youll need it
 		for (var idx in ccnode.index) {
@@ -610,7 +643,7 @@ new CircularModule({
 	
 
 	indexModuleAttribute			: function(node,ccattr,modname) {
-		Circular.debug.write('@engine.indexModuleAttribute',modname);
+		Circular.log.debug('@engine.indexModuleAttribute',modname);
 		
 		
 		if (this.indexAttribute(node,ccattr)) {
@@ -640,7 +673,7 @@ new CircularModule({
 	},
 	
 	indexAttribute			: function(node,ccattr) {
-		Circular.debug.write('@engine.indexAttribute',ccattr.properties.name);
+		Circular.log.debug('@engine.indexAttribute',ccattr.properties.name);
 		
 		// check if the attribute is an expression
 		// update the properties of ccattr, but
@@ -652,7 +685,7 @@ new CircularModule({
 		
 		if (ccattr.flags.attrdomchanged) {
 
-			Circular.debug.write('@engine.indexAttribute','attrdomchanged',node,ccattr);
+			Circular.log.debug('@engine.indexAttribute','attrdomchanged',node,ccattr);
 			
 			var expression = '', original = '';
 			
@@ -705,7 +738,7 @@ new CircularModule({
 	},
 	
 	processAttributesIn	: function(node,ccnode) {
-		Circular.debug.write('@engine.processAttributesIn',node);
+		Circular.log.debug('@engine.processAttributesIn',node);
 		// loop all attributes forward
 		// evaluate optional expressions
 		// if its a module, execute mod.in. 
@@ -732,7 +765,7 @@ new CircularModule({
 					if (result!=ccattr.content.result) {
 					
 						ccattr.content.result = result;
-						Circular.debug.write('@engine.processAttributesIn','changed',ccattr.properties.name,ccattr.content.expression,ccattr.content.result);
+						Circular.log.debug('@engine.processAttributesIn','changed',ccattr.properties.name,ccattr.content.expression,ccattr.content.result);
 						try {
 							if (result===undefined) ccattr.content.value = ''; 
 							else if (typeof ccattr.content.result == 'object') ccattr.content.value = ccattr.content.original;
@@ -759,7 +792,7 @@ new CircularModule({
 			// even if it didnt change, you need to execute it
 			// because it could change things for other attributes
 			if (ccattr.properties.module) {
-				Circular.debug.write('@engine.processAttributesIn','executing',ccattr.properties.module);
+				Circular.log.debug('@engine.processAttributesIn','executing',ccattr.properties.module);
 				var mod = Circular.modules.stack[Circular.modules.name2idx[ccattr.properties.module]];
 				var func = mod.in;
 				if (func) {
@@ -792,7 +825,7 @@ new CircularModule({
 	},
 	
 	processAttributesOut	: function(node,ccnode) {
-		Circular.debug.write('@engine.processAttributesOut');
+		Circular.log.debug('@engine.processAttributesOut');
 		// loop all modules backwards
 		// starting with the last break, if any
 		for (var dc=0; dc<ccnode.index.length; dc++) {
@@ -804,7 +837,7 @@ new CircularModule({
 		for (var dc=dc-1; dc>=0; dc--) {
 			var ccattr = ccnode.index[dc];
 			if (ccattr.properties.module) {
-				Circular.debug.write('@engine.processAttributesOut','executing',ccattr.properties.module);
+				Circular.log.debug('@engine.processAttributesOut','executing',ccattr.properties.module);
 				var mod = Circular.modules.stack[Circular.modules.name2idx[ccattr.properties.module]];
 				var func = mod.out;
 				if (func) {
@@ -816,7 +849,7 @@ new CircularModule({
 	},
 	
 	processChildren	: function(node,context) {
-		Circular.debug.write('@engine.processChildren');
+		Circular.log.debug('@engine.processChildren');
 		
 		// traverse node depth first looking
 		// for modules or expressions,
@@ -830,7 +863,7 @@ new CircularModule({
 	
 	
 	processTextNode	: function(node,ccnode) {
-		Circular.debug.write('@engine.processTextNode');
+		Circular.log.debug('@engine.processTextNode');
 		
 		if (ccnode.flags.contentchanged) {
 		
@@ -845,7 +878,7 @@ new CircularModule({
 					// this is a full match
 					var parent = node.parentNode;
 					if (!parent.hasAttribute('cc-content')) {
-						Circular.debug.write('@engine.processTextNode','setting cc-content on the parent');
+						Circular.log.debug('@engine.processTextNode','setting cc-content on the parent');
 						
 						// ugly
 
@@ -876,7 +909,7 @@ new CircularModule({
 					
 					} else {					
 				
-						Circular.debug.write('@engine.processTextNode','replacing content with single span');
+						Circular.log.debug('@engine.processTextNode','replacing content with single span');
 						var span = document.createElement('span');
 						span.setAttribute('id','cc-engine-'+this.genid++);
 
@@ -893,18 +926,18 @@ new CircularModule({
 				} else {
 				
 					// start splitting up nodes
-					Circular.debug.write('replacing content with text and spans');
+					Circular.log.debug('replacing content with text and spans');
 					
 					var vals = Circular.parser.split(val);
 					for (var vc=0; vc<vals.length;vc++) {
 							if (vals[vc].expression) {
-								Circular.debug.write('@engine.processTextNode','inserting span '+vals[vc].expression);
+								Circular.log.debug('@engine.processTextNode','inserting span '+vals[vc].expression);
 								var span = document.createElement('span');
 								span.setAttribute('id','cc-engine-'+this.genid++);
 								span.setAttribute('cc-content',vals[vc].expression);
 								nodes.push(span);
 							} else {
-								Circular.debug.write('@engine.processTextNode','inserting text '+vals[vc].text);
+								Circular.log.debug('@engine.processTextNode','inserting text '+vals[vc].text);
 								nodes.push(document.createTextNode(vals[vc].text));
 							}
 					}

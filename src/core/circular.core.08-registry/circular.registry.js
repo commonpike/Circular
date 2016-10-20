@@ -5,7 +5,7 @@
 new CircularModule({
 
 	name		: 'registry',
-	requires	: ['log','debug'],
+	requires	: ['log'],
 	counter	: 0,
 	
 	newCCNode 	: function() {
@@ -75,13 +75,25 @@ new CircularModule({
 	
 	unlock	: function(node) {
 		ccnode = $(node).data('cc-node');
-		ccnode.flags.locked=false;
+		ccnode.flags['locked']=false;
+		// unset the flags youve set before recycle
+		ccnode.flags['processing'] 			= false;
+		ccnode.flags['attrsetchanged'] 	= false;
+		ccnode.flags['contentchanged'] 	= false;
+		ccnode.flags['ocontextchanged'] = false;
+		ccnode.flags['icontextchanged'] = false;
+		ccnode.flags['attrdomchanged'] 	= false;
+		ccnode.flags['attrdatachanged'] = false;
+		for (var ac=0; ac<ccnode.index.length; ac++) {
+			ccnode.index[ac].flags['attrdomchanged'] = false;
+			ccnode.index[ac].flags['attrdatachanged'] = false;
+		}
 		$(node).data('cc-node',ccnode);
 	},
 	
 
 	set	: function(node,ccnode,watch) {
-		//Circular.debug.write('@registry.set');
+		//Circular.log.debug('@registry.set');
 		if (!ccnode.flags.registered) {
 			ccnode.flags.pristine = false;
 			ccnode.flags.registered = true;
@@ -91,14 +103,14 @@ new CircularModule({
 			ccnode.index[ac].flags.registered=true;
 		}
 		if (watch) {
-			Circular.debug.write('@registry.set','watch',node);
+			Circular.log.debug('@registry.set','watch',node);
 			Circular.watchdog.watch(node,ccnode);
 		}
 		$(node).data('cc-node',ccnode);
 	},
 	
 	get	: function(node,readonly) {
-		// Circular.debug.write('Circular.registry.get');
+		// Circular.log.debug('Circular.registry.get');
 		// this should perhaps return a deep copy instead ..
 		var ccnode = $(node).data('cc-node');
 		if (!ccnode) ccnode = this.newCCNode();

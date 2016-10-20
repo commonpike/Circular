@@ -7,7 +7,7 @@
 new CircularModule({
 	
 	name			: 'parser',
-	requires	: ['log','debug'],
+	requires	: ['log'],
 	config		: {
 		// exprregex		:	/{{([^}]*?)}}/g,
 		// exprregex			:	/{({|\[)([^}\]]*?)(}|\])}/g,
@@ -22,7 +22,7 @@ new CircularModule({
 	
 	
 	getPaths :	function(expression) {
-		Circular.debug.write('Circular.parser.getPaths',expression);
+		Circular.log.debug('Circular.parser.getPaths',expression);
 		var ast = null;
 		try {
 			ast = esprima.parse(expression);
@@ -38,7 +38,7 @@ new CircularModule({
 		}
 		
 		if (ast) {
-			Circular.debug.write('Circular.parser.getPaths',ast);
+			Circular.log.debug('Circular.parser.getPaths',ast);
 			var paths = new Array();
 			this.recursePaths(ast,paths);
 			return paths;
@@ -47,13 +47,13 @@ new CircularModule({
 	
 	recursePaths	: function(tree,paths,path) {
 	
-		Circular.debug.write('Circular.parser.recursePaths',paths,path);
+		Circular.log.debug('Circular.parser.recursePaths',paths,path);
 		
 		if (!tree || !paths) return false;
 		if (tree.type =='Identifier') {
 
 			// some sort of global
-			Circular.debug.write('Circular.parser.recursePaths','adding identifier '+tree.name);
+			Circular.log.debug('Circular.parser.recursePaths','adding identifier '+tree.name);
 			paths.push(Circular.config.rootscope+'.'+tree.name);
 
 		} else if (tree.type=="ThisExpression") {
@@ -80,7 +80,7 @@ new CircularModule({
 				if (tree.object.type=='Identifier') {
 					
 					// like foo.bar ; were done with this path - push !
-					Circular.debug.write('Circular.parser.recursePaths','adding path '+tree.object.name+path);
+					Circular.log.debug('Circular.parser.recursePaths','adding path '+tree.object.name+path);
 					
 					if (path.indexOf('.')===0) {
 						paths.push(tree.object.name+'.'+path.substring(1));
@@ -99,7 +99,7 @@ new CircularModule({
 					if (tree.object.type=='MemberExpression') {
 						
 						// like foo.bar.quz ; recurse the object
-						Circular.debug.write('Circular.parser.recursePaths','recursing member expression ..');
+						Circular.log.debug('Circular.parser.recursePaths','recursing member expression ..');
 						this.recursePaths(tree.object,paths,path);						
 					
 					} else {
@@ -117,7 +117,7 @@ new CircularModule({
 				if (tree.object.type=='Identifier') {
 					
 					// like foo[bar.quz] - push the object, recurse the property
-					Circular.debug.write('Circular.parser.recursePaths','adding identifier '+tree.object.name);
+					Circular.log.debug('Circular.parser.recursePaths','adding identifier '+tree.object.name);
 					paths.push(Circular.config.rootscope+'.'+tree.object.name);
 					this.recursePaths(tree.property);	
 					
@@ -130,7 +130,7 @@ new CircularModule({
 				} else {
 				
 					// like foo.bar[quz(raz)] ; recurse both
-					Circular.debug.write('Circular.parser.recursePaths','recursing member expression ..');
+					Circular.log.debug('Circular.parser.recursePaths','recursing member expression ..');
 					this.recursePaths(tree.object,paths);	
 					this.recursePaths(tree.property,paths);	
 				
@@ -156,7 +156,7 @@ new CircularModule({
 			
 		} else {
 		
-			Circular.debug.write('Circular.parser.recursePaths','other tree.type ',tree.type);
+			Circular.log.debug('Circular.parser.recursePaths','other tree.type ',tree.type);
 		
 			// unknown garbage. dig deeper.
 			var ccnode = Object.getOwnPropertyNames(tree);
@@ -165,16 +165,16 @@ new CircularModule({
 				if (typeof tree[key] == 'object') {
 					if (Array.isArray(tree[key])) {
 						for (var kc=0;kc<tree[key].length;kc++) {
-							Circular.debug.write('Circular.parser.recursePaths','recursing '+key+':'+kc);
+							Circular.log.debug('Circular.parser.recursePaths','recursing '+key+':'+kc);
 							this.recursePaths(tree[key][kc],paths);
 						}
 					} else {
-						Circular.debug.write('Circular.parser.recursePaths','recursing '+key,tree[key]);
+						Circular.log.debug('Circular.parser.recursePaths','recursing '+key,tree[key]);
 						this.recursePaths(tree[key],paths);
 						
 					}
 				} else {
-					Circular.debug.write('Circular.parser.recursePaths','ignoring '+key);
+					Circular.log.debug('Circular.parser.recursePaths','ignoring '+key);
 				}
 				
 			}
@@ -187,14 +187,14 @@ new CircularModule({
 	
 	match	: function(x) {
 		// returns an array of matches or false
-		Circular.debug.write('Circular.parser.match',x);
+		Circular.log.debug('Circular.parser.match',x);
 		return x.match(Circular.config.exprregex);
 	},
 	
 	// split a text into an array
 	// of plain text string and {{expressions}}
 	split	: function(text) {
-		Circular.debug.write('Circular.parser.split',text);
+		Circular.log.debug('Circular.parser.split',text);
 		var exec; var result = []; 
 		var cursor = 0;
 		while (exec = Circular.config.exprregex.exec(text)) {
@@ -229,7 +229,7 @@ new CircularModule({
 	},
 	
 	parseAttribute	: function(ccattr,ctx) {
-		Circular.debug.write('Circular.parser.parseAttribute',ccattr.content.original);
+		Circular.log.debug('Circular.parser.parseAttribute',ccattr.content.original);
 		
 		var matches = ccattr.content.original.match(Circular.config.exprregex);
 		if (matches) {
@@ -279,11 +279,11 @@ new CircularModule({
 			}
 			
 			ccattr.flags.parsed = true;
-			Circular.debug.write("Circular.parser.parseAttribute",ccattr.content.original,ctx,ccattr.content.expression);
+			Circular.log.debug("Circular.parser.parseAttribute",ccattr.content.original,ctx,ccattr.content.expression);
 			return true;
 			
 		} else {
-			Circular.debug.write('Circular.parser.parseAttribute','no match');
+			Circular.log.debug('Circular.parser.parseAttribute','no match');
 			if (ccattr.content.expression) {
 				// the expression is new or changed. need to remove content.paths
 				ccattr.content.expression = '';
@@ -302,17 +302,17 @@ new CircularModule({
 	// call it like parser.eval.call(node,expr)
 	
 	eval	: function(expr) {
-		Circular.debug.write('Circular.parser.eval');
+		Circular.log.debug('Circular.parser.eval');
 		var value = Circular.config.evalfail;
 		try {
 				value = eval(expr);
-				Circular.debug.write("Circular.parser.eval",expr,value);
+				Circular.log.debug("Circular.parser.eval",expr,value);
 		} catch (err) {
 			try {
 				// maybe its an object def
 				expr = '('+expr+')';
 				var value = eval(expr);
-				Circular.debug.write("Circular.parser.eval",expr,value);
+				Circular.log.debug("Circular.parser.eval",expr,value);
 			} catch (err) {
 				Circular.log.error("Circular.parser.eval",expr,'fail',err);
 			}

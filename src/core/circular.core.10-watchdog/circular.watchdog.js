@@ -7,7 +7,7 @@
 new CircularModule({
 		
 	name				: 'watchdog',
-	requires		: ['log','debug','registry','engine'],
+	requires		: ['log','registry','engine'],
 	timer				: null,
 	lock				: false,	// watchdog is locked while releasing
 	config			: {
@@ -53,7 +53,7 @@ new CircularModule({
 	
 	
 	init	: function() {
-		Circular.debug.write('@watchdog.init');
+		Circular.log.debug('@watchdog.init');
 		this.domobserver = new MutationObserver(Circular.watchdog.ondomchange);
 		if (!Object.observe) {
 			Circular.log.warn('@watchdog.init','emulating object.observe');
@@ -64,7 +64,7 @@ new CircularModule({
 	},
 	
 	die	: function() {
-		Circular.debug.write('@watchdog.die');
+		Circular.log.debug('@watchdog.die');
 		this.domobserver.disconnect();
 		for (path in this.pathobservers) {
 			this.pathobservers[path].observer.close();
@@ -73,25 +73,14 @@ new CircularModule({
 	},
 	
 	watch	: function (node,ccnode) {
-		Circular.debug.write('@watchdog.watch');
+		Circular.log.debug('@watchdog.watch');
 		if (!ccnode) ccnode = Circular.registry.get(node);
 		if (node instanceof jQuery) node = node.get(0);
 		this.watchdom(node,ccnode);
 		this.watchdata(node,ccnode);
 
 		
-		// unset the flags youve set before recycle
-		ccnode.flags['processing'] 			= false;
-		ccnode.flags['attrsetchanged'] 	= false;
-		ccnode.flags['contentchanged'] 	= false;
-		ccnode.flags['ocontextchanged'] = false;
-		ccnode.flags['icontextchanged'] = false;
-		ccnode.flags['attrdomchanged'] 	= false;
-		ccnode.flags['attrdatachanged'] = false;
-		for (var ac=0; ac<ccnode.index.length; ac++) {
-			ccnode.index[ac].flags['attrdomchanged'] = false;
-			ccnode.index[ac].flags['attrdatachanged'] = false;
-		}
+		
 		ccnode.flags['watched'] = true;
 		// needed if watch is called from outside ..
 		Circular.registry.set(node,ccnode);
@@ -102,7 +91,7 @@ new CircularModule({
 	
 	watchdom	: function(node,ccnode) {
 		if (!ccnode.flags.domobserved) {
-			Circular.debug.write('@watchdog.watchdom',ccnode);
+			Circular.log.debug('@watchdog.watchdom',ccnode);
 			this.domobserver.observe(node, { 
 				attributes				: true, 
 				attributeOldValue	: true,
@@ -119,7 +108,7 @@ new CircularModule({
 	},
 	
 	ondomchange	: function(records,observer) {
-		Circular.debug.write('@watchdog.ondomchange',records);
+		Circular.log.debug('@watchdog.ondomchange',records);
 		
 		//type	String	
 		//target	Node	
@@ -158,7 +147,7 @@ new CircularModule({
 
 	watchdata	: function(node,ccnode) {
 		if (ccnode.flags.attrdomchanged || ccnode.flags.attrsetchanged) {
-			Circular.debug.write('@watchdog.watchdata',node,ccnode);
+			Circular.log.debug('@watchdog.watchdata',node,ccnode);
 			
 			ccnode.index.forEach(function(ccattr,idx) {
 				if (ccattr.flags.attrdomchanged) {
@@ -172,7 +161,7 @@ new CircularModule({
 							ccattr.content.oldpaths.forEach(function(oldpath) {
 								if (this.pathobservers[oldpath]) {
 									if (ccattr.content.paths.indexOf(oldpath)==-1) {
-										Circular.debug.write('@watchdog.watchdata','removing  path',oldpath);
+										Circular.log.debug('@watchdog.watchdata','removing  path',oldpath);
 										var object=null,subpath='';
 										var split = oldpath.indexOf('.');
 										if (split!=-1) subpath = oldpath.substring(split+1)
@@ -182,7 +171,7 @@ new CircularModule({
 												if (property && property.node==node && property.type=='attribute' && property.id == ccattr.properties.name) {
 													delete this.pathobservers[oldpath].properties[pc];
 													if (!this.pathobservers[oldpath].properties.length) {
-														Circular.debug.write('@watchdog.watchdata','closing pathobserver',oldpath);
+														Circular.log.debug('@watchdog.watchdata','closing pathobserver',oldpath);
 														this.pathobservers[oldpath].observer.close();
 														delete this.pathobservers[oldpath];
 														this.countpobs--;
@@ -201,7 +190,7 @@ new CircularModule({
 						// add new content.paths
 						ccattr.content.paths.forEach(function(path) {
 							if (ccattr.content.oldpaths.indexOf(path)==-1) {
-								Circular.debug.write('@watchdog.watchdata','adding path',path);
+								Circular.log.debug('@watchdog.watchdata','adding path',path);
 								if (path!='this') {
 									var object=null,subpath='';
 									var split = path.indexOf('.');
@@ -239,26 +228,26 @@ new CircularModule({
 									}
 								} // this
 							} else {
-								Circular.debug.write('@watchdog.watchdata','path already watched',path);
+								Circular.log.debug('@watchdog.watchdata','path already watched',path);
 							}
 						},this);
 					
 					} else {
-						Circular.debug.write('@watchdog.watchdata','no content.paths',ccattr.properties.name);
+						Circular.log.debug('@watchdog.watchdata','no content.paths',ccattr.properties.name);
 					}
 
 					ccnode.flags.dataobserved=true;
 				} else {
-					Circular.debug.write('@watchdog.watchdata','no attrdomchanged',ccattr.properties.name);
+					Circular.log.debug('@watchdog.watchdata','no attrdomchanged',ccattr.properties.name);
 				}
 			},this);
 		} else {
-			Circular.debug.write('@watchdog.watchdata','no attrdomchanged in node',node.tagName);
+			Circular.log.debug('@watchdog.watchdata','no attrdomchanged in node',node.tagName);
 		}
 	},
 	
 	ondatachange	: function(fullpath,newvalue,oldvalue) {
-		Circular.debug.write('@watchdog.ondatachange',fullpath);
+		Circular.log.debug('@watchdog.ondatachange',fullpath);
 		this.pathobservers[fullpath].properties.forEach(function(prop) {
 			switch (prop.type) {
 				case 'attribute':
@@ -273,21 +262,21 @@ new CircularModule({
 	
 	
 	pass	: function(node,event,target) {
-		//Circular.debug.write('@watchdog.pass');
+		//Circular.log.debug('@watchdog.pass');
 		this.catch(node,'pass',event,target);
 	},
 	ignore	: function(node,event,target) {
-		//Circular.debug.write('@watchdog.ignore');
+		//Circular.log.debug('@watchdog.ignore');
 		this.catch(node,'ignore',event,target);
 	},
 	unignore	: function(node,event,target) {
-		//Circular.debug.write('@watchdog.unignore');
+		//Circular.log.debug('@watchdog.unignore');
 		// todo: add domchange/datachange timeout
 		this.catch(node,'unignore',event,target);
 	},
 
 	catch	: function(node,type,flag,target) {
-		Circular.debug.write('@watchdog.catch',node,type,flag,target);
+		Circular.log.debug('@watchdog.catch',node,type,flag,target);
 		clearTimeout(this.timer);
 		
 		var nodeidx = this.eventsin.nodes.indexOf(node);
@@ -311,7 +300,7 @@ new CircularModule({
 	
 	release	: function() {
 	
-		Circular.debug.write('@watchdog.release');
+		Circular.log.debug('@watchdog.release');
 
 		// copy & clean caught to releaseing
 		// read all the records
@@ -349,20 +338,20 @@ new CircularModule({
 									if (ccnode.attributes[record.target]) {
 									
 										if (ccnode.attributes[record.target].flags[record.flag+':i']) {
-											Circular.debug.write('@watchdog.release','ccattr ignoring flag',record.flag);
+											Circular.log.debug('@watchdog.release','ccattr ignoring flag',record.flag);
 											break;
 										}
 										if (ccnode.attributes[record.target].properties[record.flag+':p']) {
-											Circular.debug.write('@watchdog.release','ccattr passing flag',record.flag);
+											Circular.log.debug('@watchdog.release','ccattr passing flag',record.flag);
 											ccnode.attributes[record.target].properties[record.flag+':p']--;
 											break;
 										}
-										Circular.debug.write('@watchdog.release',record.flag,record.target,node);
+										Circular.log.debug('@watchdog.release',record.flag,record.target,node);
 										ccnode.attributes[record.target].flags[record.flag]=true;
 										ccnode.flags[record.flag]=true;
 										ccnode.flags.processing=true;
 									} else {
-										Circular.debug.write('@watchdog.release','unregistered target '+record.target,record);
+										Circular.log.debug('@watchdog.release','unregistered target '+record.target,record);
 									}
 								} else {
 									Circular.log.error('@watchdog.release','ccattr event target missing ',record);
@@ -374,15 +363,15 @@ new CircularModule({
 							case 'attrsetchanged':
 							
 								if (ccnode.flags['attrsetchanged:i']) {
-									Circular.debug.write('@watchdog.release','node ignoring attrsetchanged');
+									Circular.log.debug('@watchdog.release','node ignoring attrsetchanged');
 									break;
 								}
 								if (ccnode.properties['attrsetchanged:p']) {
-									Circular.debug.write('@watchdog.release','node passing attrsetchanged');
+									Circular.log.debug('@watchdog.release','node passing attrsetchanged');
 									ccnode.properties['attrsetchanged:p']--;
 									break;
 								}
-								Circular.debug.write('@watchdog.release','attrsetchanged',record,node);
+								Circular.log.debug('@watchdog.release','attrsetchanged',record,node);
 								ccnode.flags['attrsetchanged']=true;
 								ccnode.flags.processing=true;
 								break;
@@ -390,15 +379,15 @@ new CircularModule({
 							case 'contentchanged':
 							
 								if (ccnode.flags['contentchanged:i']) {
-									Circular.debug.write('@watchdog.release','node ignoring contentchanged');
+									Circular.log.debug('@watchdog.release','node ignoring contentchanged');
 									break;
 								}
 								if (ccnode.properties['contentchanged:p']) {
-									Circular.debug.write('@watchdog.release','node passing contentchanged');
+									Circular.log.debug('@watchdog.release','node passing contentchanged');
 									ccnode.properties['contentchanged:p']--;
 									break;
 								}
-								Circular.debug.write('@watchdog.release','contentchanged',record,node);
+								Circular.log.debug('@watchdog.release','contentchanged',record,node);
 								ccnode.flags['contentchanged']=true;
 								ccnode.flags.processing=true;
 								break;
@@ -412,7 +401,7 @@ new CircularModule({
 							// and notify them of these changes for the next cycle
 							ccnode.index.forEach(function(ccattr) {
 								if (ccattr.content.paths.indexOf('this')!=-1 && record.target!=ccattr.properties.name) {
-									Circular.debug.write('triggering catchall for path "this"',node);
+									Circular.log.debug('triggering catchall for path "this"',node);
 									Circular.watchdog.catch(node,'event','attrdatachanged',ccattr.properties.name);
 								}
 							});
@@ -430,7 +419,7 @@ new CircularModule({
 									if (ccnode.attributes[record.target]) {
 										ccnode.attributes[record.target].properties[record.flag+':p']++;
 									} else {
-										Circular.debug.write('@watchdog.release','unregistered target '+record.target,record);
+										Circular.log.debug('@watchdog.release','unregistered target '+record.target,record);
 									}
 								} else {
 									Circular.log.error('@watchdog.release','ccattr event target missing ',record);
@@ -464,7 +453,7 @@ new CircularModule({
 									if (ccnode.attributes[record.target]) {
 										ccnode.attributes[record.target].flags[record.flag+':i']=true;
 									} else {
-										Circular.debug.write('@watchdog.release','unregistered target '+record.target,record);
+										Circular.log.debug('@watchdog.release','unregistered target '+record.target,record);
 									}
 								} else {
 									Circular.log.error('@watchdog.release','ccattr event target missing ',record);
@@ -498,7 +487,7 @@ new CircularModule({
 									if (ccnode.attributes[record.target]) {
 										ccnode.attributes[record.target].flags[record.flag+':i']=false;
 									} else {
-										Circular.debug.write('@watchdog.release','unregistered target '+record.target,record);
+										Circular.log.debug('@watchdog.release','unregistered target '+record.target,record);
 									}
 								} else {
 									Circular.log.error('@watchdog.release','ccattr event target missing ',record);
@@ -541,8 +530,8 @@ new CircularModule({
 			}
 		});
 		if (todo.length) {
-			Circular.debug.write('recycling '+todo.length+' nodes');
-			if (Circular.debug.enabled) this.report(this.eventsout);		
+			Circular.log.debug('recycling '+todo.length+' nodes');
+			if (Circular.log.debugging) this.report(this.eventsout);		
 			Circular.engine.recycle(todo,true);
 			
 		}
