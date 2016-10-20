@@ -1,8 +1,6 @@
-<!DOCTYPE html>
 <html>
 	<head>
-		<title>Hello | Goodbye</title>
-		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+		<title>Circular.queue</title>
 		<script>
 		
 			
@@ -36,59 +34,23 @@
 			}
 			
 		</script>
-		<script>
 		
-			var Model = {
-				menu	: [
-						{ 
-							title	: 'Hello',
-							link	: 'hello'
-						},
-						{
-							title	: 'Goodbye',
-							link	: 'goodbye'
-						}
-				], 
-				pages	: {
-					hello 		: {
-						title : 'Hello World',
-						content	: 'Hello happy World'
-					},
-					goodbye 		: {
-						title 	: 'Goodbye World',
-						content	: 'Goodbye gruel world'
-					}
-				}
-				
-			}
-			
-			var Control = {
-				currentpage	: null,
-				goto	: function(page) {
-					this.currentpage=Model.pages[page];
-				}
-			}
-			
-			Control.goto('hello');
-			Circular.init({
-				attrprefix	: 'square-',
-				debug : true
-			});
-
-				
-		</script>
+		<style type="text/css">
+			body { font-family: sans-serif; }
+		</style>
 	</head>
-	<body square-root square-context="Control.currentpage">
-	
-		<nav>
-				<a href="#" onclick="Control.goto('hello')">Hello</a> |
-				<a href="#" onclick="Control.goto('goodbye')">Goodbye</a>
-		</nav>
-		
-		<h1 square-content="{{#title}}"></h1>
-		
-		
-		
-		
+	<body>
+		<b>Installed modules:</b><br>
+		<ol>
+			<script>for (var name in Circular.modules.name2idx) {
+				document.write('<li>'+name+':'+Circular.modules.name2idx[name]+'</li>');
+			}</script>
+		</ol>
+		<b>Registered attributes:</b><br>
+		<ol>
+			<script>for (var name in Circular.modules.attr2idx) {
+				document.write('<li>'+name+':'+Circular.modules.attr2idx[name]+'</li>');
+			}</script>
+		</ol>
 	</body>
 </html>

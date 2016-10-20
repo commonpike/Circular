@@ -15,7 +15,7 @@ new CircularModule({
 	},
 	
 	in	: function(ccattr,node,ccnode) {
-		this.write('mod.log',node);
+		this.write('@log',node);
 		ccattr.properties.debugging = this.debugging;
 		if (Circular.parser) this.toggleDebug(Circular.parser.boolish(ccattr.content.value));
 		else this.toggleDebug(!ccattr.content.original || ccattr.content.result); // simpleparse
@@ -28,9 +28,9 @@ new CircularModule({
 	
 	toggleDebug: function(state) 	{ 
 		if (state===undefined) state = !this.debugging;
-		if (!state) this.write('@log.toggleDebug','off');
+		if (!state) this.write('@log','debug off');
 		this.debugging=state; 
-		if (state) this.write('@log.toggleDebug','on');
+		if (state) this.write('@log','debug on');
 	},
 	
 	tron	: function() {
