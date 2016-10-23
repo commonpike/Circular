@@ -489,6 +489,7 @@ new CircularModule({
 		// cycle, use the original values from there
 		
 		if (ccnode.flags.pristine) {
+			
 			// index all attributes
 			
 			var modattrs = [], plainattrs = [];
@@ -512,25 +513,44 @@ new CircularModule({
 					Circular.log.debug('@engine.indexAttributes','pristine','ignoring attr',attrname);
 				}
 			}
-			// reindex
+			// unsparse
 			ccnode.index = modattrs.filter(function(val){return val});
 			ccnode.index.concat(plainattrs);
 				
 		} else if (ccnode.flags.attrsetchanged) {
-				// index all attributes, but keep the old ones
+			
+			// index all attributes, but keep the old ones
 				
 			var modattrs = [], plainattrs = [];
 			for(var ac=0; ac<node.attributes.length;ac++) {
 				
 				var attrname 	= node.attributes[ac].name;
-				if (!ccnode.attributes[attrname]) {
-					var attridx  	= Circular.modules.attridx[attrname];
-					if (attridx!==undefined) {
+				var attridx  	= Circular.modules.attridx[attrname];
+				if (attridx!==undefined) {
+					if (ccnode.attributes[attrname]) {
+						modattrs[attridx] = ccnode.attributes[attrname];
+						if (ccnode.attributes[attrname].flags.domchanged) {
+							Circular.log.debug('@engine.indexAttributes','attrsetchanged/attrdomchanged','resetting',attrname);
+							var ccattr 				= Circular.registry.newCCattribute(attrname);
+							ccattr.original 	= node.attributes[ac].value;
+							ccnode.attributes[attrname] = ccattr;
+						}
+					} else {
 						Circular.log.debug('@engine.indexAttributes','attrsetchanged','adding new mod',attrname,attridx);
 						var ccattr 				= Circular.registry.newCCattribute(attrname);
 						ccattr.original 	= node.attributes[ac].value;
 						ccnode.attributes[attrname] = ccattr;
 						modattrs[attridx] = ccattr;
+					} 
+				} else {
+					if (ccnode.attributes[attrname]) {
+						plainattrs.push(ccnode.attributes[attrname]);
+						if (ccnode.attributes[attrname].flags.domchanged) {
+							Circular.log.debug('@engine.indexAttributes','attrsetchanged/attrdomchanged','resetting',attrname);
+							var ccattr 				= Circular.registry.newCCattribute(attrname);
+							ccattr.original 	= node.attributes[ac].value;
+							ccnode.attributes[attrname] = ccattr;
+						}
 					} else if (Circular.parser.isExpression(node.attributes[ac].value)) {
 						Circular.log.debug('@engine.indexAttributes','attrsetchanged','adding new plain',attrname);
 						var ccattr 				= Circular.registry.newCCattribute(attrname);
@@ -542,14 +562,31 @@ new CircularModule({
 					}
 				}
 			}
-			// reindex
+			// unsparse
 			ccnode.index = modattrs.filter(function(val){return val});
 			ccnode.index.concat(plainattrs);
 			
+			// remove old attributes
+			for (var attrname in ccnode.attributes) {
+				if (!node.hasAttribute(attrname)) {
+					Circular.log.debug('@engine.indexAttributes','attrsetchanged','removing attr',attrname);
+					delete ccnode.attributes[attrname];
+				}
+			}
+			
 		} else if (ccnode.flags.attrdomchanged) {
+		
 			// find which attributes domchanged
-			// and reindex those
-
+			// and reset those
+			for (var attrname in ccnode.attributes) {
+				if (ccnode.attributes[attrname].flags.domchanged) {
+					Circular.log.debug('@engine.indexAttributes','attrdomchanged','resetting attr',attrname);
+					var ccattr 				= Circular.registry.newCCattribute(attrname);
+					ccattr.original 	= node.attributes[ac].value;
+					ccnode.attributes[attrname] = ccattr;
+				}
+			}
+			
 		} else {
 			Circular.log.error('@engine.indexAttributes','no need to index?')
 		}
