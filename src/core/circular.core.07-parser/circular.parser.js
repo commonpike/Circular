@@ -219,6 +219,11 @@ new CircularModule({
 		return Circular.parser.eval.call(this,parsed);
 	},
 	
+	isExpression	: function(expr) {
+		// the shortest way to check - false pos are ok
+		return (expr.substring(0,2)=="{{");
+	},
+	
 	parse	: function(expr,ctx) {
 		// parse a single expression
 		parsed = expr.replace(/\$this/g,'$(this)');
@@ -295,6 +300,7 @@ new CircularModule({
 		return false;
 	},
 	
+
 	
 	// evaluates a qualified expression.
 	// this does nothing special, but try,catch.

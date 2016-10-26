@@ -45,6 +45,10 @@ new CircularModule({
 		// map attribute names to modules
 	},
 	
+	attr2mod					: {
+		// map attribute names to modules
+	},
+	
 	name2idx					: {
 		// map module names to modules
 	},
@@ -104,6 +108,7 @@ new CircularModule({
 					for (var attr in this.attr2idx) {
 						if (this.attr2idx[attr]==oldidx) {
 							delete this.attr2idx[attr];
+							delete this.attr2mod[attr];
 						}
 					}
 					
@@ -147,6 +152,7 @@ new CircularModule({
 				for (var ac=0; ac<mod.attributes.length;ac++) {
 					var attrname = mod.attributes[ac];
 					this.attr2idx[attrname]=idx;
+					this.attr2mod[attrname]=mod.name;
 				}
 				
 				Circular[mod.name]=this.stack[idx];

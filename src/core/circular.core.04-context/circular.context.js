@@ -19,23 +19,23 @@ new CircularModule({
 		
 		ccattr.before = this.get();
 		if (ccattr.content.expression) {
-			Circular.log.debug('mod.context.in','setting context expr',ccattr.content.expression);
+			Circular.log.debug('@context.in','setting context expr',ccattr.content.expression);
 			//console.log(attr);
 			if (typeof ccattr.content.result=='string') {
-				Circular.log.debug('mod.context.in','using value',ccattr.content.value);
+				Circular.log.debug('@context.in','using value',ccattr.content.value);
 				this.set(ccattr.content.value);
 			} else {
 				this.set(ccattr.content.expression);
 			}
 		} else {
-			Circular.log.debug('mod.context.in','setting context value',ccattr.content.value);
+			Circular.log.debug('@context.in','setting context value',ccattr.content.value);
 			this.set(ccattr.content.value);
 
 		}
 	},
 	
 	out	: function(ccattr,node,ccnode) {
-		Circular.log.debug('mod.context.out','resetting context');
+		Circular.log.debug('@context.out','resetting context');
 		this.set(ccattr.before);
 		delete ccattr.before;
 	},
