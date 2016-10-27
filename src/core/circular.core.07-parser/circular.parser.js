@@ -10,9 +10,11 @@ new CircularModule({
 	requires	: ['log'],
 	config		: {
 		// exprregex		:	/{{([^}]*?)}}/g,
-		// exprregex			:	/{({|\[)([^}\]]*?)(}|\])}/g,
-		// exprregex 			: /{({|\[)(.*?(?=[}\]]}))(}|\])}/g,
-		exprregex				: /{[{\[]([\s\S]*?(?=[}\]]}))[}\]]+}/g,
+		// exprregex		:	/{({|\[)([^}\]]*?)(}|\])}/g,
+		// exprregex 		: /{({|\[)(.*?(?=[}\]]}))(}|\])}/g,
+		// exprregex		: /{[{\[]([\s\S]*?(?=[}\]]}))[}\]]+}/g,
+		exprregex				: /{{([\s\S]*?(?=}}))}}/g,
+		flagregex				: /\|[pew]+$/,
 		evalfail				: undefined,
 		rootscope				: 'window' // bad idea
 	},
@@ -183,12 +185,41 @@ new CircularModule({
 	},
 	
 	
+	isExpression	: function(expr) {
+		// quick way to check - false pos are ok
+		return (expr.substring(0,2)=="{{");
+	},
 	
-	
-	match	: function(x) {
+	match	: function(expr) {
 		// returns an array of matches or false
-		Circular.log.debug('Circular.parser.match',x);
-		return x.match(Circular.config.exprregex);
+		Circular.log.debug('Circular.parser.match',expr);
+		return expr.match(Circular.config.exprregex);
+	},
+	
+	replace	: function(expr,func) {
+		// opertes func replace on combined expressions
+		Circular.log.debug('Circular.parser.replace',expr);
+		return expr.replace(Circular.config.exprregex,func);
+	},
+	
+	getFlags	: function(expr) {
+		
+		var parse = true, eval=true, watch=true;
+		var matches = expr.match(Circular.parser.config.flagregex);
+		if (matches) {
+			return {
+				expression: expr,
+				parse			: (matches[0].indexOf('p')!=-1),
+				evaluate	: (matches[0].indexOf('e')!=-1),
+				watch			: (matches[0].indexOf('w')!=-1)
+			}
+		}
+		return {
+			expression: expr,
+			parse			: true,
+			evaluate	: true,
+			watch			: true,
+		}
 	},
 	
 	// split a text into an array
@@ -219,10 +250,7 @@ new CircularModule({
 		return Circular.parser.eval.call(this,parsed);
 	},
 	
-	isExpression	: function(expr) {
-		// the shortest way to check - false pos are ok
-		return (expr.substring(0,2)=="{{");
-	},
+	
 	
 	parse	: function(expr,ctx) {
 		// parse a single expression
@@ -232,75 +260,6 @@ new CircularModule({
 		parsed = parsed.replace(/@/g,'Circular.');
 		return parsed;
 	},
-	
-	parseAttribute	: function(ccattr,ctx) {
-		Circular.log.debug('Circular.parser.parseAttribute',ccattr.content.original);
-		
-		var matches = ccattr.content.original.match(Circular.config.exprregex);
-		if (matches) {
-			//console.log(matches[0],ccattr.content.original);
-			if (matches[0]===ccattr.content.original) {
-			
-			
-				// this is a single full expression "{{#foo}}"
-
-				var orgexpr	= ccattr.content.expression;
-				var stripped = ccattr.content.original.substring(2,ccattr.content.original.length-2);
-				ccattr.content.expression = this.parse(stripped,ctx);
-				if (!ccattr.flags.parsed || ccattr.content.expression!=orgexpr) {
-					// the expression is new or changed. need to get content.paths
-					if (ccattr.content.original.substring(0,2)=="{{") {
-						// slice the old saucage for the watchdog
-						if (ccattr.content.paths) ccattr.content.oldpaths = ccattr.content.paths.slice(0);
-						ccattr.content.paths 	= this.getPaths(ccattr.content.expression);
-					}	
-				}
-				
-			} else {
-			
-				// this is a stringlike thing, "foo {{#bar}}"
-				// console.log(matches);
-				
-				var watches = [];
-				var orgexpr	= ccattr.content.expression;
-				ccattr.content.expression = ccattr.content.original.replace(Circular.config.exprregex,function(match,inner) {
-					parsed = Circular.parser.parse(inner,ctx);
-					if (match.substring(0,2)=="{{") {
-						watches.push(parsed);
-					}
-					return '"+('+parsed+')+"';
-				});
-				// tell eval that this is a stringthing
-				ccattr.content.expression = '"'+ccattr.content.expression+'"';
-				
-				if (!ccattr.flags.parsed || ccattr.content.expression!=orgexpr) {
-					// the expression is new or changed. need to get content.paths
-					if (ccattr.content.paths) ccattr.content.oldpaths = ccattr.content.paths.slice(0); // copy
-					ccattr.content.paths = [];
-					for (var wc=0; wc<watches.length;wc++) {
-						ccattr.content.paths = ccattr.content.paths.concat(this.getPaths(watches[wc]));
-					}
-				}
-			}
-			
-			ccattr.flags.parsed = true;
-			Circular.log.debug("Circular.parser.parseAttribute",ccattr.content.original,ctx,ccattr.content.expression);
-			return true;
-			
-		} else {
-			Circular.log.debug('Circular.parser.parseAttribute','no match');
-			if (ccattr.content.expression) {
-				// the expression is new or changed. need to remove content.paths
-				ccattr.content.expression = '';
-				if (ccattr.content.paths) ccattr.content.oldpaths = ccattr.content.paths.slice(0);
-				ccattr.content.paths 	= [];
-			}
-			
-		}
-		return false;
-	},
-	
-
 	
 	// evaluates a qualified expression.
 	// this does nothing special, but try,catch.

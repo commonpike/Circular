@@ -2,7 +2,6 @@
 <html>
 	<head>
 		<title>Hello | Goodbye</title>
-		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
 		<script>
 		
 			
@@ -27,10 +26,12 @@
 
 			} else if (document.location.href.indexOf('circular/dist/docs/core')!=-1) {
 			
+				document.write('<script src="http://code.jquery.com/jquery-1.11.3.min.js"><'+'/script>');
 				document.write('<script src="../../../js/circular.min.js"><'+'/script>');
 				
 			} else {
 			
+				document.write('<script src="http://code.jquery.com/jquery-1.11.3.min.js"><'+'/script>');
 				document.write('<script src="http://circularjs.net/current/js/circular.min.js"><'+'/script>');
 				
 			}

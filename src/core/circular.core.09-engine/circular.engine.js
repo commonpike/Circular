@@ -803,7 +803,7 @@ new CircularModule({
 			
 			if (ccattr.flags.attrdomchanged) {
 				Circular.log.debug('@engine.processAttributesIn','changed, parsing original',ccattr.content.original);
-				Circular.parser.parseAttribute(ccattr,Circular.context.get());
+				this.parseAttribute(ccattr,Circular.context.get());
 			}
 		
 			if (ccattr.flags.attrdomchanged || ccattr.flags.attrdatachanged) {
@@ -910,6 +910,94 @@ new CircularModule({
 			}
 		}
 		
+	},
+	
+	parseAttribute	: function(ccattr,ctx) {
+		Circular.log.debug('@engine.parseAttribute',ccattr.content.original);
+		
+		// assumes only the original is correct
+		
+		// checks if the original is an {{expression}}
+		// set flags parse, evaluate, watch
+		// if parse, parses original into expression
+		// else puts original (minus brackets and flags) in expression
+		// if watch, gets the paths to watch
+		// does NOT yet evaluate
+		
+		var exprmatches = Circular.parser.match(ccattr.content.original);
+		if (exprmatches) {
+			if (exprmatches[0]===ccattr.content.original) {
+			
+			
+				// this is a single full expression "{{#foo|we}}"
+
+				var inner 		= ccattr.content.original.substring(2,ccattr.content.original.length-2);
+				var flagged 	= Circular.parser.getFlags(inner);
+				ccattr.flags.parse		= flagged.parse;
+				ccattr.flags.evaluate	= flagged.evaluate;
+				ccattr.flags.watch		= flagged.watch;
+				
+				if (ccattr.flags.parse) {
+					ccattr.content.expression = Circular.parser.parse(flagged.expression,ctx);
+				} else {
+					ccattr.content.expression = flagged.expression;
+				}
+				if (ccattr.flags.watch) {
+					if (ccattr.content.paths) ccattr.content.oldpaths = ccattr.content.paths.slice(0);
+					ccattr.content.paths 	= Circular.parser.getPaths(ccattr.content.expression);
+				}	
+				
+				
+			} else {
+			
+				// this is a stringlike thing, "foo {{#bar|pew}} quz"
+				// all expressions must always be evaluated
+				// any watched paths in any expression will watch that path
+				// for the whole attribute.
+				
+				ccattr.flags.parse		= false; 	// parsing happens here
+				ccattr.flags.evaluate	= true;		// must evaluate
+				ccattr.flags.watch		= true;		// watch any paths
+				
+				var watches = [];
+				ccattr.content.expression = Circular.parser.replace(ccattr.content.original,function(match,inner) {
+					var flagged = Circular.parser.getFlags(inner);					
+					var parsed = '';
+					if (flagged.parse) {
+						parsed = Circular.parser.parse(flagged.expression,ctx);
+					} else {
+						parsed = inner;
+					}
+					if (flagged.watch) {
+						watches.push(parsed);
+					}	
+					return '"+('+parsed+')+"';
+				});
+				// tell eval that this is a stringthing
+				ccattr.content.expression = '"'+ccattr.content.expression+'"';
+				
+				if (ccattr.content.paths) ccattr.content.oldpaths = ccattr.content.paths.slice(0); // copy
+				ccattr.content.paths = [];
+				for (var wc=0; wc<watches.length;wc++) {
+					ccattr.content.paths = ccattr.content.paths.concat(Circular.parser.getPaths(watches[wc]));
+				}
+				
+			}			
+			
+			Circular.log.debug("@engine.parseAttribute",ccattr.content.original,ccattr.content.expression);
+			return true;
+			
+		} else {
+			Circular.log.debug('@engine.parseAttribute','no match');
+			ccattr.content.expression = '';
+			ccattr.flags.parse		= false; 	// parsing happens here
+			ccattr.flags.evaluate	= false;		// must evaluate
+			ccattr.flags.watch		= false;		// watch any paths
+			if (ccattr.content.paths) ccattr.content.oldpaths = ccattr.content.paths.slice(0);
+			ccattr.content.paths 	= [];
+			
+		}
+		return false;
 	},
 	
 	evalAttribute	: function(node,ccnode,ccattr) {
