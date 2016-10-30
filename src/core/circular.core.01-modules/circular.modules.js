@@ -2,56 +2,146 @@
 		modules 
 ----------------------- */
 	
-function CircularModule(def) {
+function CircularModule(name,def) {
 
-	if (def.name) {
+	if (!def) def = {};
+	if (name) {
+
+		if (!def.config)					def.config = {};
 	
-		if (!def.in)					def.in 	= function(ccattr,node,ccnode) { return true; }
-		if (!def.out) 				def.out = function(ccattr,node,ccnode) { return true; }	
-		if (!def.requires)		def.requires = [];
-		if (!def.attributes)	def.attributes = ['cc-'+def.name];
-		if (!def.override)		def.override = false;
-		if (!def.priority)		def.priority = 0;
-		if (!def.config)			def.config = {};
+		if (!def.settings)				def.settings 			= { name : name };		
+		if (!def.attributes)			def.attributes 		= [{ name : 'cc-'+name }];
 		
-		if (def.name=='modules') {
+		// store this
+		def.settings.name = name;
+		
+		if (def.settings.name=='modules') {
 			def.add(def);
 		} else {
 			Circular.modules.add(def);
 		}
 		
 	} else if (Circular.log) {
-		Circular.log.fatal('CircularModule.name is required');
+		Circular.log.fatal('CircularModule: Name is required');
 	} else {
-		alert('CircularModule.name is required');
+		alert('CircularModule: Name is required');
 		Circular.die();
 	}
 }
 
+// modules is the first module
+new CircularModule('modules', {
+		
+	config				: {
+		attrprefix		: 'cc-',
+		debug					: false,
+	},
+	
+	settings 			: {
+	
+	},
 
+	attributes		: [],
 	
-new CircularModule({
+	init	: function(config) {
+
+		this.debug('Circular.modules.init');
+		
+		if (!config.modules) config.modules = {};
+		
+		// all the modules are loaded and
+		// attributes assigned. clean it up.
+		
+		// optionally rewrite cc- attributes
+		
+		if (!config.modules.attrprefix) config.modules.attrprefix='cc-';
+		if (config.modules.attrprefix!='cc-') {
+			
+			this.attrprefix 	= config.modules.attrprefix;
+			this.rxattrprefix = new RegExp('^'+config.modules.attrprefix);
+			
+			// change shortcuts in the mod.attributes
+			for (var mc=0 ;mc<this.modnames.length;mc++) {
+				var mod = Circular[this.modnames[mc]];
+				for (var ac=0; ac<mod.attributes.length; ac++) {
+					var attrname = mod.attributes[ac].name;
+					var newattrname = this.prefix(attrname);
+					// make attr lookup faster
+					mod.attributes[newattrname] = mod.attributes[ac];
+					delete mod.attributes[attrname];
+				}
+			}
+			
+			// change shortcuts in this.attrnames
+			var newattrnames = [];
+			for (var ac=0; ac<this.attrnames.length; ac++) {
+				var attrname = this.attrnames[ac];
+				var newattrname = this.prefix(attrname);
+				newattrnames.push(newattrname);
+				this.attr2mod[newattrname] = this.attr2mod[attrname];
+				delete this.attr2mod[attrname];
+			}
+			this.attrnames=newattrnames;
+			
+		}
+		
+		// make attr lookup faster
+		for (var ac=0; ac<this.attrnames.length; ac++) {
+			this.attr2idx[this.attrnames[ac]]=ac;
+		}
+		
+		// loop all modules, process includes and config
+		var css = '';
+		this.modnames.forEach(function(modname) {
+		
+			if (Circular[modname].settings.insertcss) {
+				Circular[modname].settings.insertcss.forEach(function(str) {
+					css += str;
+				})
+			}
+			
+			// extend config from init call and attach it globally, too
+			if (Circular[modname].config) {
+				if (config[modname]) $.extend(true,Circular[modname].config,config[modname]);
+				Circular.config[modname] = Circular[modname].config;
+			}
+			
+		});
+		
+		if (css) {
+			var styleElement = document.createElement("style");
+			styleElement.type = "text/css";
+			document.head.appendChild(styleElement);
+			
+			// ruff stuff. probs in ie<9
+			styleElement.appendChild(document.createTextNode(css));
+		}
+		
+		for(var mc=0; mc<this.modnames.length; mc++) {
+			var modname = this.modnames[mc];
+			if (Circular[modname]!=this && Circular[modname].init) {
+				Circular[modname].init();
+			}
+		};
+			
+		
+	},
 	
-	name					: 'modules',
+	
+	// ------------------
+	
+	modnames		: [],
+	attrnames		: [],	
+	attr2idx		: {
+		// map attribute names to their index (faster)
+	},
+	attr2mod		: {
+		// map attribute names to modules
+	},
+	
+	// read once from config during init
 	attrprefix		: 'cc-',
 	rxattrprefix	: /^cc-/,
-	
-	stack	: [
-		// this is where the circularmodules are stored
-		// the order matters
-	],
-	
-	attr2idx					: {
-		// map attribute names to modules
-	},
-	
-	attr2mod					: {
-		// map attribute names to modules
-	},
-	
-	name2idx					: {
-		// map module names to modules
-	},
 	
 	
 	prefix	: function(attrname) {
@@ -70,25 +160,22 @@ new CircularModule({
 	
 	add	: function(mod) {
 	
-		if (Circular.debug) {
-			Circular.log.debug('Circular.modules.add',mod.name);
-		}
+		
+		this.debug('Circular.modules.add',mod.settings.name);
 		
 		if (!Circular.dead) {
 
 			valid = true;
-			
-			if (this.name2idx[mod.name]) {
-				if (!mod.override) {
-					if (Circular.log) Circular.log.error('Circular.modules.add','mod.'+mod.name+' namespace already taken');
-					valid = false;
-				} 
+
+			if (this.modnames.indexOf(mod.settings.name)!=-1) {
+				if (Circular.log) Circular.log.error('Circular.modules.add','mod.'+mod.settings.name+' is already added');
+				valid=false;
 			}
 			
-			if (mod.requires) {
-				mod.requires.forEach(function(name) {
-					if (this.name2idx[name]===undefined) {
-						if (Circular.log) Circular.log.error('Circular.modules.add','mod.'+mod.name+' requires mod.'+name);
+			if (mod.settings.requiremods) {
+				mod.settings.requiremods.forEach(function(name) {
+					if (Circular.modules.modnames.indexOf(name)==-1) {
+						if (Circular.log) Circular.log.error('Circular.modules.add','mod.'+mod.settings.name+' requires mod.'+name);
 						valid=false;
 					}
 				},this);
@@ -96,72 +183,17 @@ new CircularModule({
 			
 			if (valid) {
 			
-				var idx 			= 0;
-				var replace	= false;
+				this.modnames.push(mod.settings.name);
+				Circular[mod.settings.name]	= mod;
 				
-				if (this.name2idx[mod.name]) {
-				
-					// we are overriding an old module
-					// remove all the stuff pointing to it
-					
-					var oldidx = this.name2idx[mod.name];
-					for (var attr in this.attr2idx) {
-						if (this.attr2idx[attr]==oldidx) {
-							delete this.attr2idx[attr];
-							delete this.attr2mod[attr];
-						}
-					}
-					
-					// by default, use the old index
-					if (!mod.priority) 	{
-						replace	= true;
-						mod.priority = oldidx;
-					}
-				} 
-				
-				if (mod.priority && mod.priority<this.stack.length) {
-					idx = mod.priority;
-					if (replace) {
-						
-						this.stack[idx]=mod;
-					} else {
-						
-						this.stack.splice(idx,0,mod);
-						// rewrite all the higher indexes.
-						for (var attr in this.attr2idx) {
-							if (this.attr2idx[attr]>=idx) {
-								this.attr2idx[attr]++;
-							}
-						}
-						
-						for (var name in this.name2idx) {
-							if (this.name2idx[name]>=idx) {
-								this.name2idx[name]++;
-							}
-						}
-						
-					}
-				} else {
-					idx = this.stack.length;
-					this.stack.push(mod);
-				} 
-			
-				
-				this.name2idx[mod.name]=idx;
-				
-				for (var ac=0; ac<mod.attributes.length;ac++) {
-					var attrname = mod.attributes[ac];
-					this.attr2idx[attrname]=idx;
-					this.attr2mod[attrname]=mod.name;
+				for (var ac=mod.attributes.length-1; ac>=0 ;ac--) {
+					var attrname = mod.attributes[ac].name;
+					this.attrnames.push(attrname);
+					this.attr2mod[attrname]=mod.settings.name;
+					// make attr lookup faster
+					mod.attributes[attrname] = mod.attributes[ac];
 				}
-				
-				Circular[mod.name]=this.stack[idx];
-				
-				if (mod.name=="debug" && Circular.config.debug) {
-					
-					Circular.debug.on();
-				}
-				
+								
 			} else {
 				// crucial. i think i want you.
 				if (Circular.log) Circular.log.fatal('Circular.modules.add','fatal error');
@@ -171,49 +203,11 @@ new CircularModule({
 
 	},
 	
-	init	: function(config) {
-		
-		if (Circular.debug) Circular.log.debug('Circular.modules.init');
-					
-		// optionally rewrite cc- attributes
-		if (!config.attrprefix) config.attrprefix='cc-';
-		if (config.attrprefix!='cc-') {
-			this.attrprefix 	= config.attrprefix;
-			this.rxattrprefix = new RegExp('^'+config.attrprefix);
-			for (var attrname in this.attr2idx) {
-				console.log(attrname,this.prefix(attrname));
-				this.attr2idx[this.prefix(attrname)] = this.attr2idx[attrname];
-				delete this.attr2idx[attrname];
-			}
+	debug	: function() {
+		if (this.config.debug && Circular.log) {
+			Circular.log.debug.apply(Circular.log,arguments);
 		}
-		
-		// create a stylesheet, add all css and config
-		var css = '';
-		this.stack.forEach(function(mod) {
-			if (mod.css) css += mod.css;
-			if (mod.config) $.extend(Circular.config,mod.config);
-		});
-		
-		if (css) {
-			var styleElement = document.createElement("style");
-			styleElement.type = "text/css";
-			document.head.appendChild(styleElement);
-			
-			// ruff stuff. probs in ie<9
-			styleElement.appendChild(document.createTextNode(css));
-		}
-		
-		// override config before you init
-		$.extend(Circular.config,config);
-		
-		for (var dc=0; dc < this.stack.length; dc++) {
-			if (this.stack[dc]!=this && this.stack[dc].init) {
-				this.stack[dc].init();
-			}
-		}
-			
-		
-	}
+	}	
 	
 	
 	

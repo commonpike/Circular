@@ -2,42 +2,72 @@
 	context
 ----------------------- */
 
-new CircularModule({
+new CircularModule('context',{
 
-	name				: 'context',
-	requires		: ['log'],
-	config			: {
-		rootcontext		: 'document'
+	config				: {
+		root		: 'document',
+		debug		: false
 	},
-	current			: '',
+	
+	settings 			: {
+		requiremods		: ['log']
+	},
+
+	attributes		: [{
+	
+		name : 'cc-context',
+		in	: function(ccattr,node,ccnode) {
+			return this.in(ccattr,node,ccnode);
+		},
+		out	: function(ccattr,node,ccnode) {
+			return this.out(ccattr,node,ccnode);
+		}
+		
+		
+	},{
+	
+		name : 'cc-root',
+		in	: function(ccattr,node,ccnode) {
+			return this.in(ccattr,node,ccnode);
+		},
+		out	: function(ccattr,node,ccnode) {
+			return this.out(ccattr,node,ccnode);
+		}
+		
+	}],
 	
 	init				: function() {
-		this.set(Circular.config.rootcontext);
+		this.set(this.config.root);
 	},
 	
+	// ------------------
+	
+	
+	
+	current			: '',
+
 	in	: function(ccattr,node,ccnode) {
 		
-		ccattr.before = this.get();
+		ccattr.properties.ctxbefore = Circular.context.get();
 		if (ccattr.content.expression) {
-			Circular.log.debug('@context.in','setting context expr',ccattr.content.expression);
-			//console.log(attr);
+			this.debug('cc-context.in','setting context expr',ccattr.content.expression);
 			if (typeof ccattr.content.result=='string') {
-				Circular.log.debug('@context.in','using value',ccattr.content.value);
-				this.set(ccattr.content.value);
+				this.debug('cc-context.in','using result literal',ccattr.content.value);
+				Circular.context.set(ccattr.content.value);
 			} else {
-				this.set(ccattr.content.expression);
+				Circular.context.set(ccattr.content.expression);
 			}
 		} else {
-			Circular.log.debug('@context.in','setting context value',ccattr.content.value);
-			this.set(ccattr.content.value);
+			this.debug('cc-context.in','setting context value',ccattr.content.value);
+			Circular.context.set(ccattr.content.value);
 
 		}
 	},
 	
 	out	: function(ccattr,node,ccnode) {
-		Circular.log.debug('@context.out','resetting context');
-		this.set(ccattr.before);
-		delete ccattr.before;
+		this.debug('cc-context.out','resetting context');
+		Circular.context.set(ccattr.properties.ctxbefore);
+		delete ccattr.properties.ctxbefore;
 	},
 	
 	set		: function(context) {
@@ -45,7 +75,11 @@ new CircularModule({
 	},
 	get		: function() {
 			return this.current;
+	},
+	debug	: function() {
+		if (this.config.debug) {
+			Circular.log.debug.apply(Circular.log,arguments);
+		}
 	}
-		
-		
+	
 });

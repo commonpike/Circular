@@ -1,15 +1,12 @@
 var Circular = {
 	
 	/* ----------------------
-		config
+		vars
 	----------------------- */
 	
-	config	: {
-		version					: '0.1.6',
-		autoinit				:	true
-	},
-	
-	// status
+	config		: {},
+	autoinit	:	true,
+	version		: '0.1.8',
 	inited		: false,
 	dead			: false,
 
@@ -21,6 +18,7 @@ var Circular = {
 
 	init 		: function(config) {
 		if (!config) config={};
+		this.config	= config;
 		$(document).ready(function() {
 			Circular.modules.init(config);
 			if (Circular.log) {
@@ -44,6 +42,10 @@ var Circular = {
 		this.inited = true;
 	},
 	
+	/* ----------------------
+		die 
+	----------------------- */
+	
 	die		: function() {
 		if (Circular.log) Circular.log.warn('Circular.die()');
 		this.dead = true;
@@ -53,7 +55,7 @@ var Circular = {
 }
 
 $(document).ready(function() {
-	if (Circular.config.autoinit && !Circular.inited) {
+	if (Circular.autoinit && !Circular.inited) {
 		Circular.init();
 	}
 });

@@ -2,10 +2,24 @@
 	registry
 ----------------------- */
 
-new CircularModule({
+new CircularModule('registry', {
 
-	name		: 'registry',
-	requires	: ['log'],
+	
+	config				: {
+		debug	: false
+	},
+	
+	settings 			: {
+		requiremodss	: ['log']
+	},
+
+	attributes		: [],
+	
+	init					: function() { return true; },
+	
+	// ------------------
+	
+	
 	counter	: 0,
 	
 	newCCNode 	: function() {
@@ -93,7 +107,7 @@ new CircularModule({
 	
 
 	set	: function(node,ccnode,watch) {
-		//Circular.log.debug('@registry.set');
+		this.debug('@registry.set');
 		if (!ccnode.flags.registered) {
 			ccnode.flags.pristine = false;
 			ccnode.flags.registered = true;
@@ -103,14 +117,14 @@ new CircularModule({
 			ccnode.index[ac].flags.registered=true;
 		}
 		if (watch) {
-			Circular.log.debug('@registry.set','watch',node);
+			this.debug('@registry.set','watch',node);
 			Circular.watchdog.watch(node,ccnode);
 		}
 		$(node).data('cc-node',ccnode);
 	},
 	
 	get	: function(node,readonly) {
-		// Circular.log.debug('Circular.registry.get');
+		this.debug('Circular.registry.get');
 		// this should perhaps return a deep copy instead ..
 		var ccnode = $(node).data('cc-node');
 		if (!ccnode) ccnode = this.newCCNode();
@@ -119,7 +133,13 @@ new CircularModule({
 		} else {
 			Circular.log.error('@registry.get','Node is locked',node);
 		}
-	}
+	},
+	
+	debug	: function() {
+		if (this.config.debug) {
+			Circular.log.debug.apply(Circular.log,arguments);
+		}
+	}	
 	
 	
 	

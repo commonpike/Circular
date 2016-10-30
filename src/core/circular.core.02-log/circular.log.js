@@ -2,29 +2,44 @@
 	log
 ----------------------- */
 
-new CircularModule({
+new CircularModule('log',{
 
-	name	: 'log',
+	config				: {
+		debug	: false,
+	},
 	
-	debugging		: false,
-
+	settings 			: {
+	
+	},
+		
+	attributes		: [
+		 {
+		 	name	: 'cc-log',
+			in	: function(ccattr,node,ccnode) {
+				this.write('@log',node);
+				ccattr.properties.debugging = this.debugging;
+				if (Circular.parser) this.toggleDebug(Circular.parser.boolish(ccattr.content.value));
+				else this.toggleDebug(!ccattr.content.original || ccattr.content.result); // simpleparse
+			},
+			
+			out	: function(ccattr,node,ccnode) {
+				this.toggleDebug(ccattr.properties.debugging);
+				delete ccattr.properties.debugging;
+			}
+		}
+	],
+	
 	init	: function() {
-		if (Circular.config.debug) {
+		if (this.config.debug) {
 			this.toggleDebug(true);
 		}
 	},
 	
-	in	: function(ccattr,node,ccnode) {
-		this.write('@log',node);
-		ccattr.properties.debugging = this.debugging;
-		if (Circular.parser) this.toggleDebug(Circular.parser.boolish(ccattr.content.value));
-		else this.toggleDebug(!ccattr.content.original || ccattr.content.result); // simpleparse
-	},
+	// -------------
 	
-	out	: function(ccattr,node,ccnode) {
-		this.toggleDebug(ccattr.properties.debugging);
-		delete ccattr.properties.debugging;
-	},
+	// read once from config;
+	// set by toggleDebug otherwise
+	debugging		: false,
 	
 	toggleDebug: function(state) 	{ 
 		if (state===undefined) state = !this.debugging;

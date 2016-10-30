@@ -70,20 +70,14 @@
 			}
 			
 			Control.goto('hello');
-			Circular.init({
-				log : {
-					debug : true
-				},
-				engine	: {
-					debug : true
-				}
-			});
+			
+			Circular.autoinit=false;
 
 				
 		</script>
 	</head>
 	<body cc-root cc-context="Control.currentpage">
-	
+		<button onclick="Circular.init({log:{debug:true}})">Circular.init()</button><br>
 		<nav>
 				<a href="#" onclick="Control.goto('hello')">Hello</a> |
 				<a href="#" onclick="Control.goto('goodbye')">Goodbye</a>

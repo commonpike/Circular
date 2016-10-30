@@ -1,22 +1,31 @@
 
 /* ----------------------
-	queue
-	
-	todo: add pause 
-	
+	queue	
 ----------------------- */
 
-new CircularModule({
+new CircularModule('queue', {
 
-	name				: 'queue',
-	requires		: ['log'],
+	config				: {
+		debug	: false
+	},
+	
+	settings 			: {
+		requiremods		: ['log']
+	},
+
+	attributes		: [
+	
+	],
+	
+	// ----------
+	
 	added				: 0,
 	handled			: 0,
 	todo				: [],
 	paused			: false,
 	
 	add		: function(func) {
-		Circular.log.debug("@queue.add",this.added++);
+		this.debug("@queue.add",this.added++);
 		this.todo.push(func);
 		if (this.todo.length==1) this.next();
 	}, 
@@ -24,12 +33,12 @@ new CircularModule({
 	next	: function() {
 		if (!Circular.dead) {
 			if (this.todo.length) {
-				Circular.log.debug("@queue.next","executing",this.handled++,"pending",this.todo.length-1);
+				this.debug("@queue.next","executing",this.handled++,"pending",this.todo.length-1);
 				this.todo[0].call();
 				this.todo.shift();
 				this.next();
 			} else {
-				Circular.log.debug("@queue.next","all done.");
+				this.debug("@queue.next","all done.");
 			}
 		} else {
 			Circular.log.warn("@queue.next","Circular died X-|");
@@ -38,7 +47,12 @@ new CircularModule({
 	
 	pause	: function(p) {
 		this.paused = !!p;
-	}
+	},
 			
-		
+	debug	: function() {
+		if (this.config.debug) {
+			Circular.log.debug.apply(Circular.log,arguments);
+		}
+	}	
+	
 });
