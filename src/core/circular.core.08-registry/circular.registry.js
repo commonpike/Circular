@@ -101,8 +101,10 @@ new CircularModule('registry', {
 		for (var ac=0; ac<ccnode.index.length; ac++) {
 			ccnode.index[ac].flags['attrdomchanged'] = false;
 			ccnode.index[ac].flags['attrdatachanged'] = false;
+			//alert(ccnode.index[ac].properties.name+' eq '+(ccnode.index[ac]===ccnode.attributes[ccnode.index[ac].properties.name]));
 		}
 		$(node).data('cc-node',ccnode);
+		
 	},
 	
 

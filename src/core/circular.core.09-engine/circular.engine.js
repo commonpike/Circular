@@ -220,12 +220,15 @@ new CircularModule('engine', {
 			
 			this.indexAttributes(node,ccnode);
 			if (ccnode.index.length) {
+				Circular.eject.clear(node,ccnode);
 				this.processAttributesIn(node,ccnode);
+				Circular.eject.process(node,ccnode);
 				Circular.registry.set(node,ccnode,true);
 				if (ccnode.flags.recurse) {
 					this.processChildren(node,ccnode.properties.innercontext);
 				} else this.debug('@engine.processElementNode','flags.recurse=false');
 				this.processAttributesOut(node,ccnode);
+				Circular.eject.process(node,ccnode);
 				Circular.registry.set(node,ccnode,true);
 				return true;
 			} else {
@@ -243,7 +246,9 @@ new CircularModule('engine', {
 			
 			this.indexAttributes(node,ccnode);
 			if (ccnode.index.length) {
+				Circular.eject.clear(node,ccnode);
 				this.processAttributesIn(node,ccnode);
+				Circular.eject.process(node,ccnode);
 				Circular.registry.set(node,ccnode,true);
 				if (ccnode.flags.recurse) {
 					if (ccnode.flags.icontextchanged || ccnode.flags.contentchanged) {
@@ -251,6 +256,7 @@ new CircularModule('engine', {
 					} else this.debug('@engine.processElementNode','no need to recurse');
 				}  else this.debug('@engine.processElementNode','flags.recurse=false');
 				this.processAttributesOut(node,ccnode);
+				Circular.eject.process(node,ccnode);
 				Circular.registry.set(node,ccnode,true);
 			} else {
 				ccnode.properties.innercontext=ccnode.properties.outercontext;
@@ -264,7 +270,9 @@ new CircularModule('engine', {
 			
 			this.indexAttributes(node,ccnode);
 			if (ccnode.index.length) {
+				Circular.eject.clear(node,ccnode);
 				this.processAttributesIn(node,ccnode);
+				Circular.eject.process(node,ccnode);
 				Circular.registry.set(node,ccnode,true);
 				if (ccnode.flags.recurse) {
 					if (ccnode.flags.icontextchanged || ccnode.flags.contentchanged) { 
@@ -272,6 +280,7 @@ new CircularModule('engine', {
 					} else this.debug('@engine.processElementNode','no need to recurse');
 				}  else this.debug('@engine.processElementNode','flags.recurse=false');
 				this.processAttributesOut(node,ccnode);
+				Circular.eject.process(node,ccnode);
 				Circular.registry.set(node,ccnode,true);
 			} else {
 				Circular.log.error('@engine.processElementNode','attrdomchanged, but no attributes');
@@ -282,7 +291,9 @@ new CircularModule('engine', {
 			this.debug('@engine.processElementNode','ccnode.flags.attrdatachanged');
 			
 			if (ccnode.index.length) {
+				Circular.eject.clear(node,ccnode);
 				this.processAttributesIn(node,ccnode);
+				Circular.eject.process(node,ccnode);
 				Circular.registry.set(node,ccnode,true);
 				if (ccnode.flags.recurse) {
 					if (ccnode.flags.icontextchanged || ccnode.flags.contentchanged) { 
@@ -290,6 +301,7 @@ new CircularModule('engine', {
 					} else this.debug('@engine.processElementNode','no need to recurse');
 				}  else this.debug('@engine.processElementNode','flags.recurse=false');
 				this.processAttributesOut(node,ccnode);
+				Circular.eject.process(node,ccnode);
 				Circular.registry.set(node,ccnode,true);
 			} else {
 				Circular.log.error('@engine.processElementNode','attrdatachanged, but no attributes');
@@ -300,7 +312,9 @@ new CircularModule('engine', {
 			this.debug('@engine.processElementNode','ccnode.flags.ocontextchanged');
 			
 			if (ccnode.index.length) {
+				Circular.eject.clear(node,ccnode);
 				this.processAttributesIn(node,ccnode);
+				Circular.eject.process(node,ccnode);
 				Circular.registry.set(node,ccnode,true);
 				if (ccnode.flags.recurse) {
 					if (ccnode.flags.icontextchanged || ccnode.flags.contentchanged) {
@@ -308,6 +322,7 @@ new CircularModule('engine', {
 					} else this.debug('@engine.processElementNode','no need to recurse');
 				}  else this.debug('@engine.processElementNode','flags.recurse=false');
 				this.processAttributesOut(node,ccnode);
+				Circular.eject.process(node,ccnode);
 				Circular.registry.set(node,ccnode,true);
 			
 			} else {
@@ -590,13 +605,15 @@ new CircularModule('engine', {
 		
 			// find which attributes domchanged
 			// and reset those
-			for (var attrname in ccnode.attributes) {
-				if (ccnode.attributes[attrname].flags.domchanged) {
+			for (var attridx in ccnode.index) {
+				var attrname = ccnode.index[attridx].properties.name;
+				if (ccnode.attributes[attrname].flags.attrdomchanged) {
 					this.debug('@engine.indexAttributes','attrdomchanged','resetting attr',attrname);
 					var ccattr 				= Circular.registry.newCCattribute(attrname);
-					ccattr.properties.module	= Circular.modules.attr2mod[attrname];
-					ccattr.content.original 	= node.attributes[ac].value;
+					ccattr.properties.module		= Circular.modules.attr2mod[attrname];
+					ccattr.content.original 		= node.getAttribute(attrname);
 					ccnode.attributes[attrname] = ccattr;
+					ccnode.index[attridx] = ccattr;
 				}
 			}
 			
@@ -813,6 +830,7 @@ new CircularModule('engine', {
 			}
 		
 			if (ccattr.flags.attrdomchanged || ccattr.flags.attrdatachanged) {
+				//alert('adc '+ccattr.properties.name);
 				this.debug('@engine.processAttributesIn','processing',ccattr.properties.name);
 				this.evalAttribute(node,ccnode,ccattr);
 				
@@ -1008,6 +1026,8 @@ new CircularModule('engine', {
 	
 	evalAttribute	: function(node,ccnode,ccattr) {
 		
+		//alert('eval '+ccattr.properties.name);
+		
 		// turns the expression into a result, and the
 		// result into a value.
 		
@@ -1168,62 +1188,7 @@ new CircularModule('engine', {
 		}
 	},
 	
-	/* node management - unused  */
 	
-	hide	: function(node,method) {
-		if (!method) method = Circular.config.hide;
-		if (method=='css') $(node).addClass('cc-engine-hidden');
-		else if (method=='dom') this.eject(node,'engine','hide');
-	},
-	
-	show	: function(node,method) {
-		if (!method) method = Circular.config.hide;
-		if (method=='css') $(node).removeClass('cc-engine-hidden');
-		else if (method=='dom') this.inject(node);
-	},
-	
-	eject	: function(node,modname,params) {
-	
-		if (!modname) modname 	= this.name;
-		if (!params) params			= 'eject';
-		
-		var $ejected = $('#cc-ejected');
-		if (!$ejected.size()) {
-			$('body').append('<div id="cc-ejected"></div>');
-			$ejected = $('#cc-ejected');
-		}
-		var id = node.getAttribute('id');
-		if (id==undefined) {
-			id = 'cc-engine-'+this.genid++;
-			node.setAttribute('id',id);
-		}
-		$placeholder = $('<!--@'+modname+'['+JSON.stringify(params)+'][#'+id+']-->');
-		$(node).after($placeholder).appendTo($ejected);
-		
-		this.ejected[id] = $placeholder;
-		return id;
-
-	},
-	
-	inject	: function(node) {
-		var id 		= node.getAttribute('id');
-		var $placeholder 	= this.ejected[id];
-		if ($placeholder) {
-			$placeholder.before(node);
-			$placeholder.remove();
-			delete this.ejected[id];
-		} else {
-			Circular.log.error('@engine.inject','no placeholder found',id);
-		}
-	},
-	
-	detach	: function(node) {
-	
-	},
-	
-	attach	: function(node) {
-	
-	},
 	
 	debug	: function() {
 		if (this.config.debug) {

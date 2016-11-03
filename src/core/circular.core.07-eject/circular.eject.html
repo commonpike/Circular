@@ -1,8 +1,6 @@
-<!DOCTYPE html>
 <html>
 	<head>
-		<title>Hello | Goodbye</title>
-		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+		<title>Circular.eject</title>
 		<script>
 		
 			
@@ -27,75 +25,31 @@
 
 			} else if (document.location.href.indexOf('circular/dist/docs/core')!=-1) {
 			
+				document.write('<script src="http://code.jquery.com/jquery-1.11.3.min.js"><'+'/script>');
 				document.write('<script src="../../../js/circular.min.js"><'+'/script>');
 				
 			} else {
 			
+				document.write('<script src="http://code.jquery.com/jquery-1.11.3.min.js"><'+'/script>');
 				document.write('<script src="http://circularjs.net/current/js/circular.min.js"><'+'/script>');
 				
 			}
 			
 		</script>
+		<style type="text/css">body { font-family: sans-serif; }</style>
 		<script>
-		
-			var Model = {
-				menu	: [
-						{ 
-							title	: 'Hello',
-							link	: 'hello'
-						},
-						{
-							title	: 'Goodbye',
-							link	: 'goodbye'
-						}
-				], 
-				pages	: {
-					hello 		: {
-						title : 'Hello World',
-						content	: 'Hello happy World'
-					},
-					goodbye 		: {
-						title 	: 'Goodbye World',
-						content	: 'Goodbye gruel world'
-					}
-				}
-				
-			}
-			
-			var Control = {
-				currentpage	: null,
-				goto	: function(page) {
-					this.currentpage=Model.pages[page];
-				}
-			}
-			
-			Control.goto('hello');
+			document.bodypart = 'heart';
 			Circular.init({
-				modules : {
-					attrprefix	: 'square-'
-				}, 
-				log 	: {
-					debug : true
-				},
-				engine	: {
+				log : {
 					debug : true
 				}
 			});
-
-				
 		</script>
 	</head>
-	<body square-root square-context="Control.currentpage">
-	
-		<nav>
-				<a href="#" onclick="Control.goto('hello')">Hello</a> |
-				<a href="#" onclick="Control.goto('goodbye')">Goodbye</a>
-		</nav>
-		
-		<h1 square-content="{{#title}}"></h1>
-		
-		
-		
-		
+	<body cc-root>
+		<p>Wild thing</p>
+		<p cc-eject="true">
+			You make my mouth sing
+		</p>
 	</body>
 </html>
