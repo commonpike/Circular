@@ -1067,6 +1067,9 @@ new CircularModule('engine', {
 			ccattr.content.value = ccattr.content.original;
 		}
 		
+		var filter = Circular[ccattr.properties.module]['attributes'][ccattr.properties.name]['filter'];
+		if (filter) ccattr.content.value=filter(ccattr.content.value);
+		
 		if (node.getAttribute(ccattr.properties.name)!=ccattr.content.value) {
 			if (Circular.watchdog  && ccnode.flags.watched ) { // watched was commented ?
 				Circular.watchdog.pass(node,'attrdomchanged',ccattr.properties.name);
