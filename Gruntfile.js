@@ -14,11 +14,23 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-contrib-uglify');
 	grunt.loadNpmTasks('grunt-contrib-copy');
 	grunt.loadNpmTasks('grunt-contrib-clean');
+	grunt.loadNpmTasks('grunt-processhtml');
 	process.chdir(cwd);
 	grunt.initConfig({
+		clean: {
+			before: {
+        src: ['dist/docs/**']
+      },
+      after: {
+        src: ['dist/docs/**'],
+        filter: function(fp) {
+          return grunt.file.isDir(fp) && require('fs').readdirSync(fp).length === 0;
+        }
+      }
+    },
 		concat: {
 			'dist/js/circular.js' : [
-				'vendor/node_modules/esprima/esprima.js',
+				'vendor/node_modules/esprima/dist/esprima.js',
 				'vendor/node_modules/observe-js/src/observe.js',
 				'src/core/*/*.js',
 				'src/base/*/*.js'
@@ -66,18 +78,39 @@ module.exports = function(grunt) {
 				//filter: 'isDirectory'
 			}
 		},
-		clean: {
-			before: {
-        src: ['dist/docs/**']
-      },
-      after: {
-        src: ['dist/docs/**'],
-        filter: function(fp) {
-          return grunt.file.isDir(fp) && require('fs').readdirSync(fp).length === 0;
-        }
-      }
+    
+    processhtml : {
+			dist: {
+				options: {
+          process	: true
+      	},
+      	files: [{
+          expand: true,
+          cwd: 'dist',
+          src: ['docs/*/*/*.html'],
+          dest: 'dist'
+      	}]
+    	},
+    	live: {
+				options: {
+          process	: true
+      	},
+      	files: [{
+          expand: true,
+          cwd: 'dist',
+          src: ['docs/*/*/*.html'],
+          dest: 'dist'
+      	}]
+    	}
     }
+    
 	});
 	
-	grunt.registerTask('default', ["clean:before","concat","uglify","copy","clean:after"]);
+	// run 'grunt' to generate a working dist folder
+	grunt.registerTask('default', ["clean:before","concat","uglify","copy","processhtml:dist","clean:after"]);
+
+	// run 'grunt release' to generate a new release ready to go online
+	// in due time we may add version numbers, git management, ftp and such
+	grunt.registerTask('release', ["clean:before","concat","uglify","copy","processhtml:live","clean:after"]);
+	
 }

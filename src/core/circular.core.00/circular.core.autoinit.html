@@ -2,41 +2,36 @@
 <html>
 	<head>
 		<title>Hello | Goodbye</title>
-		<script>
 		
-			
-			if (document.location.href.indexOf('circular/src/core')!=-1) {
-
-				document.write('\
-					<script src="../../../vendor/node_modules/jquery/dist/jquery.min.js"><'+'/script>\
-					<script src="../../../vendor/node_modules/esprima/dist/esprima.js"><'+'/script>\
-					<script src="../../../vendor/node_modules/observe-js/src/observe.js"><'+'/script>\
-					<script src="../../core/circular.core.00/circular.core.js"><'+'/script>\
-					<script src="../../core/circular.core.01-modules/circular.modules.js"><'+'/script>\
-					<script src="../../core/circular.core.02-log/circular.log.js"><'+'/script>\
-					<script src="../../core/circular.core.03-queue/circular.queue.js"><'+'/script>\
-					<script src="../../core/circular.core.04-parser/circular.parser.js"><'+'/script>\
-					<script src="../../core/circular.core.05-context/circular.context.js"><'+'/script>\
-					<script src="../../core/circular.core.06-content/circular.content.js"><'+'/script>\
-					<script src="../../core/circular.core.07-eject/circular.eject.js"><'+'/script>\
-					<script src="../../core/circular.core.08-registry/circular.registry.js"><'+'/script>\
-					<script src="../../core/circular.core.09-engine/circular.engine.js"><'+'/script>\
-					<script src="../../core/circular.core.10-watchdog/circular.watchdog.js"><'+'/script>\
-				')
-
-			} else if (document.location.href.indexOf('circular/dist/docs/core')!=-1) {
-			
-				document.write('<script src="http://code.jquery.com/jquery-1.11.3.min.js"><'+'/script>');
-				document.write('<script src="../../../js/circular.min.js"><'+'/script>');
-				
-			} else {
-			
-				document.write('<script src="http://code.jquery.com/jquery-1.11.3.min.js"><'+'/script>');
-				document.write('<script src="http://circularjs.net/current/js/circular.min.js"><'+'/script>');
-				
-			}
-			
-		</script>
+		<!-- build:remove -->
+		<script src="../../../vendor/node_modules/jquery/dist/jquery.min.js"></script>
+		<script src="../../../vendor/node_modules/esprima/dist/esprima.js"></script>
+		<script src="../../../vendor/node_modules/observe-js/src/observe.js"></script>
+		<script src="../../core/circular.core.00/circular.core.js"></script>
+		<script src="../../core/circular.core.01-modules/circular.modules.js"></script>
+		<script src="../../core/circular.core.02-log/circular.log.js"></script>
+		<script src="../../core/circular.core.03-queue/circular.queue.js"></script>
+		<script src="../../core/circular.core.04-parser/circular.parser.js"></script>
+		<script src="../../core/circular.core.05-context/circular.context.js"></script>
+		<script src="../../core/circular.core.06-content/circular.content.js"></script>
+		<script src="../../core/circular.core.07-eject/circular.eject.js"></script>
+		<script src="../../core/circular.core.08-registry/circular.registry.js"></script>
+		<script src="../../core/circular.core.09-engine/circular.engine.js"></script>
+		<script src="../../core/circular.core.10-watchdog/circular.watchdog.js"></script>
+		<!-- /build -->
+		
+		
+		<!-- build:template:dist
+			<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+			<script src="../../../js/circular.min.js"></script>
+		/build -->
+		
+		<!-- build:template:live
+			<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+			<script src="http://circularjs.net/current/js/circular.min.js"></script>
+		/build -->
+		
+		
 		<script>
 		
 			var Model = {
