@@ -13,17 +13,18 @@ new CircularModule('eject',{
 		insertcss		: ['#cc-ejected { display:none }']
 	},
 
-	attributes		: [{
-		name 	: 'cc-eject',
-		in		: function(ccattr,node,ccnode) {
-			//alert(ccattr.content.value);
-			if (Circular.parser.boolish(ccattr.content.value)) {
-				this.flag(node,ccnode,ccattr.properties.name);
-			} else {
-				this.unflag(node,ccnode,ccattr.properties.name);
+	attributes		: {
+		'cc-eject' : {
+			in		: function(ccattr,ccnode,node) {
+				//alert(ccattr.content.value);
+				if (Circular.parser.boolish(ccattr.content.value)) {
+					this.flag(node,ccnode,ccattr.properties.name);
+				} else {
+					this.unflag(node,ccnode,ccattr.properties.name);
+				}
 			}
 		}
-	}],
+	},
 	
 	comments			: {
 		'eject'	: function(arg) {

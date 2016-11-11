@@ -27,7 +27,7 @@
 
 ----
 
-###@alert.in(ccattr,node,ccnode)
+###@alert.in(ccattr,ccnode,node)
 
 *description:*
 
@@ -45,7 +45,7 @@
 		
 ----
 
-###@alert.out(ccattr,node,ccnode)
+###@alert.out(ccattr,ccnode,node)
 
 *description:*
 >processes the attribute on the way out

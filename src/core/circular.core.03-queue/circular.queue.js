@@ -13,9 +13,9 @@ new CircularModule('queue', {
 		requiremods		: ['log']
 	},
 
-	attributes		: [
+	attributes		: {
 	
-	],
+	},
 	
 	// ----------
 	

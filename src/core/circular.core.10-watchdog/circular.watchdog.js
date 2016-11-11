@@ -16,7 +16,7 @@ new CircularModule('watchdog', {
 		requiremods	: ['log','registry','engine']
 	},
 
-	attributes		: [],
+	attributes		: {},
 	
 	init					: function() { 
 		return true;

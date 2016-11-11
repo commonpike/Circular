@@ -13,7 +13,7 @@ new CircularModule('registry', {
 		requiremodss	: ['log']
 	},
 
-	attributes		: [],
+	attributes		: {},
 	
 	init					: function() { return true; },
 	

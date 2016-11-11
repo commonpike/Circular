@@ -12,22 +12,21 @@ new CircularModule('log',{
 	
 	},
 		
-	attributes		: [
-		 {
-		 	name	: 'cc-log',
-			in	: function(ccattr,node,ccnode) {
+	attributes		: {
+		'cc-log' : {
+			in	: function(ccattr,ccnode,node) {
 				this.write('@log',node);
 				ccattr.properties.debugging = this.debugging;
 				if (Circular.parser) this.toggleDebug(Circular.parser.boolish(ccattr.content.value));
 				else this.toggleDebug(!ccattr.content.original || ccattr.content.result); // simpleparse
 			},
 			
-			out	: function(ccattr,node,ccnode) {
+			out	: function(ccattr,ccnode,node) {
 				this.toggleDebug(ccattr.properties.debugging);
 				delete ccattr.properties.debugging;
 			}
 		}
-	],
+	},
 	
 	init	: function() {
 		if (this.config.debug) {

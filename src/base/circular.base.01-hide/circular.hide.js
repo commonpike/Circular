@@ -10,7 +10,7 @@ new CircularModule({
 	requires		: ['debug','engine'],
 	css					: '.cc-hide { display:none!important; }',
 
-	in	: function(ccattr,node,ccnode) {
+	in	: function(ccattr,ccnode,node) {
 		Circular.log.debug('@hide.in',node);
 		if (Circular.parser.boolish(ccattr.content.value)) {
 			if (Circular.modules.unprefix(ccattr.properties.name)=='cc-show') {

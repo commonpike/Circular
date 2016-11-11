@@ -887,7 +887,7 @@ new CircularModule('engine', {
 				var mod = Circular[ccattr.properties.module];
 				var func = mod.attributes[ccattr.properties.name].in;
 				if (func) {
-					var ok = func.call(mod,ccattr,node,ccnode);
+					var ok = func.call(mod,ccattr,ccnode,node);
 					if (ok===false) {
 						ccattr.flags.breaking=true;
 						ccnode.flags.recurse = false;
@@ -933,7 +933,7 @@ new CircularModule('engine', {
 				var mod = Circular[ccattr.properties.module];
 				var func = mod.attributes[ccattr.properties.name].out;
 				if (func) {
-					func.call(mod,ccattr,node,ccnode);
+					func.call(mod,ccattr,ccnode,node);
 				}
 			}
 		}
@@ -1067,14 +1067,16 @@ new CircularModule('engine', {
 			ccattr.content.value = ccattr.content.original;
 		}
 		
-		var filter = Circular[ccattr.properties.module]['attributes'][ccattr.properties.name]['filter'];
-		if (filter) ccattr.content.value=filter(ccattr.content.value);
+		var sane = '';
+		var sanitize = Circular[ccattr.properties.module]['attributes'][ccattr.properties.name]['sanitize'];
+		if (sanitize) sane=sanitize(ccattr.content.value);
+		else sane = ccattr.content.value;
 		
-		if (node.getAttribute(ccattr.properties.name)!=ccattr.content.value) {
+		if (node.getAttribute(ccattr.properties.name)!=sane) {
 			if (Circular.watchdog  && ccnode.flags.watched ) { // watched was commented ?
 				Circular.watchdog.pass(node,'attrdomchanged',ccattr.properties.name);
 			}
-			node.setAttribute(ccattr.properties.name,ccattr.content.value);
+			node.setAttribute(ccattr.properties.name,sane);
 		}
 		
 	},

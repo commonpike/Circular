@@ -12,7 +12,7 @@ new CircularModule({
 
 	orgattr			: 'cc-template-origin',
 	
-	in	: function(ccattr,node,ccnode) {
+	in	: function(ccattr,ccnode,node) {
 		Circular.log.debug('@template.in',node);
 		var tplsel = ccattr.content.value;
 		var $node = $(node);

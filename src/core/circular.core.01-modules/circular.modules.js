@@ -10,7 +10,7 @@ function CircularModule(name,def) {
 		if (!def.config)					def.config = {};
 	
 		if (!def.settings)				def.settings 			= { name : name };		
-		if (!def.attributes)			def.attributes 		= [{ name : 'cc-'+name }];
+		if (!def.attributes)			def.attributes 		= { };
 		
 		// store this
 		def.settings.name = name;
@@ -186,14 +186,35 @@ new CircularModule('modules', {
 				this.modnames.push(mod.settings.name);
 				Circular[mod.settings.name]	= mod;
 				
-				for (var ac=mod.attributes.length-1; ac>=0 ;ac--) {
-					var attrname = mod.attributes[ac].name;
-					this.attrnames.push(attrname);
+				
+				var sorted = [];
+				for (var attrname in mod.attributes) {
+					var attr = mod.attributes[attrname];
+					if (attr.priority===undefined) {
+						attr.priority=sorted.length;
+					}
+					if (sorted[attr.priority]) {
+						Circular.log.warn('@modules.add',mod.settings.name,attrname,'fixing dupe priority');
+						attr.priority=sorted.length;
+					}
+					attr.name = attrname;
 					this.attr2mod[attrname]=mod.settings.name;
-					// make attr lookup faster
-					mod.attributes[attrname] = mod.attributes[ac];
+					sorted[attr.priority]=attrname;
 				}
-								
+				for (var ac=sorted.length-1; ac>=0 ;ac--) {
+					if (sorted[ac]) this.attrnames.push(sorted[ac]);
+				}
+				
+				/*
+					for (var ac=mod.attributes.length-1; ac>=0 ;ac--) {
+						var attrname = mod.attributes[ac].name;
+						this.attrnames.push(attrname);
+						this.attr2mod[attrname]=mod.settings.name;
+						// make attr lookup faster
+						mod.attributes[attrname] = mod.attributes[ac];
+					}
+				*/
+				
 			} else {
 				// crucial. i think i want you.
 				if (Circular.log) Circular.log.fatal('Circular.modules.add','fatal error');

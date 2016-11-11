@@ -13,28 +13,29 @@ new CircularModule('context',{
 		requiremods		: ['log']
 	},
 
-	attributes		: [{
+	attributes		: {
 	
-		name : 'cc-context',
-		in	: function(ccattr,node,ccnode) {
-			return this.in(ccattr,node,ccnode);
+		'cc-context' : {
+			priority:1,
+			in	: function(ccattr,ccnode,node) {
+				return this.in(ccattr,ccnode,node);
+			},
+			out	: function(ccattr,ccnode,node) {
+				return this.out(ccattr,ccnode,node);
+			}		
 		},
-		out	: function(ccattr,node,ccnode) {
-			return this.out(ccattr,node,ccnode);
-		}
 		
+		'cc-root' : {
+			priority:2,
+			in	: function(ccattr,ccnode,node) {
+				return this.in(ccattr,ccnode,node);
+			},
+			out	: function(ccattr,ccnode,node) {
+				return this.out(ccattr,ccnode,node);
+			}
+		}		
 		
-	},{
-	
-		name : 'cc-root',
-		in	: function(ccattr,node,ccnode) {
-			return this.in(ccattr,node,ccnode);
-		},
-		out	: function(ccattr,node,ccnode) {
-			return this.out(ccattr,node,ccnode);
-		}
-		
-	}],
+	},
 	
 	init				: function() {
 		this.set(this.config.root);
@@ -46,7 +47,7 @@ new CircularModule('context',{
 	
 	current			: '',
 
-	in	: function(ccattr,node,ccnode) {
+	in	: function(ccattr,ccnode,node) {
 		
 		ccattr.properties.ctxbefore = Circular.context.get();
 		if (ccattr.content.expression) {
@@ -64,7 +65,7 @@ new CircularModule('context',{
 		}
 	},
 	
-	out	: function(ccattr,node,ccnode) {
+	out	: function(ccattr,ccnode,node) {
 		this.debug('cc-context.out','resetting context');
 		Circular.context.set(ccattr.properties.ctxbefore);
 		delete ccattr.properties.ctxbefore;

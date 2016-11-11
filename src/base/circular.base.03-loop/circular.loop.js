@@ -22,7 +22,7 @@ new CircularModule({
 	last		: false,
 	greedy	: true, // eat whitespace when creating template
 	
-	in	: function(ccattr,node,ccnode) {
+	in	: function(ccattr,ccnode,node) {
 
 		Circular.log.debug('@loop.in',node);
 		
