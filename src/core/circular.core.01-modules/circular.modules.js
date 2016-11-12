@@ -41,7 +41,13 @@ new CircularModule('modules', {
 	
 	},
 
-	attributes		: [],
+	attributes		: {
+	
+	},
+	
+	comments			: {
+	
+	},
 	
 	init	: function(config) {
 
@@ -85,7 +91,7 @@ new CircularModule('modules', {
 			
 		}
 		
-		// make attr lookup faster
+		// make reverse attr lookup faster
 		for (var ac=0; ac<this.attrnames.length; ac++) {
 			this.attr2idx[this.attrnames[ac]]=ac;
 		}
@@ -138,6 +144,9 @@ new CircularModule('modules', {
 	attr2mod		: {
 		// map attribute names to modules
 	},
+	comm2mod		: {
+		// map comment names to modules
+	},
 	
 	// read once from config during init
 	attrprefix		: 'cc-',
@@ -183,10 +192,11 @@ new CircularModule('modules', {
 			
 			if (valid) {
 			
+				// store the module
 				this.modnames.push(mod.settings.name);
 				Circular[mod.settings.name]	= mod;
 				
-				
+				// store the attributes
 				var sorted = [];
 				for (var attrname in mod.attributes) {
 					var attr = mod.attributes[attrname];
@@ -194,7 +204,7 @@ new CircularModule('modules', {
 						attr.priority=sorted.length;
 					}
 					if (sorted[attr.priority]) {
-						Circular.log.warn('@modules.add',mod.settings.name,attrname,'fixing dupe priority');
+						Circular.log.warn('@modules.add',mod.settings.name,attrname,'changing dupe priority',attr.priority);
 						attr.priority=sorted.length;
 					}
 					attr.name = attrname;
@@ -204,16 +214,11 @@ new CircularModule('modules', {
 				for (var ac=sorted.length-1; ac>=0 ;ac--) {
 					if (sorted[ac]) this.attrnames.push(sorted[ac]);
 				}
-				
-				/*
-					for (var ac=mod.attributes.length-1; ac>=0 ;ac--) {
-						var attrname = mod.attributes[ac].name;
-						this.attrnames.push(attrname);
-						this.attr2mod[attrname]=mod.settings.name;
-						// make attr lookup faster
-						mod.attributes[attrname] = mod.attributes[ac];
-					}
-				*/
+
+				// store the comment handlers
+				for (var c in mod.comments) {
+					this.comm2mod[c]=mod.settings.name
+				}
 				
 			} else {
 				// crucial. i think i want you.

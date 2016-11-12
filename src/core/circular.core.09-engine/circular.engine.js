@@ -12,7 +12,8 @@ new CircularModule('engine', {
 	},
 	
 	settings 			: {
-		requiremods		: ['context','log','registry']
+		requiremods		: ['context','log','registry'],
+		rxcomment			: /^@([^[]+)(\[(.*)\])?$/
 	},
 	
 	init					: function() { 
@@ -197,7 +198,11 @@ new CircularModule('engine', {
 				
 			case Node.COMMENT_NODE:
 			
-				this.debug('@engine.process ','ignoring comments '+node.nodeType);
+				if (this.processCommentNode(node,ccnode)) {
+					this.debug('@engine.process','processed',node);
+				} else {
+					this.debug('@engine.process','ignored',node);
+				}
 				break;
 				
 			default:
@@ -1197,7 +1202,18 @@ new CircularModule('engine', {
 		}
 	},
 	
-	
+	processCommentNode	: function(node,ccnode) {
+		this.debug('@engine.processCommentNode');
+		var matches = node.nodeValue.match(this.settings.rxcomment);
+		if (!matches) return false;
+		var comm = matches[1], sarg=matches[3];
+		if (!comm) return false;
+		var arg = undefined;
+		if (sarg) arg = Circular.parser.eval(sarg);
+		var mod = Circular.modules.comm2mod[comm];
+		Circular[mod].comments[comm](node,arg);
+		return true;
+	},
 	
 	debug	: function() {
 		if (this.config.debug) {

@@ -27,16 +27,20 @@ new CircularModule('eject',{
 	},
 	
 	comments			: {
-		'eject'	: function(arg) {
-			var nodeid=arg[1];
-			Circular.engine.processNodeElement($(nodeid),Circular.context.get());
+		'eject'	: function(node,arg) {
+			if (arg && arg.length) {
+				var nodeid=arg[1];
+				if (nodeid) {
+					Circular.engine.process($(nodeid),Circular.context.get());
+				}
+			}
 		}
 	},
 	
 	// ----------------
 	// this module has preprocess and postprocess
 	// calls hardcoded into the engine. 
-	// arent you jealous now.
+	// boy arent you jealous now.
 	
 	
 	preprocess		: function(node,ccnode) {
@@ -58,7 +62,7 @@ new CircularModule('eject',{
 	
 
 	// ---------------
-	// i would use 'Set' for this if it was
+	// i would use a es6 'Set' for this if it was
 	// supported better by IE. now i use object.keys.
 	
 	// this is where we store comment references
@@ -75,6 +79,7 @@ new CircularModule('eject',{
 	
 	apply		: function(node,ccnode,flag) {
 		if (!ccnode.flags.ejected) {
+		
 			$ejected = $('#cc-ejected');
 			if (!$ejected.size()) $ejected = $('<div id="cc-ejected">').appendTo('body');
 			var nodeid=Circular.engine.nodeid(node);
@@ -95,9 +100,11 @@ new CircularModule('eject',{
 	},
 	
 	restore	: function(node,ccnode) {
+	
 		// find the comment belonging to the node
 		// move the node after the comment
 		// remove the comment
+
 		if (ccnode.flags.ejected) {
 			var nodeid=Circular.engine.nodeid(node);
 			var comment = this.ejected[nodeid];
