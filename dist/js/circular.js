@@ -8143,7 +8143,7 @@ function CircularModule(name,def) {
 		if (!def.config)					def.config = {};
 	
 		if (!def.settings)				def.settings 			= { name : name };		
-		if (!def.attributes)			def.attributes 		= [{ name : 'cc-'+name }];
+		if (!def.attributes)			def.attributes 		= { };
 		
 		// store this
 		def.settings.name = name;
@@ -8174,7 +8174,13 @@ new CircularModule('modules', {
 	
 	},
 
-	attributes		: [],
+	attributes		: {
+	
+	},
+	
+	comments			: {
+	
+	},
 	
 	init	: function(config) {
 
@@ -8218,7 +8224,7 @@ new CircularModule('modules', {
 			
 		}
 		
-		// make attr lookup faster
+		// make reverse attr lookup faster
 		for (var ac=0; ac<this.attrnames.length; ac++) {
 			this.attr2idx[this.attrnames[ac]]=ac;
 		}
@@ -8271,6 +8277,9 @@ new CircularModule('modules', {
 	attr2mod		: {
 		// map attribute names to modules
 	},
+	comm2mod		: {
+		// map comment names to modules
+	},
 	
 	// read once from config during init
 	attrprefix		: 'cc-',
@@ -8316,17 +8325,34 @@ new CircularModule('modules', {
 			
 			if (valid) {
 			
+				// store the module
 				this.modnames.push(mod.settings.name);
 				Circular[mod.settings.name]	= mod;
 				
-				for (var ac=mod.attributes.length-1; ac>=0 ;ac--) {
-					var attrname = mod.attributes[ac].name;
-					this.attrnames.push(attrname);
+				// store the attributes
+				var sorted = [];
+				for (var attrname in mod.attributes) {
+					var attr = mod.attributes[attrname];
+					if (attr.priority===undefined) {
+						attr.priority=sorted.length;
+					}
+					if (sorted[attr.priority]) {
+						Circular.log.warn('@modules.add',mod.settings.name,attrname,'changing dupe priority',attr.priority);
+						attr.priority=sorted.length;
+					}
+					attr.name = attrname;
 					this.attr2mod[attrname]=mod.settings.name;
-					// make attr lookup faster
-					mod.attributes[attrname] = mod.attributes[ac];
+					sorted[attr.priority]=attrname;
 				}
-								
+				for (var ac=sorted.length-1; ac>=0 ;ac--) {
+					if (sorted[ac]) this.attrnames.push(sorted[ac]);
+				}
+
+				// store the comment handlers
+				for (var c in mod.comments) {
+					this.comm2mod[c]=mod.settings.name
+				}
+				
 			} else {
 				// crucial. i think i want you.
 				if (Circular.log) Circular.log.fatal('Circular.modules.add','fatal error');
@@ -8359,22 +8385,21 @@ new CircularModule('log',{
 	
 	},
 		
-	attributes		: [
-		 {
-		 	name	: 'cc-log',
-			in	: function(ccattr,node,ccnode) {
+	attributes		: {
+		'cc-log' : {
+			in	: function(ccattr,ccnode,node) {
 				this.write('@log',node);
 				ccattr.properties.debugging = this.debugging;
 				if (Circular.parser) this.toggleDebug(Circular.parser.boolish(ccattr.content.value));
 				else this.toggleDebug(!ccattr.content.original || ccattr.content.result); // simpleparse
 			},
 			
-			out	: function(ccattr,node,ccnode) {
+			out	: function(ccattr,ccnode,node) {
 				this.toggleDebug(ccattr.properties.debugging);
 				delete ccattr.properties.debugging;
 			}
 		}
-	],
+	},
 	
 	init	: function() {
 		if (this.config.debug) {
@@ -8444,9 +8469,9 @@ new CircularModule('queue', {
 		requiremods		: ['log']
 	},
 
-	attributes		: [
+	attributes		: {
 	
-	],
+	},
 	
 	// ----------
 	
@@ -8823,28 +8848,29 @@ new CircularModule('context',{
 		requiremods		: ['log']
 	},
 
-	attributes		: [{
+	attributes		: {
 	
-		name : 'cc-context',
-		in	: function(ccattr,node,ccnode) {
-			return this.in(ccattr,node,ccnode);
+		'cc-context' : {
+			priority:1,
+			in	: function(ccattr,ccnode,node) {
+				return this.in(ccattr,ccnode,node);
+			},
+			out	: function(ccattr,ccnode,node) {
+				return this.out(ccattr,ccnode,node);
+			}		
 		},
-		out	: function(ccattr,node,ccnode) {
-			return this.out(ccattr,node,ccnode);
-		}
 		
+		'cc-root' : {
+			priority:2,
+			in	: function(ccattr,ccnode,node) {
+				return this.in(ccattr,ccnode,node);
+			},
+			out	: function(ccattr,ccnode,node) {
+				return this.out(ccattr,ccnode,node);
+			}
+		}		
 		
-	},{
-	
-		name : 'cc-root',
-		in	: function(ccattr,node,ccnode) {
-			return this.in(ccattr,node,ccnode);
-		},
-		out	: function(ccattr,node,ccnode) {
-			return this.out(ccattr,node,ccnode);
-		}
-		
-	}],
+	},
 	
 	init				: function() {
 		this.set(this.config.root);
@@ -8856,7 +8882,7 @@ new CircularModule('context',{
 	
 	current			: '',
 
-	in	: function(ccattr,node,ccnode) {
+	in	: function(ccattr,ccnode,node) {
 		
 		ccattr.properties.ctxbefore = Circular.context.get();
 		if (ccattr.content.expression) {
@@ -8874,7 +8900,7 @@ new CircularModule('context',{
 		}
 	},
 	
-	out	: function(ccattr,node,ccnode) {
+	out	: function(ccattr,ccnode,node) {
 		this.debug('cc-context.out','resetting context');
 		Circular.context.set(ccattr.properties.ctxbefore);
 		delete ccattr.properties.ctxbefore;
@@ -8910,19 +8936,20 @@ new CircularModule('content',{
 		insertcss		: ['.cc-content-generated {  }']
 	},
 
-	attributes		: [{
-		name 	: 'cc-content',
-		in		: function(ccattr,node,ccnode) {
-			val = ccattr.content.value;
-			//if (val.length>16) {
-			//	Circular.watchdog.pass(node,'attrdomchanged',ccattr.properties.name);
-			//	node.setAttribute('cc-content',val.substring(0,16)+'..')
-			//}
-			Circular.log.debug('cc-content.in','setting content',val);
-			node.textContent=val;
-			$(node).addClass('cc-content-generated');
+	attributes		: {
+		'cc-content' : {
+			in		: function(ccattr,ccnode,node) {
+				val = ccattr.content.value;
+				Circular.log.debug('cc-content.in','setting content',val);
+				node.textContent=val;
+				$(node).addClass('cc-content-generated');
+			},
+			sanitize	: function(value) {
+				if (value.length>16) return value.substring(0,16)+'(...)';
+				return value;
+			}
 		}
-	}]
+	}
 	
 		
 });
@@ -8942,38 +8969,41 @@ new CircularModule('eject',{
 		insertcss		: ['#cc-ejected { display:none }']
 	},
 
-	attributes		: [{
-		name 	: 'cc-eject',
-		in		: function(ccattr,node,ccnode) {
-			//alert(ccattr.content.value);
-			if (Circular.parser.boolish(ccattr.content.value)) {
-				this.flag(node,ccnode,ccattr.properties.name);
-			} else {
-				this.unflag(node,ccnode,ccattr.properties.name);
+	attributes		: {
+		'cc-eject' : {
+			in		: function(ccattr,ccnode,node) {
+				//alert(ccattr.content.value);
+				if (Circular.parser.boolish(ccattr.content.value)) {
+					this.flag(node,ccnode,ccattr.properties.name);
+				} else {
+					this.unflag(node,ccnode,ccattr.properties.name);
+				}
 			}
 		}
-	}],
+	},
+	
+	comments			: {
+		'eject'	: function(node,arg) {
+			if (arg && arg.length) {
+				var nodeid=arg[1];
+				if (nodeid) {
+					Circular.engine.process($(nodeid),Circular.context.get());
+				}
+			}
+		}
+	},
+	
+	// ----------------
+	// this module has preprocess and postprocess
+	// calls hardcoded into the engine. 
+	// boy arent you jealous now.
 	
 	
-	// ---------------
-	// i would use 'Set' for this if it was
-	// supported better by IE
-	
-	genid		: 0,
-	
-	clear		: function(node,ccnode) {
+	preprocess		: function(node,ccnode) {
 		ccnode.flags.ejectors = {};
 	},
 	
-	flag		: function(node,ccnode,flag) {
-		ccnode.flags.ejectors[flag]=true;
-	},
-	
-	unflag	: function(node,ccnode,flag) {
-		delete ccnode.flags.ejectors[flag];
-	},
-	
-	process	: function(node,ccnode) {
+	postprocess	: function(node,ccnode) {
 		var flags = Object.keys(ccnode.flags.ejectors);
 		if (flags.length) {
 			if (!ccnode.flags.ejected) {
@@ -8986,22 +9016,67 @@ new CircularModule('eject',{
 		}
 	},
 	
+
+	// ---------------
+	// i would use a es6 'Set' for this if it was
+	// supported better by IE. now i use object.keys.
+	
+	// this is where we store comment references
+	ejected	: { },
+	
+	flag		: function(node,ccnode,flag) {
+		ccnode.flags.ejectors[flag]=true;
+	},
+	
+	unflag	: function(node,ccnode,flag) {
+		delete ccnode.flags.ejectors[flag];
+	},
+	
+	
 	apply		: function(node,ccnode,flag) {
-		$ejected = $('#cc-ejected');
-		if (!$ejected.size()) $ejected = $('<div id="cc-ejected">').appendTo('body');
-		if (!$(node).attr('id')) $(node).attr('id','cc-eject-'+this.genid++);
-		// create a comment just before the node
-		// move the node to #cc-ejected
-		Circular.log.debug('@eject','ejected #'+$(node).attr('id'),flag);
-		ccnode.flags.ejected=true;
+		if (!ccnode.flags.ejected) {
+		
+			$ejected = $('#cc-ejected');
+			if (!$ejected.size()) $ejected = $('<div id="cc-ejected">').appendTo('body');
+			var nodeid=Circular.engine.nodeid(node);
+			
+			// create a comment just before the node
+			var comment = document.createComment('@eject[["'+flag+'","#'+nodeid+'"]]');
+			node.parentNode.insertBefore(comment,node);
+			this.ejected[nodeid]=comment;
+			
+			// move the node to #cc-ejected
+			$(node).appendTo($ejected);
+			ccnode.flags.ejected=true;
+			Circular.log.debug('@eject.apply','ejected #'+nodeid,flag);
+			
+		} else {
+			Circular.log.error('@eject.apply','#'+nodeid,'flags.ejected=true; not ejecting');
+		}
 	},
 	
 	restore	: function(node,ccnode) {
+	
 		// find the comment belonging to the node
 		// move the node after the comment
 		// remove the comment
-		Circular.log.debug('@eject','restored #'+$(node).attr('id'));
-		ccnode.flags.ejected=false;
+
+		if (ccnode.flags.ejected) {
+			var nodeid=Circular.engine.nodeid(node);
+			var comment = this.ejected[nodeid];
+			if (comment) {
+				comment.parentNode.insertBefore(node,comment);
+				comment.parentNode.removeChild(comment);
+				ccnode.flags.ejected=false;
+				delete this.ejected[nodeid];
+				Circular.log.debug('@eject.restore','restored #'+$(node).attr('id'));
+				
+			} else {
+				Circular.log.error('@eject.restore','#'+nodeid,'no comment found in @eject.ejected');
+			}
+		} else {
+			Circular.log.error('@eject.restore','#'+nodeid,'flags.ejected=false; not restoring');
+		}
 	}
 
 	
@@ -9023,7 +9098,7 @@ new CircularModule('registry', {
 		requiremodss	: ['log']
 	},
 
-	attributes		: [],
+	attributes		: {},
 	
 	init					: function() { return true; },
 	
@@ -9170,7 +9245,8 @@ new CircularModule('engine', {
 	},
 	
 	settings 			: {
-		requiremods		: ['context','log','registry']
+		requiremods		: ['context','log','registry'],
+		rxcomment			: /^@([^[]+)(\[(.*)\])?$/
 	},
 	
 	init					: function() { 
@@ -9182,6 +9258,10 @@ new CircularModule('engine', {
 	
 	counter			: 0,
 	genid				: 0,
+	nodeid			: function(node) {
+		if (!node.hasAttribute('id')) node.setAttribute('id','cc-engine-'+(this.genid++));
+		return node.getAttribute('id');
+	},
 	
 	start				: function() {
 		this.debug('@engine.start ');
@@ -9351,7 +9431,11 @@ new CircularModule('engine', {
 				
 			case Node.COMMENT_NODE:
 			
-				this.debug('@engine.process ','ignoring comments '+node.nodeType);
+				if (this.processCommentNode(node,ccnode)) {
+					this.debug('@engine.process','processed',node);
+				} else {
+					this.debug('@engine.process','ignored',node);
+				}
 				break;
 				
 			default:
@@ -9378,15 +9462,15 @@ new CircularModule('engine', {
 			
 			this.indexAttributes(node,ccnode);
 			if (ccnode.index.length) {
-				Circular.eject.clear(node,ccnode);
+				Circular.eject.preprocess(node,ccnode);
 				this.processAttributesIn(node,ccnode);
-				Circular.eject.process(node,ccnode);
+				Circular.eject.postprocess(node,ccnode);
 				Circular.registry.set(node,ccnode,true);
 				if (ccnode.flags.recurse) {
 					this.processChildren(node,ccnode.properties.innercontext);
 				} else this.debug('@engine.processElementNode','flags.recurse=false');
 				this.processAttributesOut(node,ccnode);
-				Circular.eject.process(node,ccnode);
+				Circular.eject.postprocess(node,ccnode);
 				Circular.registry.set(node,ccnode,true);
 				return true;
 			} else {
@@ -9404,9 +9488,9 @@ new CircularModule('engine', {
 			
 			this.indexAttributes(node,ccnode);
 			if (ccnode.index.length) {
-				Circular.eject.clear(node,ccnode);
+				Circular.eject.preprocess(node,ccnode);
 				this.processAttributesIn(node,ccnode);
-				Circular.eject.process(node,ccnode);
+				Circular.eject.postprocess(node,ccnode);
 				Circular.registry.set(node,ccnode,true);
 				if (ccnode.flags.recurse) {
 					if (ccnode.flags.icontextchanged || ccnode.flags.contentchanged) {
@@ -9414,7 +9498,7 @@ new CircularModule('engine', {
 					} else this.debug('@engine.processElementNode','no need to recurse');
 				}  else this.debug('@engine.processElementNode','flags.recurse=false');
 				this.processAttributesOut(node,ccnode);
-				Circular.eject.process(node,ccnode);
+				Circular.eject.postprocess(node,ccnode);
 				Circular.registry.set(node,ccnode,true);
 			} else {
 				ccnode.properties.innercontext=ccnode.properties.outercontext;
@@ -9428,9 +9512,9 @@ new CircularModule('engine', {
 			
 			this.indexAttributes(node,ccnode);
 			if (ccnode.index.length) {
-				Circular.eject.clear(node,ccnode);
+				Circular.eject.preprocess(node,ccnode);
 				this.processAttributesIn(node,ccnode);
-				Circular.eject.process(node,ccnode);
+				Circular.eject.postprocess(node,ccnode);
 				Circular.registry.set(node,ccnode,true);
 				if (ccnode.flags.recurse) {
 					if (ccnode.flags.icontextchanged || ccnode.flags.contentchanged) { 
@@ -9438,7 +9522,7 @@ new CircularModule('engine', {
 					} else this.debug('@engine.processElementNode','no need to recurse');
 				}  else this.debug('@engine.processElementNode','flags.recurse=false');
 				this.processAttributesOut(node,ccnode);
-				Circular.eject.process(node,ccnode);
+				Circular.eject.postprocess(node,ccnode);
 				Circular.registry.set(node,ccnode,true);
 			} else {
 				Circular.log.error('@engine.processElementNode','attrdomchanged, but no attributes');
@@ -9449,9 +9533,9 @@ new CircularModule('engine', {
 			this.debug('@engine.processElementNode','ccnode.flags.attrdatachanged');
 			
 			if (ccnode.index.length) {
-				Circular.eject.clear(node,ccnode);
+				Circular.eject.preprocess(node,ccnode);
 				this.processAttributesIn(node,ccnode);
-				Circular.eject.process(node,ccnode);
+				Circular.eject.postprocess(node,ccnode);
 				Circular.registry.set(node,ccnode,true);
 				if (ccnode.flags.recurse) {
 					if (ccnode.flags.icontextchanged || ccnode.flags.contentchanged) { 
@@ -9459,7 +9543,7 @@ new CircularModule('engine', {
 					} else this.debug('@engine.processElementNode','no need to recurse');
 				}  else this.debug('@engine.processElementNode','flags.recurse=false');
 				this.processAttributesOut(node,ccnode);
-				Circular.eject.process(node,ccnode);
+				Circular.eject.postprocess(node,ccnode);
 				Circular.registry.set(node,ccnode,true);
 			} else {
 				Circular.log.error('@engine.processElementNode','attrdatachanged, but no attributes');
@@ -9470,9 +9554,9 @@ new CircularModule('engine', {
 			this.debug('@engine.processElementNode','ccnode.flags.ocontextchanged');
 			
 			if (ccnode.index.length) {
-				Circular.eject.clear(node,ccnode);
+				Circular.eject.preprocess(node,ccnode);
 				this.processAttributesIn(node,ccnode);
-				Circular.eject.process(node,ccnode);
+				Circular.eject.postprocess(node,ccnode);
 				Circular.registry.set(node,ccnode,true);
 				if (ccnode.flags.recurse) {
 					if (ccnode.flags.icontextchanged || ccnode.flags.contentchanged) {
@@ -9480,7 +9564,7 @@ new CircularModule('engine', {
 					} else this.debug('@engine.processElementNode','no need to recurse');
 				}  else this.debug('@engine.processElementNode','flags.recurse=false');
 				this.processAttributesOut(node,ccnode);
-				Circular.eject.process(node,ccnode);
+				Circular.eject.postprocess(node,ccnode);
 				Circular.registry.set(node,ccnode,true);
 			
 			} else {
@@ -10041,7 +10125,7 @@ new CircularModule('engine', {
 				var mod = Circular[ccattr.properties.module];
 				var func = mod.attributes[ccattr.properties.name].in;
 				if (func) {
-					var ok = func.call(mod,ccattr,node,ccnode);
+					var ok = func.call(mod,ccattr,ccnode,node);
 					if (ok===false) {
 						ccattr.flags.breaking=true;
 						ccnode.flags.recurse = false;
@@ -10087,7 +10171,7 @@ new CircularModule('engine', {
 				var mod = Circular[ccattr.properties.module];
 				var func = mod.attributes[ccattr.properties.name].out;
 				if (func) {
-					func.call(mod,ccattr,node,ccnode);
+					func.call(mod,ccattr,ccnode,node);
 				}
 			}
 		}
@@ -10221,11 +10305,16 @@ new CircularModule('engine', {
 			ccattr.content.value = ccattr.content.original;
 		}
 		
-		if (node.getAttribute(ccattr.properties.name)!=ccattr.content.value) {
+		var sane = '';
+		var sanitize = Circular[ccattr.properties.module]['attributes'][ccattr.properties.name]['sanitize'];
+		if (sanitize) sane=sanitize(ccattr.content.value);
+		else sane = ccattr.content.value;
+		
+		if (node.getAttribute(ccattr.properties.name)!=sane) {
 			if (Circular.watchdog  && ccnode.flags.watched ) { // watched was commented ?
 				Circular.watchdog.pass(node,'attrdomchanged',ccattr.properties.name);
 			}
-			node.setAttribute(ccattr.properties.name,ccattr.content.value);
+			node.setAttribute(ccattr.properties.name,sane);
 		}
 		
 	},
@@ -10346,7 +10435,18 @@ new CircularModule('engine', {
 		}
 	},
 	
-	
+	processCommentNode	: function(node,ccnode) {
+		this.debug('@engine.processCommentNode');
+		var matches = node.nodeValue.match(this.settings.rxcomment);
+		if (!matches) return false;
+		var comm = matches[1], sarg=matches[3];
+		if (!comm) return false;
+		var arg = undefined;
+		if (sarg) arg = Circular.parser.eval(sarg);
+		var mod = Circular.modules.comm2mod[comm];
+		Circular[mod].comments[comm](node,arg);
+		return true;
+	},
 	
 	debug	: function() {
 		if (this.config.debug) {
@@ -10373,7 +10473,7 @@ new CircularModule('watchdog', {
 		requiremods	: ['log','registry','engine']
 	},
 
-	attributes		: [],
+	attributes		: {},
 	
 	init					: function() { 
 		return true;
@@ -10941,7 +11041,7 @@ new CircularModule({
 	requires		: ['debug','engine'],
 	css					: '.cc-hide { display:none!important; }',
 
-	in	: function(ccattr,node,ccnode) {
+	in	: function(ccattr,ccnode,node) {
 		Circular.log.debug('@hide.in',node);
 		if (Circular.parser.boolish(ccattr.content.value)) {
 			if (Circular.modules.unprefix(ccattr.properties.name)=='cc-show') {
@@ -10988,7 +11088,7 @@ new CircularModule({
 
 	orgattr			: 'cc-template-origin',
 	
-	in	: function(ccattr,node,ccnode) {
+	in	: function(ccattr,ccnode,node) {
 		Circular.log.debug('@template.in',node);
 		var tplsel = ccattr.content.value;
 		var $node = $(node);
@@ -11051,7 +11151,7 @@ new CircularModule({
 	last		: false,
 	greedy	: true, // eat whitespace when creating template
 	
-	in	: function(ccattr,node,ccnode) {
+	in	: function(ccattr,ccnode,node) {
 
 		Circular.log.debug('@loop.in',node);
 		

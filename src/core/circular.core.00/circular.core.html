@@ -22,16 +22,16 @@
 		
 		
 		<!-- build:template:dist
-			<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
-			<script src="../../../js/circular.min.js"></script>
+		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+		<script src="../../../js/circular.min.js"></script>
 		/build -->
 		
 		<!-- build:template:live
-			<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
-			<script src="http://circularjs.net/current/js/circular.min.js"></script>
+		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+		<script src="http://circularjs.net/current/js/circular.min.js"></script>
 		/build -->
 			
-	
+		<link rel="stylesheet" href="../../assets/docs.css">	
 
 		<script>
 		
@@ -80,7 +80,7 @@
 		</script>
 	</head>
 	<body cc-root cc-context="Control.currentpage">
-	
+		<!--@include["../../assets/header.inc"]-->
 		<nav>
 				<a href="#" onclick="Control.goto('hello')">Hello</a> |
 				<a href="#" onclick="Control.goto('goodbye')">Goodbye</a>
@@ -89,7 +89,6 @@
 		<h1 cc-content="{{#title}}"></h1>
 		
 		
-		
-		
+		<!--@include["../../assets/footer.inc"]-->
 	</body>
 </html>

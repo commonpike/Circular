@@ -53,6 +53,12 @@ module.exports = function(grunt) {
 				dest: 'dist/js/',
 				filter: 'isFile'
 			},
+			assets : {
+				expand: true,
+				cwd: 'src/assets',
+				src: ['**'],
+				dest: 'dist/docs/assets'
+			},
 			coredocs : {
 				expand: true,
 				//flatten: true,
