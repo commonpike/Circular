@@ -13,7 +13,8 @@ new CircularModule('watchdog', {
 	},
 	
 	settings 			: {
-		requiremods	: ['log','registry','engine']
+		requiremods	: ['log','registry','engine'],
+		emulated		: false
 	},
 
 	attributes		: {},
@@ -68,6 +69,7 @@ new CircularModule('watchdog', {
 		this.domobserver = new MutationObserver(Circular.watchdog.ondomchange);
 		if (!Object.observe) {
 			Circular.log.warn('@watchdog.init','emulating object.observe');
+			this.settings.emulated=true;
 			setInterval(function() {
 				Platform.performMicrotaskCheckpoint();
 			},this.config.muinterval);

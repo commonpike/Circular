@@ -26,6 +26,7 @@ new CircularModule('engine', {
 	counter			: 0,
 	genid				: 0,
 	nodeid			: function(node) {
+		if (node instanceof jQuery) node = node.get(0);
 		if (!node.hasAttribute('id')) node.setAttribute('id','cc-engine-'+(this.genid++));
 		return node.getAttribute('id');
 	},
@@ -223,6 +224,9 @@ new CircularModule('engine', {
 	
 		this.debug('@engine.processElementNode',node.nodeName);
 		
+		if (node.nodeName=='XMP' || node.nodeName=='CODE' || node.hasAttribute('cc-engine-skip')) {
+			return false;
+		}
 		if (ccnode.flags.pristine) {
 		
 			this.debug('@engine.processElementNode','ccnode.flags.pristine');
@@ -1208,11 +1212,16 @@ new CircularModule('engine', {
 		if (!matches) return false;
 		var comm = matches[1], sarg=matches[3];
 		if (!comm) return false;
-		var arg = undefined;
-		if (sarg) arg = Circular.parser.eval(sarg);
 		var mod = Circular.modules.comm2mod[comm];
-		Circular[mod].comments[comm](node,arg);
-		return true;
+		if (mod) {
+			var arg = undefined;
+			if (sarg) arg = Circular.parser.eval(sarg);
+			Circular[mod].comments[comm](node,arg);
+			return true;
+		} else {
+			Circular.log.debug('@engine.processCommentNode','command module not found',comm);
+		}
+		return false;
 	},
 	
 	debug	: function() {

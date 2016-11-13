@@ -18,6 +18,10 @@
 		<script src="../../core/circular.core.08-registry/circular.registry.js"></script>
 		<script src="../../core/circular.core.09-engine/circular.engine.js"></script>
 		<script src="../../core/circular.core.10-watchdog/circular.watchdog.js"></script>
+		
+		<script src="../../base/circular.base.03-include/circular.include.js"></script>
+		<script src="../../contrib/circular.srcbox/circular.srcbox.js"></script>
+		
 		<!-- /build -->
 		
 		
@@ -36,42 +40,14 @@
 		<script>
 		
 			var Model = {
-				menu	: [
-						{ 
-							title	: 'Hello',
-							link	: 'hello'
-						},
-						{
-							title	: 'Goodbye',
-							link	: 'goodbye'
-						}
-				], 
-				pages	: {
-					hello 		: {
-						title : 'Hello World',
-						content	: 'Hello happy World'
-					},
-					goodbye 		: {
-						title 	: 'Goodbye World',
-						content	: 'Goodbye gruel world'
-					}
-				}
-				
+				message	: 'hello'
 			}
 			
-			var Control = {
-				currentpage	: null,
-				goto	: function(page) {
-					this.currentpage=Model.pages[page];
-				}
-			}
-			
-			Control.goto('hello');
 			Circular.init({
 				log : {
 					debug : true
 				},
-				engine	: {
+				engine : {
 					debug : true
 				}
 			});
@@ -79,15 +55,30 @@
 				
 		</script>
 	</head>
-	<body cc-root cc-context="Control.currentpage">
+	<body cc-root cc-context="Model">
 		<!--@include["../../assets/header.inc"]-->
-		<nav>
-				<a href="#" onclick="Control.goto('hello')">Hello</a> |
-				<a href="#" onclick="Control.goto('goodbye')">Goodbye</a>
-		</nav>
-		
-		<h1 cc-content="{{#title}}"></h1>
-		
+		<article>
+
+			<section id="about">
+				This is just a general testpage to see
+				if there are big compiletime typos in the src.
+			</section>
+			
+			<section id="demo">
+			
+				<form id="controls">
+						<input type="radio" name="test" onclick="Model.message='hello';" checked>message='hello'</a> 
+						<input type="radio" name="test" onclick="Model.message='goodbye';">message='goodbye'</a>
+				</form>
+				
+				<div id="results">
+					<div cc-srcbox>
+<h1 cc-content="{{#message}}"></h1>
+					</div>
+				</div>
+				
+			</section>
+		</article>
 		
 		<!--@include["../../assets/footer.inc"]-->
 	</body>
