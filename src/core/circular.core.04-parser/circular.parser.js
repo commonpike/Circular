@@ -220,7 +220,7 @@ new CircularModule('parser', {
 		var matches = expr.match(this.config.flagregex);
 		if (matches) {
 			return {
-				expression: expr,
+				expression: expr.substring(0,expr.length-matches[0].length),
 				parse			: (matches[0].indexOf('p')!=-1),
 				evaluate	: (matches[0].indexOf('e')!=-1),
 				watch			: (matches[0].indexOf('w')!=-1)

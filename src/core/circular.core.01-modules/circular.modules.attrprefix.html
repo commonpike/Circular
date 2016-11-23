@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>Hello | Goodbye</title>
+		<title>@config.modules.attrprefix</title>
 		
 		<!-- build:remove -->
 		<script src="../../../vendor/node_modules/jquery/dist/jquery.min.js"></script>
@@ -40,9 +40,8 @@
 		<script src="http://circularjs.net/current/js/circular.srcbox.js"></script>
 		<link rel="stylesheet" href="http://circularjs.net/current/assets/docs.css">	
 		/build -->
-			
 		
-
+		
 		<script>
 		
 			var Model = {
@@ -50,10 +49,10 @@
 			}
 			
 			Circular.init({
-				log : {
-					debug : true
-				},
-				engine : {
+				modules : {
+					attrprefix	: 'square-'
+				}, 
+				log 	: {
 					debug : true
 				}
 			});
@@ -61,13 +60,21 @@
 				
 		</script>
 	</head>
-	<body cc-root cc-context="Model">
+	<body square-root square-context="Model">
 		<!--@include["../../assets/header.inc"]-->
 		<article>
 
 			<section id="about">
-				This is just a general testpage to see
-				if there are big compiletime typos in the src.
+				You can change the default 'cc-' prefix of all custom attributes to something
+				else (like the html5 compliant 'data-cc-'). Below example uses
+<pre>
+Circular.init({
+	modules : { attrprefix	: 'square-' }
+})
+</pre>
+			If you do this, <b>all</b> attribute names in your html that originally started
+			with <code>cc-</code> need to start with <code>square-</code> instead.
+
 			</section>
 			
 			<section id="demo">
@@ -80,8 +87,8 @@
 				<div id="results">
 				
 <!-- ....... -->		
-<div cc-srcbox>
-<h1 cc-content="{{#message}}"></h1>
+<div square-srcbox>
+<h1 square-content="{{#message}}"></h1>
 </div>
 <!-- ....... -->		
 

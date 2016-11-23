@@ -95,7 +95,7 @@ footer {
 	position:relative;
 	font-family:'Helvetica','Helvetica Neue',sans-serif;
 	font-variant: small-caps;
-	padding:1em 2em;
+	padding:1em 1em;
 	min-height:3em;
 }
 	footer span {
@@ -124,19 +124,27 @@ code {
 @media (min-width: 480px) {
 	header {	
 		padding: 1em 2em 0;
+		max-width:1024px;
+		margin:0 auto;
 	}
 	article {
 		padding:1em 0 4em;
 		background-color:white;
 	}
-	section {
-		padding: 1em 2em;
-	}
-		section#demo {
-			padding:1em 2em;
-    }
-			div#results {
-				padding: 0 1em 2em;
+		section {
+			padding: 1em 2em;
+			max-width:1024px;
+			margin:0 auto;
+		}
+			section#demo {
+				padding:1em 2em;
 			}
-				
+				div#results {
+					padding: 0 1em 2em;
+				}
+	footer {
+		padding: 1em 2em;
+		max-width:1024px;
+		margin:0 auto;
+	}
 }
