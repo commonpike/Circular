@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Circular.init()</title>
+		
+		<!-- build:remove -->
+		<script src="../../../vendor/node_modules/jquery/dist/jquery.min.js"></script>
+		<script src="../../../vendor/node_modules/esprima/dist/esprima.js"></script>
+		<script src="../../../vendor/node_modules/observe-js/src/observe.js"></script>
+		<script src="../../core/circular.core.00/circular.core.js"></script>
+		<script src="../../core/circular.core.01-modules/circular.modules.js"></script>
+		<script src="../../core/circular.core.02-log/circular.log.js"></script>
+		<script src="../../core/circular.core.03-queue/circular.queue.js"></script>
+		<script src="../../core/circular.core.04-parser/circular.parser.js"></script>
+		<script src="../../core/circular.core.05-context/circular.context.js"></script>
+		<script src="../../core/circular.core.06-content/circular.content.js"></script>
+		<script src="../../core/circular.core.07-eject/circular.eject.js"></script>
+		<script src="../../core/circular.core.08-registry/circular.registry.js"></script>
+		<script src="../../core/circular.core.09-engine/circular.engine.js"></script>
+		<script src="../../core/circular.core.10-watchdog/circular.watchdog.js"></script>
+		
+		<script src="../../base/circular.base.03-include/circular.include.js"></script>
+		<script src="../../contrib/circular.srcbox/circular.srcbox.js"></script>
+		
+		<link rel="stylesheet" href="../../assets/docs.css">	
+		
+		<!-- /build -->
+		
+		
+		<!-- build:template:dist
+		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+		<script src="../../../js/circular.min.js"></script>
+		<script src="../../../js/circular.srcbox.js"></script>
+		<link rel="stylesheet" href="../../../assets/docs.css">	
+		/build -->
+		
+		<!-- build:template:live
+		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+		<script src="http://circularjs.net/current/js/circular.min.js"></script>
+		<script src="http://circularjs.net/current/js/circular.srcbox.js"></script>
+		<link rel="stylesheet" href="http://circularjs.net/current/assets/docs.css">	
+		/build -->
+			
+		
+
+		<script>
+		
+
+			Circular.init({
+				log : {
+					debug : true
+				},
+				engine : {
+					debug : true
+				}
+			});
+
+				
+		</script>
+	</head>
+	<body cc-root>
+		<!--@include["../../assets/header.inc"]-->
+		<article>
+
+			<section id="about">
+				After loading the Circular javascript, you usually call Circular.init() with a 'config object'
+				that sets various options for all the modules, at once. This page uses
+<xmp>
+Circular.init({
+	log : {
+		debug : true
+	},
+	engine : {
+		debug : true
+	}
+});
+</xmp>
+				which sets two options, one for the 'log' module and one for the 'engine' module.
+				Init happens on document.ready. If you don't use <code>Circular.init()</code>, init
+				will happen automatically with default options on <code>document.ready</code>.
+			</section>
+			
+			<section id="demo">
+
+				<div id="results">
+				
+<!-- ....... -->		
+<div cc-srcbox>
+<h1 cc-content="@log.config.debug = {{@log.config.debug}}"></h1>
+<h1 cc-content="@engine.config.debug = {{@engine.config.debug}}"></h1>
+</div>
+<!-- ....... -->		
+
+
+				</div>
+				
+			</section>
+		</article>
+		
+		<!--@include["../../assets/footer.inc"]-->
+	</body>
+</html>
