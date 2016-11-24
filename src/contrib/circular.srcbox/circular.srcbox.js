@@ -11,14 +11,16 @@ new CircularModule('srcbox',{
 	settings		: {
 		insertcss	: [
 			"dl.srcbox i.reload {position: absolute;  right: 1em; top: 3.5em; font-style: normal; cursor:pointer; } ",
-			"dl.srcbox i.reload:before { width : 1em; height : 1em; content: \"\\27F3\" }"
+			"dl.srcbox i.reload:before { width : 1em; height : 1em; content: \"\\27F3\" }",
+			"dl.srcbox i.source {position: absolute;  right: 1em; top: 3.5em; font-style: normal; cursor:pointer; } ",
+			"dl.srcbox i.source:before { width : 3em; height : 1em; content: \"</>\" }"
 		]
 	},
 	
 	attributes	: {
 		'cc-srcbox' : {
 			in	: function(ccattr,ccnode,node) {
-				Circular.log.debug('cc-srcbox.in',node);
+				Circular.log.debug('@srcbox','cc-srcbox',node);
 				var $node = $(node);
 				var nodeid = Circular.engine.nodeid($node);
 				var $srcbox = '\
@@ -30,7 +32,9 @@ new CircularModule('srcbox',{
 						<i class="reload"></i>\
 						<xmp></xmp></dd>\
 						<dt>input</dt>\
-						<dd class="srcbox-input"><xmp></xmp></dd>\
+						<dd class="srcbox-input">\
+						<i class="source"></i>\
+						<xmp></xmp></dd>\
 					</dl>\
 				';				
 				$node.after($srcbox);
@@ -120,8 +124,11 @@ new CircularModule('srcbox',{
 		$("dt:first",$this).addClass('current');
 		$("dd:first",$this).addClass('current').show(); 
 			
-		$("dt:eq(1),i.reload",$this).click(function() {
+		$("i.reload",$this).click(function() {
 			Circular.srcbox.update('#'+$this.attr('id'),true);
+		});
+		$("i.source",$this).click(function() {
+			window.open('view-source:'+document.location.href,'_blank');
 		});
 
 	}

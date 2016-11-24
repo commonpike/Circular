@@ -1,27 +1,112 @@
 <html>
 	<head>
-		<title>Circular.hide</title>
+		<title>cc-hide,cc-show</title>
+		
+		<!-- build:remove -->
+		<script src="../../../vendor/node_modules/jquery/dist/jquery.min.js"></script>
+		<script src="../../../vendor/node_modules/esprima/dist/esprima.js"></script>
+		<script src="../../../vendor/node_modules/observe-js/src/observe.js"></script>
+		<script src="../../core/circular.core.00/circular.core.js"></script>
+		<script src="../../core/circular.core.01-modules/circular.modules.js"></script>
+		<script src="../../core/circular.core.02-log/circular.log.js"></script>
+		<script src="../../core/circular.core.03-queue/circular.queue.js"></script>
+		<script src="../../core/circular.core.04-parser/circular.parser.js"></script>
+		<script src="../../core/circular.core.05-context/circular.context.js"></script>
+		<script src="../../core/circular.core.06-content/circular.content.js"></script>
+		<script src="../../core/circular.core.07-eject/circular.eject.js"></script>
+		<script src="../../core/circular.core.08-registry/circular.registry.js"></script>
+		<script src="../../core/circular.core.09-engine/circular.engine.js"></script>
+		<script src="../../core/circular.core.10-watchdog/circular.watchdog.js"></script>
+		
+		<script src="../../base/circular.base.01-hide/circular.hide.js"></script>
+		<script src="../../base/circular.base.03-include/circular.include.js"></script>
+		<script src="../../contrib/circular.srcbox/circular.srcbox.js"></script>
+		
+		<link rel="stylesheet" href="../../assets/docs.css">	
+		
+		<!-- /build -->
+		
+		
+		<!-- build:template:dist
 		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
 		<script src="../../../js/circular.min.js"></script>
-		<style type="text/css">
-			body { font-family: sans-serif; }
-		</style>
+		<script src="../../../js/circular.srcbox.js"></script>
+		<link rel="stylesheet" href="../../../assets/docs.css">	
+		/build -->
+		
+		<!-- build:template:live
+		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+		<script src="http://circularjs.net/current/js/circular.min.js"></script>
+		<script src="http://circularjs.net/current/js/circular.srcbox.js"></script>
+		<link rel="stylesheet" href="http://circularjs.net/current/assets/docs.css">	
+		/build -->
+			
+		
+
 		<script>
 		
-			var Model = {
-				hours : (new Date()).getHours()
+			Model	= {
+				date	: new Date(),
+				hours : 0
 			};
-				
-			// check the time every minute
-			setInterval(function() {
-				Model.hours = (new Date()).getHours();
-			},1000*60); 
+			Model.date.setHours(0);
+			Model.date.setMinutes(0);
 			
+			Circular.init({
+				log : {
+					debug : true
+				}
+			});
+
+				
 		</script>
 	</head>
 	<body cc-root cc-context="Model">
-		<div cc-hide="{{#hours>12}}">Good morning</div> 
-		<div cc-hide="{{#hours<12 || #hours>18}}">Good day</div> 
-		<div cc-hide="{{#hours<18}}">Good evening</div> 
+		<!--@include["../../assets/header.inc"]-->
+		<article>
+
+			<section id="about">
+				<code>cc-hide</code> and <code>cc-show</code> do what you expect:
+				they hide and show a node, using css. <br>
+				<code>cc-hide</code> is processed before the node if traversed. 
+				If a node is hidden, Circular doesn't bother processing its children either.<br>
+				<code>cc-show</code> is processed after the node is traversed.
+				
+			</section>
+			
+			<section id="demo">
+				<form id="controls">
+					<label>Set the time:</label>
+					<select onchange="{{#date.setHours($this.val()); #hours=#date.getHours(); @log.write(#date)|p}}">
+						<option value="0">00:00</option>
+						<option value="4">04:00</option>
+						<option value="8">08:00</option>
+						<option value="12">12:00</option>
+						<option value="16">16:00</option>
+						<option value="20">20:00</option>
+					</select>
+				</form>
+				<div id="results">
+				
+<!-- ....... -->		
+<div cc-srcbox>
+<div class="daytime" cc-hide="{{#hours<6}}">
+	<h1 cc-show="{{#hours<12}}">Good Morning</h1>
+	<h1 cc-show="{{#hours>=12 && #hours<18}}">Good Afternoon</h1>
+	<h1 cc-show="{{#hours>=18}}">Good Evening</h1>
+</div>
+<div class="nighttime" cc-hide="{{#hours>=6}}">
+	<h1>Good Night</h1>
+</div>
+</div>
+<!-- ....... -->		
+
+
+				</div>
+				
+			</section>
+		</article>
+		
+		<!--@include["../../assets/footer.inc"]-->
 	</body>
 </html>

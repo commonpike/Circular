@@ -18,7 +18,7 @@ new CircularModule('content',{
 		'cc-content' : {
 			in		: function(ccattr,ccnode,node) {
 				val = ccattr.content.value;
-				Circular.log.debug('cc-content.in','setting content',val);
+				Circular.log.debug('@content','cc-content','setting content',val);
 				node.textContent=val;
 				$(node).addClass('cc-content-generated');
 			},

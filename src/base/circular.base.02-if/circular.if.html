@@ -1,7 +1,6 @@
-<!DOCTYPE html>
 <html>
 	<head>
-		<title>Hello | Goodbye</title>
+		<title>cc-if,cc-else</title>
 		
 		<!-- build:remove -->
 		<script src="../../../vendor/node_modules/jquery/dist/jquery.min.js"></script>
@@ -19,7 +18,8 @@
 		<script src="../../core/circular.core.09-engine/circular.engine.js"></script>
 		<script src="../../core/circular.core.10-watchdog/circular.watchdog.js"></script>
 		
-		<script src="../../base/circular.base.03-include/circular.include.js"></script>
+		<script src="../../base/circular.base.02-if/circular.if.js"></script>
+		<script src="../../base/circular.base.04-include/circular.include.js"></script>
 		<script src="../../contrib/circular.srcbox/circular.srcbox.js"></script>
 		
 		<link rel="stylesheet" href="../../assets/docs.css">	
@@ -45,15 +45,15 @@
 
 		<script>
 		
-			var Model = {
-				message	: 'hello'
-			}
+			Model	= {
+				date	: new Date(),
+				hours : 0
+			};
+			Model.date.setHours(0);
+			Model.date.setMinutes(0);
 			
 			Circular.init({
 				log : {
-					debug : true
-				},
-				engine : {
 					debug : true
 				}
 			});
@@ -66,22 +66,35 @@
 		<article>
 
 			<section id="about">
-				This is just a general testpage to see
-				if there are big compiletime typos in the src.
+				<code>cc-if</code> and <code>cc-else</code> do what you expect:
+				they remove and reinsert a node (using @eject). <br>
+				<code>cc-if</code> takes an argument and writes that to cc-else when needed. 
 			</section>
 			
 			<section id="demo">
-			
 				<form id="controls">
-						<input type="radio" name="test" onclick="{{#message='hello'|p}}" checked>#message='hello'</a> 
-						<input type="radio" name="test" onclick="{{#message='goodbye'|p}}">#message='goodbye'</a>
+					<label>Set the time:</label>
+					<select onchange="{{#date.setHours($this.val()); #hours=#date.getHours(); @log.write(#date)|p}}">
+						<option value="0">00:00</option>
+						<option value="4">04:00</option>
+						<option value="8">08:00</option>
+						<option value="12">12:00</option>
+						<option value="16">16:00</option>
+						<option value="20">20:00</option>
+					</select>
 				</form>
-				
 				<div id="results">
 				
 <!-- ....... -->		
 <div cc-srcbox>
-<h1 cc-content="{{#message}}"></h1>
+<div class="daytime" cc-if="{{#hours>6}}">
+	<h1 cc-if="{{#hours<12}}">Good Morning</h1>
+	<h1 cc-if="{{#hours>=12 && #hours<18}}">Good Afternoon</h1>
+	<h1 cc-if="{{#hours>=18}}">Good Evening</h1>
+</div>
+<div class="nighttime" cc-else>
+	<h1>Good Night</h1>
+</div>
 </div>
 <!-- ....... -->		
 

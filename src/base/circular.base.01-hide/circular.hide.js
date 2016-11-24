@@ -3,33 +3,45 @@
 	hide
 ----------------------- */
 
-new CircularModule({
+new CircularModule('hide',{
 
-	name				: 'hide',
-	attributes	: ['cc-hide','cc-show'],
-	requires		: ['debug','engine'],
-	css					: '.cc-hide { display:none!important; }',
-
-	in	: function(ccattr,ccnode,node) {
-		Circular.log.debug('@hide.in',node);
-		if (Circular.parser.boolish(ccattr.content.value)) {
-			if (Circular.modules.unprefix(ccattr.properties.name)=='cc-show') {
-				this.show(node);
-				return true;
-			} else {
-				this.hide(node);
-				return false;
+	settings		: {
+		insertcss : ['.cc-hide { display:none!important; }']
+	},
+	
+	attributes	: {
+	
+		'cc-hide' : {
+			in	: function(ccattr,ccnode,node) {
+				if (Circular.parser.boolish(ccattr.content.value)) {
+					Circular.log.debug('@hide','cc-hide','hide',node);
+					this.hide(node);
+					return false;
+				} else {
+					Circular.log.debug('@hide','cc-hide','show',node);
+					this.show(node);
+					return true;
+				}
 			}
-		} else {
-			if (Circular.modules.unprefix(ccattr.properties.name)=='cc-show') {
-				this.hide(node);
-				return false;
-			} else {
-				this.show(node);
-				return true;
+		},
+		
+		'cc-show': {
+			out	: function(ccattr,ccnode,node) {
+				if (Circular.parser.boolish(ccattr.content.value)) {
+					Circular.log.debug('@hide','cc-show','show',node);
+					this.show(node);
+					return true;
+				} else {
+					Circular.log.debug('@hide','cc-show','hide',node);
+					this.hide(node);
+					return false;
+				}
 			}
 		}
 	},
+
+	// -----
+	
 	hide	: function(node) {
 		$(node).addClass('cc-hide');
 	},

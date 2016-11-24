@@ -20,15 +20,15 @@ a[onclick] {
 header {	
 	padding: 1em 1em 0;
 	font-family:'Helvetica','Helvetica Neue',sans-serif;
-	font-variant: small-caps;
 }
 
 	header h1 {
+		font-family:monospace;
 		font-weight:normal;
 		margin:.25em 0;
 	}
 	#branding {
-		
+		font-variant: small-caps;
 	}    
 		
 		#logo {
@@ -50,6 +50,7 @@ article {
 		text-decoration:none;
 	}
 	section {
+		line-height:1.5;
 		padding: 1em;
 	}
 		
@@ -58,12 +59,14 @@ article {
     }
 			form#controls  {
 				padding: 2em 1em;
+    		margin:0;
     		background-color: #eee;
     	}
     	div#results {
     		background-color: #eee;
     	}
     		dl.srcbox { 
+    			line-height:1;
     			background-color:#779;
     			margin:0;
     		}

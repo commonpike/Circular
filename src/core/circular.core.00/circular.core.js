@@ -17,28 +17,36 @@ var Circular = {
 	----------------------- */
 
 	init 		: function(config) {
-		if (!config) config={};
-		this.config	= config;
-		$(document).ready(function() {
-			Circular.modules.init(config);
-			if (Circular.log) {
-				if (Circular.queue) {
-					if (Circular.engine) {
-						Circular.queue.add(function() {
-							Circular.engine.start();	
-						});
+		if (!this.inited) {
+			if (!config) config={};
+			this.config	= config;
+			$(document).ready(function() {
+				Circular.modules.init(config);
+				if (Circular.log) {
+					if (Circular.queue) {
+						if (Circular.engine) {
+							Circular.queue.add(function() {
+								Circular.engine.start();	
+							});
+						} else {
+							Circular.log.fatal('@engine not found');
+						} 
 					} else {
-						Circular.log.fatal('@engine not found');
-					} 
+						Circular.log.fatal('@queue not found');
+					}
 				} else {
-					Circular.log.fatal('@queue not found');
+					alert('@log not found');
+					Circular.die();
 				}
+						
+			});
+		} else {
+			if (Circular.log) {
+				Circular.log.error('Circular already inited');
 			} else {
-				alert('@log not found');
-				Circular.die();
+				alert('Circular already inited, but @log not found');
 			}
-					
-		});
+		}
 		this.inited = true;
 	},
 	

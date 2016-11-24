@@ -1,45 +1,83 @@
 <html>
 	<head>
-		<title>Circular.log</title>
-		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
-		<script>
+		<title>@log</title>
 		
+		<!-- build:remove -->
+		<script src="../../../vendor/node_modules/jquery/dist/jquery.min.js"></script>
+		<script src="../../../vendor/node_modules/esprima/dist/esprima.js"></script>
+		<script src="../../../vendor/node_modules/observe-js/src/observe.js"></script>
+		<script src="../../core/circular.core.00/circular.core.js"></script>
+		<script src="../../core/circular.core.01-modules/circular.modules.js"></script>
+		<script src="../../core/circular.core.02-log/circular.log.js"></script>
+		<script src="../../core/circular.core.03-queue/circular.queue.js"></script>
+		<script src="../../core/circular.core.04-parser/circular.parser.js"></script>
+		<script src="../../core/circular.core.05-context/circular.context.js"></script>
+		<script src="../../core/circular.core.06-content/circular.content.js"></script>
+		<script src="../../core/circular.core.07-eject/circular.eject.js"></script>
+		<script src="../../core/circular.core.08-registry/circular.registry.js"></script>
+		<script src="../../core/circular.core.09-engine/circular.engine.js"></script>
+		<script src="../../core/circular.core.10-watchdog/circular.watchdog.js"></script>
+		
+		<script src="../../base/circular.base.03-include/circular.include.js"></script>
+		<script src="../../contrib/circular.srcbox/circular.srcbox.js"></script>
+		
+		<link rel="stylesheet" href="../../assets/docs.css">	
+		
+		<!-- /build -->
+		
+		
+		<!-- build:template:dist
+		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+		<script src="../../../js/circular.min.js"></script>
+		<script src="../../../js/circular.srcbox.js"></script>
+		<link rel="stylesheet" href="../../../assets/docs.css">	
+		/build -->
+		
+		<!-- build:template:live
+		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+		<script src="http://circularjs.net/current/js/circular.min.js"></script>
+		<script src="http://circularjs.net/current/js/circular.srcbox.js"></script>
+		<link rel="stylesheet" href="http://circularjs.net/current/assets/docs.css">	
+		/build -->
 			
-			if (document.location.href.indexOf('circular/src/core')!=-1) {
 
-				document.write('\
-					<script src="../../../vendor/node_modules/jquery/dist/jquery.min.js"><'+'/script>\
-					<script src="../../../vendor/node_modules/esprima/esprima.js"><'+'/script>\
-					<script src="../../../vendor/node_modules/observe-js/src/observe.js"><'+'/script>\
-					<script src="../../core/circular.core.00/circular.core.js"><'+'/script>\
-					<script src="../../core/circular.core.01-log/circular.log.js"><'+'/script>\
-					<script src="../../core/circular.core.02-debug/circular.debug.js"><'+'/script>\
-					<script src="../../core/circular.core.03-queue/circular.queue.js"><'+'/script>\
-					<script src="../../core/circular.core.04-context/circular.context.js"><'+'/script>\
-					<script src="../../core/circular.core.05-root/circular.root.js"><'+'/script>\
-					<script src="../../core/circular.core.06-content/circular.content.js"><'+'/script>\
-					<script src="../../core/circular.core.07-parser/circular.parser.js"><'+'/script>\
-					<script src="../../core/circular.core.08-registry/circular.registry.js"><'+'/script>\
-					<script src="../../core/circular.core.09-engine/circular.engine.js"><'+'/script>\
-					<script src="../../core/circular.core.10-watchdog/circular.watchdog.js"><'+'/script>\
-				')
-
-			} else if (document.location.href.indexOf('circular/dist/docs/core')!=-1) {
-			
-				document.write('<script src="../../../js/circular.min.js"><'+'/script>');
-				
-			} else {
-			
-				document.write('<script src="http://circularjs.net/current/js/circular.min.js"><'+'/script>');
-				
-			}
-			
-		</script>
-		<style type="text/css">
-			body { font-family: sans-serif; }
-		</style>
 	</head>
 	<body cc-root>
-		<div cc-log="You found it :-)">Look in your console!</div> 
+		<!--@include["../../assets/header.inc"]-->
+		<article>
+
+			<section id="about">
+				The log module provide a few methods and one attribute that by default write stuff to your console.
+				You can use the methods in your own javascript (like in your own modules). <code>@log.debug</code>
+				will output nothing unless debugging is on, either by config or by calling <code>@log.tron()</code>.
+			</section>
+			
+			<section id="demo">
+			
+				<form id="controls" onsubmit="return false">
+					<button onclick="{{@log.tron()|p}}">@log.tron()</button>
+					<button onclick="{{@log.troff()|p}}">@log.troff()</button>
+					<button onclick="{{@log.debug('hello')|p}}">@log.debug('hello')</button><br>
+					
+					<button onclick="{{@log.info('hello')|p}}">@log.info('hello')</button>
+					<button onclick="{{@log.error('hello')|p}}">@log.error('hello')</button>
+					<button onclick="{{@log.fatal('hello')|p}}">@log.fatal('hello')</button><br>
+				</form>
+				
+				<div id="results">
+				
+<!-- ....... -->		
+<div cc-srcbox>
+<h1 cc-log="You found it :-)">Look in your console !</h1>
+</div>
+<!-- ....... -->		
+
+
+				</div>
+				
+			</section>
+		</article>
+		
+		<!--@include["../../assets/footer.inc"]-->
 	</body>
 </html>

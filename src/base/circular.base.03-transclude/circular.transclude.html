@@ -1,7 +1,6 @@
-<!DOCTYPE html>
 <html>
 	<head>
-		<title>Circular.autoinit</title>
+		<title>cc-transclude</title>
 		
 		<!-- build:remove -->
 		<script src="../../../vendor/node_modules/jquery/dist/jquery.min.js"></script>
@@ -19,7 +18,8 @@
 		<script src="../../core/circular.core.09-engine/circular.engine.js"></script>
 		<script src="../../core/circular.core.10-watchdog/circular.watchdog.js"></script>
 		
-		<script src="../../base/circular.base.03-include/circular.include.js"></script>
+		<script src="../../base/circular.base.03-transclude/circular.transclude.js"></script>
+		<script src="../../base/circular.base.04-include/circular.include.js"></script>
 		<script src="../../contrib/circular.srcbox/circular.srcbox.js"></script>
 		
 		<link rel="stylesheet" href="../../assets/docs.css">	
@@ -41,44 +41,73 @@
 		<link rel="stylesheet" href="http://circularjs.net/current/assets/docs.css">	
 		/build -->
 			
+		
 
 		<script>
 		
-			var Model = {
-				message	: 'hello'
-			}
-			
-			Circular.autoinit=false;
-			
+			Circular.init({
+				log : {
+					debug : true
+				}
+			});
 
+				
 		</script>
-			
-			
-
 	</head>
 	<body cc-root cc-context="Model">
 		<!--@include["../../assets/header.inc"]-->
 		<article>
 
 			<section id="about">
-				If you don't call <code>Circular.init()</code> yourself, it will automatically init with the default options
-				on document <code>ready</code>.<br><br>
-				To avoid that behaviour, set <code>Circular.autoinit=false;</code> after loading the Circular javascript.
-				This is what has been done in this page, which is why the layout looks messed up at first. 
-				Click the button below to initialize Circular.
+				The term <b>transclude</b> was shamelessly stolen from AngularJS. It does the same there.<br><br>
+				
+				<code>cc-transclude</code> allows you to include clones of parts of the dom
+				elsewhere in the document, specified by the value of the attribute and the 
+				value of the <code>cc-transclude-base</code> on a parent element.<br><br>
+				
+				You don't usually set <code>cc-transclude-base</code> yourself. Instead,
+				the attribute is added by module code for, for example, <code>cc-template</code> 
+				and <code>cc-include</code>
+				to refer to the <b>original</b> content, before the inclusion happened. The @transclude 
+				module then generates a <code>transclude-sel</code> attribute next to the 
+				<code>cc-transclude</code> attribute, which odes the real work.<br><br>
+				
+				So you would only use <code>cc-transclude</code> inside a template or included file,
+				to refer to the original contents of the node before the inclusion took place, and the below 
+				example is just plain weird.
 			</section>
 			
 			<section id="demo">
-			
-				<form id="controls" onsubmit="return false">
-						<button onclick="Circular.init({log:{debug:true}})">Circular.init({log:{debug:true}})</button><br>
+				<form id="controls">
+					<label>Select a room:</label>
+					<select onchange="$('#overview').attr('cc-transclude-base',$(this).val())">
+						<option value="#area1">Room 1</option>
+						<option value="#area2">Room 2</option>
+					</select>
 				</form>
-				
 				<div id="results">
 				
 <!-- ....... -->		
 <div cc-srcbox>
-<h1 cc-content="{{#message}}">WE ARE WAITING FOR YOUR CLICK</h1>
+
+<ul id="area1" style="display:none">
+	<li class="lower"><span class="male">20 male</span>, <span class="female">20 female</span></li>
+	<li class="middle"><span class="male">40 male</span>, <span class="female">23 female</span></li>
+	<li class="higher"><span class="male">13 male</span>, <span class="female">4 female</span></li>
+</ul>
+<ul id="area2" style="display:none">
+	<li class="lower">24 total</li>
+	<li class="middle">34 total</li>
+	<li class="higher">4 total</li>
+</ul>
+
+<ul id="overview" cc-transclude-base="#area1">
+	<li>lower income: <span cc-transclude=".lower"></span></li><br>
+	<li>middle income: <span cc-transclude=".middle"></span></li><br>
+	<li>higher income: <span cc-transclude=".higher"></span></li><br>
+</ul>
+
+
 </div>
 <!-- ....... -->		
 
@@ -91,5 +120,3 @@
 		<!--@include["../../assets/footer.inc"]-->
 	</body>
 </html>
-
-
