@@ -12,23 +12,28 @@ new CircularModule('engine', {
 	},
 	
 	settings 			: {
-		requiremods		: ['context','log','registry'],
+		insertcss			: ['#cc-engine-stack { display:none }'],
 		rxcomment			: /^@([^[]+)(\[(.*)\])?$/
 	},
 	
 	init					: function() { 
-		
+		this.$stack = $('<div id="cc-engine-stack" cc-engine-skip>').appendTo('body');
 	},
 	
 	// -------------
 	
-	
 	counter			: 0,
 	genid				: 0,
+	$stack			: null,
+	
 	nodeid			: function(node) {
 		if (node instanceof jQuery) node = node.get(0);
 		if (!node.hasAttribute('id')) node.setAttribute('id','cc-engine-'+(this.genid++));
 		return node.getAttribute('id');
+	},
+	
+	stack				: function(node,parent) {
+		return $(node).appendTo(parent?$(parent):this.$stack);
 	},
 	
 	start				: function() {
@@ -66,12 +71,20 @@ new CircularModule('engine', {
 		});
 		
 		nodes.forEach(function(node) {
-			var ccnode = Circular.registry.get(node,true);
-			if (ccnode.flags.locked) {
-				this.debug('@engine.recycle ','Recycling',node);
-				this.process(node);
+			if ((document.contains && document.contains(node)) || 
+				(document.body.contains(node) || document.head.contains(node))) {
+			//	console.log('get',node);
+				var ccnode = Circular.registry.get(node,true);
+				if (ccnode.flags.locked) {
+					this.debug('@engine.recycle ','Recycling',node);
+					this.process(node);
+				} else {
+					this.debug('@engine.recycle ','Node was already recycled',node,ccnode);
+				}
 			} else {
-				this.debug('@engine.recycle ','Node was already recycled',node,ccnode);
+				// is this leaking ?
+				this.debug('@engine.recycle ','Node was removed',node,ccnode);
+				Circular.registry.unlock(node);
 			}
 		},this);
 
@@ -1166,8 +1179,8 @@ new CircularModule('engine', {
 				
 						this.debug('@engine.processTextNode','replacing content with single span');
 						var span = document.createElement('span');
-						span.setAttribute('id','cc-engine-'+this.genid++);
-
+						var spanid = this.nodeid(span);
+						
 						span.setAttribute('cc-content',val);
 						if (Circular.watchdog) {
 							Circular.watchdog.pass(parent,'contentchanged');
@@ -1188,7 +1201,7 @@ new CircularModule('engine', {
 							if (vals[vc].expression) {
 								this.debug('@engine.processTextNode','inserting span '+vals[vc].expression);
 								var span = document.createElement('span');
-								span.setAttribute('id','cc-engine-'+this.genid++);
+								var spanid = this.nodeid(span);
 								span.setAttribute('cc-content',vals[vc].expression);
 								nodes.push(span);
 							} else {

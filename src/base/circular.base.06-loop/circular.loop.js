@@ -1,194 +1,184 @@
 
 /* ----------------------
-	template
+	loop
 ----------------------- */
 
-new CircularModule({
+new CircularModule('loop',{
 
-	name				: 'loop',
-	requires		: ['debug','context'],
-	attributes	: ['cc-loop'],
-	watches			: ['cc-loop-offset', 'cc-loop-limit' ],
-	css					: '' +
-		'.cc-loop-template, .cc-loop-hide, .cc-loop-cached { display:none; } ' +
-		'.cc-loop-item, .cc-loop-first, .cc-loop-last {} ',
-
-	genid		: 0,
-	offset	: 0,
-	limit		: 0,
-	index		: 1,	// start at one !
-	key			: undefined,
-	first		: false,
-	last		: false,
-	greedy	: true, // eat whitespace when creating template
-	
-	in	: function(ccattr,ccnode,node) {
-
-		Circular.log.debug('@loop.in',node);
-		
-		var $node = $(node);
-		
-		// make sure it has an id
-		var nodeid = $node.attr('id');
-		if (!nodeid) {
-			nodeid = 'cc-loop-'+this.genid++;
-			$node.attr('id',nodeid);
-		}
-		
-		// set the parent context for all children
-		Circular.context.set(attr.expression);
-		if ($node.attr('cc-context') != attr.expression) {
-			$node.attr('cc-context',attr.expression);
-		}
-		
-		// find a template or make one
-		var $template = $node.children('.cc-loop-template');
-		if (!$template.size()) {
-			Circular.log.debug('@loop.in','creating template');
-			Circular.watchdog.pass(node,'contentchanged');
-			if ($node.children().size()==1 && ($node.contents().size()==1 || this.greedy)) {
-				$template = $node.children().addClass('cc-loop-template');
-			} else {
-				Circular.log.debug('@loop.in','adding template wrapper');
-				$node.contents().wrapAll('<div  class="cc-loop-template"></div>');
-				$template = $node.children('.cc-loop-template');
-			}
-		}
-		
-		// mark all other children cached
-		$node.children(':not(.cc-loop-template)').addClass('cc-loop-cached');
-
-		// check for offset and limit
-		this.offset = $node.attr('cc-loop-offset')*1;
-		if (!this.offset) this.offset =0;
-		this.limit = $node.attr('cc-loop-limit')*1;
-		if (!this.limit) this.limit=0;
-		
-		// see what we have to loop
-		var keys = [];
-		if (!this.limit) {
-			keys = Object.keys(ccattr.content.result).slice(this.offset);
-		} else {
-			keys = Object.keys(ccattr.content.result).slice(this.offset,this.offset+this.limit);
-		}
-		
-		Circular.log.debug('@loop.in',ccattr.content.result,keys,'offset '+this.offset+', limit '+this.limit);
-		
-		this.index 	= 1;
-		this.first 	= true;		
-		var $curr = null;
-		for (var kc=0; kc<keys.length; kc++) {
-			Circular.log.debug('@loop.in','index '+this.index,keys[kc]);
-			this.key = keys[kc];
-			this.last = (kc==keys.length-1);
-
-			//var context = '{{#'+keys[kc]+'}}';
-			var context = "{{#this['"+keys[kc]+"']}}";
-			
-			var itemid = nodeid+'-item-'+(kc+this.offset);
-			
-			$item = $node.children('#'+itemid+'.cc-loop-item');
-			if (!$item.size()) {
-				// clone the template 
-				Circular.log.debug('@loop.in','creating new item '+itemid);
-				$item = $template.clone()
-					.removeClass('cc-loop-template')
-					.addClass('cc-loop-item')
-					.addClass('cc-loop-index-'+this.index)
-					.attr('id',itemid)
-					.attr('cc-context',context);
-				if (!$curr) $item.prependTo($node);
-				else $item.insertAfter($curr);
-				
-			} else {
-			
-				//	we already have it. just move it in place 
-				Circular.log.debug('@loop.in','moving old item '+itemid);
-				$item.removeClass('cc-loop-cached');
-				if (!$curr) $item.appendTo($node);
-				else $item.insertAfter($curr)
-				
-			}
-			if (this.first) $item.addClass('cc-loop-first');
-			else $item.removeClass('cc-loop-first');
-			if (this.last) $item.addClass('cc-loop-last');
-			else $item.removeClass('cc-loop-last');
-			this.process($item);	
-			$curr = $item;
-				
-			this.first = false;
-			this.index++;
-		}
-		
-		// clean up cached items
-		$node.children('.cc-loop-cached').each(function() {
-			this.className = this.className.replace(/cc-loop-index-\d+/,'');
-			$(this).removeClass('cc-loop-first cc-loop-last cc-loop-hide').
-				attr('cc-loop-index','').
-				attr('cc-loop-key','').
-				attr('cc-loop-first','').
-				attr('cc-loop-last','');
-		});
-		
-		Circular.log.debug('@loop.in done');
+	config			: {
+		greedy	: true // eat whitespace when creating template
 	},
 	
-	process	: function($item) {
-		Circular.log.debug('@loop.process',$item);
-		var loop = this;
-		
-		$item.filter('[cc-loop-first]').add($('[cc-loop-first]',$item)).each(function() {
-			if (loop.first) {
-				$(this).attr('cc-loop-first','true').addClass('cc-loop-first');
-			} else {
-				$(this).attr('cc-loop-first','false').removeClass('cc-loop-first');
+	attributes	: {
+		'cc-loop' : {
+			in	: function(ccattr,ccnode,node) {
+				this.processCCLoop(ccattr,ccnode,node);
 			}
+		
+		},
+		'cc-loop-each'			: {},
+		'cc-loop-offset' 		: {},
+		'cc-loop-limit' 		: {},
+		'cc-loop-source' 		: {},
+		'cc-loop-template' 	: {},
+		'cc-loop-item' 			: {},
+		'cc-loop-first' 		: {},
+		'cc-loop-last' 			: {}
+	},
+		
+	// ---------------------------
+	
+	$templates			: null,
+	processCCLoop	: function(ccattr,ccnode,node) {
+		
+		var $node				= $(node);
+		var $template 	= this.getTemplate($node);
+		var $olditems		= this.getOldItems($node);
+		var newitems		= [];
+		
+		var keys 			= this.getKeys(ccnode);
+		var each			= 'value';
+		var ctx				= ccattr.content.expression;
+		
+		if (ccnode.attributes['cc-loop-each']) {
+			each = ccnode.attributes['cc-loop-each'].content.value;
+		}
+		
+		//console.log(keys);
+		for (var idx=0; idx<keys.length; idx++) {
+			var itemctx = this.getItemContext(each,ctx,keys[idx],idx);
+			var $item 	= this.getNewItem($olditems,$template,itemctx,keys,idx);
+			//console.log(itemctx,$item);
+			newitems.push($item);
+		}
+		this.appendNewItems($node,newitems);
+		this.removeOldItems($olditems);
+	},
+	
+	getTemplate		: function($node) {
+		var tplsel = $node.attr('cc-loop-source');
+		if (!tplsel) return this.createTemplate($node);
+		else return $(tplsel);
+	},
+	
+	createTemplate	: function($node) {
+	
+		Circular.log.debug('@loop','createTemplate',$node);
+		
+		if (!this.$templates) {
+			this.$templates = Circular.engine.stack($('<div id="cc-loop-templates">'));
+		}
+		
+		var $template = $node.children('[cc-loop-template]');
+		if (!$template.size()) {
+			if ($node.children().length==1) {
+				$template = $node.children();
+				$template.attr('cc-loop-template','');
+			} else {
+				$node.wrapInner('<div cc-loop-template>');
+				$template = $node.children('[cc-loop-template]');
+			}
+		}
+		var tid = Circular.engine.nodeid($template);
+		
+		// todo: check if such template exists?
+		
+		// check all loop beneath this loop, not nested,
+		// and create template for them first
+		this.getSubloops($node).each(function() {
+			Circular.loop.createTemplate($(this));
 		});
 		
-		$item.filter('[cc-loop-last]').add($('[cc-loop-last]',$item)).each(function() {
-			if (loop.last) {
-				$(this).attr('cc-loop-last','true').addClass('cc-loop-last');
-			} else {
-				$(this).attr('cc-loop-last','false').removeClass('cc-loop-last');
+		Circular.engine.stack($template,this.$templates);
+		$node.attr('cc-loop-source','#'+tid);
+		return $template;
+	},
+	
+	getSubloops		: function($node) {
+		// return the closest child loops only
+		// http://stackoverflow.com/questions/13448113/match-first-matching-hierarchical-descendant-with-jquery-selectors
+		return $node.children(':not([cc-loop])').andSelf().find('[cc-loop]:eq(0)');
+	},
+	
+	getOldItems		: function($node) {
+		var $olditems = $node.children('[cc-loop-item]');
+		$olditems.data('cc-loop-old',true);
+		Circular.log.debug('@loop','getOldItems',$olditems);
+		return $olditems;
+	},
+	
+	getKeys				: function(ccnode) {
+		var keys = [];
+		var arr = ccnode.attributes['cc-loop'].content.result;
+		//console.log(ccnode,arr);
+		if (arr) {
+			var allkeys = Object.keys(arr);
+			var offset = 0;
+			if (ccnode.attributes['cc-offset']) {
+				offset = ccnode.attributes['cc-offset'].content.value;
+			}
+			var limit = allkeys.length;
+			if (ccnode.attributes['cc-limit']) {
+				limit = ccnode.attributes['cc-limit'].content.value;
+			}
+			var keys = allkeys.slice(offset,offset+limit);
+			// sort, filter
+		} else {
+			Circular.log.error('@loop','getKeys','no result',ccnode);
+		}
+		return keys;
+	},
+	
+	getItemContext	: function(each,ctx,key,index) {
+		var itemctx = '';
+		switch(each) {
+			
+			case 'key': 
+				itemctx = key;
+				break;
+			case 'index': 
+				itemctx = index;
+				break;
+			case 'item' :
+				var ekey = key.replace(/'/g, '\\\'');
+				itemctx = '{index:'+index+',key:\''+ekey+'\',value:'+ctx+'[\''+ekey+'\']'+'}';
+				break;
+			default: 
+				var ekey = key.replace(/'/g, '\\\'');
+				itemctx = ctx+'[\''+ekey+'\']';
+				break;
+		}
+		return itemctx;
+	},
+	
+	getNewItem			: function($olditems,$template,itemctx,keys,idx) {
+		var $newitem = $('[cc-loop-item][cc-context="{{'+itemctx+'}}"]',$olditems);
+		if (!$newitem.length) {
+			$newitem = $template.clone();
+			$newitem.removeAttr('cc-loop-template').removeAttr('id').attr('cc-loop-item','');
+		} else {
+			$newitem.data('cc-loop-old',false);
+		}
+		$newitem.attr('cc-context',itemctx);
+		// .. first,last ..
+		return $newitem;
+	},
+	
+	appendNewItems	: function($node,newitems) {
+		Circular.log.debug('@loop','appendNewItems',newitems);
+		$node.append(newitems);
+	},
+	
+	removeOldItems($olditems) {
+		Circular.log.debug('@loop','removeOldItems',$olditems);
+		$olditems.each(function() {
+			var $this = $(this);
+			if ($this.data('cc-loop-old')) {
+				$this.remove();
 			}
 		});
-		
-		$item.filter('[cc-loop-index]').add($('[cc-loop-index]',$item)).each(function() {
-			this.className = this.className.replace(/cc-loop-index-\d+/,'');
-			$(this).attr('cc-loop-index',loop.index).addClass('cc-loop-index-'+loop.index);
-		});
-		
-		$item.filter('[cc-loop-key]').add($('[cc-loop-key]',$item)).each(function() {
-			$(this).attr('cc-loop-key',loop.key);
-			// cant trust the key to be a valid classname
-		});
-		
-		$item.filter('[cc-loop-show],[cc-loop-hide]').add($('[cc-loop-show],[cc-loop-hide]',$item)).each(function() {
-			var res = false, action="show";
-			var cond = $(this).attr('cc-loop-show');
-			if (!cond) {
-				cond = $(this).attr('cc-loop-hide');
-				action="hide";
-			}
-			if (cond.substring(0,1)==':') {
-				res = (loop.key == cond.substring(1));
-			} else if (cond=='first') {
-				res = loop.first;
-			} else if (cond=='last') {
-				res = loop.last;
-			} else {
-				res = (loop.index == cond);
-			}
-			if (action=="show") {
-				if (res) $(this).removeClass('cc-loop-hide');
-				else $(this).addClass('cc-loop-hide');			
-			} else {
-				if (res) $(this).addClass('cc-loop-hide');
-				else $(this).removeClass('cc-loop-hide');			
-			}
-		});	
-		
 	}
+
 	
 	
 		

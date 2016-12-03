@@ -68,6 +68,9 @@ new CircularModule('eject',{
 	// this is where we store comment references
 	ejected	: { },
 	
+	// this is where we store ejected nodes
+	$ejected	: null,
+	
 	flag		: function(node,ccnode,flag) {
 		ccnode.flags.ejectors[flag]=true;
 	},
@@ -80,8 +83,7 @@ new CircularModule('eject',{
 	apply		: function(node,ccnode,flag) {
 		if (!ccnode.flags.ejected) {
 		
-			$ejected = $('#cc-ejected');
-			if (!$ejected.size()) $ejected = $('<div id="cc-ejected">').appendTo('body');
+			if (!this.$ejected) this.$ejected = Circular.engine.stack($('<div id="cc-ejected">'));
 			var nodeid=Circular.engine.nodeid(node);
 			
 			// create a comment just before the node
@@ -90,7 +92,7 @@ new CircularModule('eject',{
 			this.ejected[nodeid]=comment;
 			
 			// move the node to #cc-ejected
-			$(node).appendTo($ejected);
+			Circular.engine.stack(node,this.$ejected);
 			ccnode.flags.ejected=true;
 			Circular.log.debug('@eject.apply','ejected #'+nodeid,flag);
 			

@@ -89,21 +89,25 @@ new CircularModule('registry', {
 	
 	unlock	: function(node) {
 		ccnode = $(node).data('cc-node');
-		ccnode.flags['locked']=false;
-		// unset the flags youve set before recycle
-		ccnode.flags['processing'] 			= false;
-		ccnode.flags['attrsetchanged'] 	= false;
-		ccnode.flags['contentchanged'] 	= false;
-		ccnode.flags['ocontextchanged'] = false;
-		ccnode.flags['icontextchanged'] = false;
-		ccnode.flags['attrdomchanged'] 	= false;
-		ccnode.flags['attrdatachanged'] = false;
-		for (var ac=0; ac<ccnode.index.length; ac++) {
-			ccnode.index[ac].flags['attrdomchanged'] = false;
-			ccnode.index[ac].flags['attrdatachanged'] = false;
-			//alert(ccnode.index[ac].properties.name+' eq '+(ccnode.index[ac]===ccnode.attributes[ccnode.index[ac].properties.name]));
+		if (ccnode) {
+			ccnode.flags['locked']=false;
+			// unset the flags youve set before recycle
+			ccnode.flags['processing'] 			= false;
+			ccnode.flags['attrsetchanged'] 	= false;
+			ccnode.flags['contentchanged'] 	= false;
+			ccnode.flags['ocontextchanged'] = false;
+			ccnode.flags['icontextchanged'] = false;
+			ccnode.flags['attrdomchanged'] 	= false;
+			ccnode.flags['attrdatachanged'] = false;
+			for (var ac=0; ac<ccnode.index.length; ac++) {
+				ccnode.index[ac].flags['attrdomchanged'] = false;
+				ccnode.index[ac].flags['attrdatachanged'] = false;
+				//alert(ccnode.index[ac].properties.name+' eq '+(ccnode.index[ac]===ccnode.attributes[ccnode.index[ac].properties.name]));
+			}
+			$(node).data('cc-node',ccnode);
+		} else {
+			Circular.log.debug('@registry','unlock','no cc-node');
 		}
-		$(node).data('cc-node',ccnode);
 		
 	},
 	

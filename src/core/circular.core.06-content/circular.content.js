@@ -6,7 +6,7 @@
 new CircularModule('content',{
 
 	config				: {
-	
+		addclass	: false
 	},
 	
 	settings 			: {
@@ -20,7 +20,9 @@ new CircularModule('content',{
 				val = ccattr.content.value;
 				Circular.log.debug('@content','cc-content','setting content',val);
 				node.textContent=val;
-				$(node).addClass('cc-content-generated');
+				if (Circular.content.config.addclass) {
+					$(node).addClass('cc-content-generated');
+				}
 			},
 			sanitize	: function(value) {
 				if (value.length>16) return value.substring(0,16)+'(...)';

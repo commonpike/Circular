@@ -49,6 +49,9 @@ article {
 		color:#779;
 		text-decoration:none;
 	}
+	article table {
+		color:#779;
+	}
 	section {
 		line-height:1.5;
 		padding: 1em;
