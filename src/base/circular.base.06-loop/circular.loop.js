@@ -153,14 +153,59 @@ new CircularModule('loop',{
 	
 	getNewItem			: function($olditems,$template,itemctx,keys,idx) {
 		var $newitem = $('[cc-loop-item][cc-context="{{'+itemctx+'}}"]',$olditems);
-		if (!$newitem.length) {
+		if (!$newitem.length || $newitem.data('cc-loop-modified')) {
 			$newitem = $template.clone();
 			$newitem.removeAttr('cc-loop-template').removeAttr('id').attr('cc-loop-item','');
 		} else {
 			$newitem.data('cc-loop-old',false);
 		}
 		$newitem.attr('cc-context',itemctx);
-		// .. first,last ..
+		
+		// .. first,last..
+		if (idx==0) {
+			$newitem.addClass('cc-loop-first');
+		} else {
+			$newitem.removeClass('cc-loop-first');
+			var $remove = $('[cc-loop-first]',$newitem);
+			if ($remove.length) {
+				$newitem.data('cc-loop-modified',true);
+				$remove.remove();
+			}
+		}
+		if (idx==keys.length-1) {
+			$newitem.addClass('cc-loop-last');
+		} else {
+			$newitem.removeClass('cc-loop-last');
+			var $remove = $('[cc-loop-last]',$newitem);
+			if ($remove.length) {
+				$newitem.data('cc-loop-modified',true);
+				$remove.remove();
+			}
+		}
+		
+		// index ..
+		var $remove = $('[cc-loop-index][cc-loop-index!='+idx+']',$newitem);
+		if ($remove.length) {
+			$newitem.data('cc-loop-modified',true);
+			$remove.remove();
+		}
+		
+		// odd,even ..
+		if (idx%2) {
+			$newitem.removeClass('cc-loop-odd').addClass('cc-loop-even');
+			var $remove = $('[cc-loop-odd]',$newitem);
+			if ($remove.length) {
+				$newitem.data('cc-loop-modified',true);
+				$remove.remove();
+			}
+		} else {
+			$newitem.addClass('cc-loop-odd').removeClass('cc-loop-even');
+			var $remove = $('[cc-loop-even]',$newitem);
+			if ($remove.length) {
+				$newitem.data('cc-loop-modified',true);
+				$remove.remove();
+			}
+		}
 		return $newitem;
 	},
 	
