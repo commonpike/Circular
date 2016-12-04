@@ -1,6 +1,6 @@
 <html>
 	<head>
-		<title>cc-loop</title>
+		<title>cc-loop rows</title>
 		
 		<!-- build:remove -->
 		<script src="../../../vendor/node_modules/jquery/dist/jquery.min.js"></script>
@@ -48,50 +48,48 @@
 			var Model = {	
 				colors	: [
 					{
-							"key":"red",
-							"value":"#f00"
+							"colorName":"red",
+							"hexValue":"#f00"
 					},
 					{
-							"key":"green",
-							"value":"#0f0"
+							"colorName":"green",
+							"hexValue":"#0f0"
 					},
 					{
-							"key":"blue",
-							"value":"#00f"
+							"colorName":"blue",
+							"hexValue":"#00f"
 					},
 					{
-							"key":"cyan",
-							"value":"#0ff"
+							"colorName":"cyan",
+							"hexValue":"#0ff"
 					},
 					{
-							"key":"magenta",
-							"value":"#f0f"
+							"colorName":"magenta",
+							"hexValue":"#f0f"
 					},
 					{
-							"key":"yellow",
-							"value":"#ff0"
+							"colorName":"yellow",
+							"hexValue":"#ff0"
 					},
 					{
-							"key":"black",
-							"value":"#000"
+							"colorName":"black",
+							"hexValue":"#000"
 					}
 				],
 				rates 	: [
-        		{ key :"AED",value:3.67365 },
-        		{ key :"AFN",value:48.3775 },
-        		{ key :"ALL",value:110.318335 },
-        		{ key :"AMD",value:409.144998 },
-        		{ key :"YER",value:215.043059 },
-        		{ key :"ZAR",value:8.428236 },
-        		{ key :"ZMK",value:4997.53 } ,
-        		{ key :"ZWL",value:322.355011 }
+        		{ curr :"AED",rate:3.67365 },
+        		{ curr :"AFN",rate:48.3775 },
+        		{ curr :"ALL",rate:110.318335 },
+        		{ curr :"AMD",rate:409.144998 },
+        		{ curr :"YER",rate:215.043059 },
+        		{ curr :"ZAR",rate:8.428236 },
+        		{ curr :"ZMK",rate:4997.53 } ,
+        		{ curr :"ZWL",rate:322.355011 }
     		],
     		items	: []
     
 			};
-			var Control = {
-				items : Model.colors
-			};
+			Model.items = Model.colors;
 			
 			Circular.init({
 				log : {
@@ -111,27 +109,36 @@
 
 				
 		</script>
+		<style type="text/css">
+			.cc-loop-odd { background-color:#eee; }
+			.cc-loop-even .cc-loop-odd { background-color:white; }
+			th { background-color:#779; color:white; }
+		</style>
 	</head>
-	<body cc-root>
+	<body cc-root cc-context="Model">
 		<!--@include["../../assets/header.inc"]-->
 		<article>
 
 			<section id="about">
-				<code>cc-loop</code> requires to have an <code>{{expression}}</code> as a value 
-				that resolves to an object or array. It repeat the children of the 
-				node for each element in the object or array, and set the context
-				of each generated child to, by default, the value of that element.<br><br>
-				So <code>&lt;div cc-loop="{{[1,2,3]}}">{{#this}}&lt;/div></code>
-				will simply print <code>123</code> for you, and 
-				<code>&lt;div cc-loop="{{{foo:1,bar:2,quz:3}}}">{{#this}}&lt;/div></code>
-				will print the same.
+				<code>cc-loop</code> has some additional tags and classes
+				to manage row handling. Elements with attributes 
+				<code>cc-first</code> and <code>cc-last</code> will only
+				be display for the first and the last element in the loop.
+				Elements with tag <code>cc-loop-index="3"</code> will only
+				be displayed on the 3rd index of the loop. Elements with
+				tags <code>cc-loop-odd</code> and <code>cc-loop-even</code>
+				will only be displayed in odd and even entries of the loop.<br><br>
+				
+				Similarly, cc-loop adds some css classes to handle row styling:
+				<code>.cc-loop-first,.cc-loop-last,.cc-loop-odd,.cc-loop-even</code>.
+				
 				
 			</section>
 			
 			<section id="demo">
 				<form id="controls">
 					<label>Show me</label>
-					<select onchange="Control.items = Model[$(this).val()]">
+					<select onchange="Model.items = Model[$(this).val()]">
 						<option value="colors">Colors</option>
 						<option value="rates">Rates</option>
 					</select>
@@ -140,11 +147,17 @@
 				
 <!-- ....... -->		
 <div cc-srcbox>
-<table border="1" cc-context="Control">
-	<tbody cc-loop="{{#items}}">
-		<tr>
-			<td>{{#key}}</td>
-			<td>{{#value}}</td>
+<table width="50%" cc-loop="{{#items}}">
+	<tbody>
+		<tr cc-loop-first>
+			<th>key</th>
+			<th>value</th>
+		</tr>
+		<tr cc-loop="{{#this}}">
+			<td>{{#this}} <sup cc-loop-index="1">*</sup></td>
+		</tr>
+		<tr cc-loop-last>
+			<th colspan="2"><small>* taken from reliable sources</small></th>
 		</tr>
 	</tbody>
 </table>

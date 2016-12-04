@@ -6,7 +6,8 @@
 new CircularModule('loop',{
 
 	config			: {
-		greedy	: true // eat whitespace when creating template
+		greedy			: true, // eat whitespace when creating template
+		maxnesting	: 500		// avoid eternal loops
 	},
 	
 	attributes	: {
@@ -19,79 +20,96 @@ new CircularModule('loop',{
 		'cc-loop-each'			: {},
 		'cc-loop-offset' 		: {},
 		'cc-loop-limit' 		: {},
-		'cc-loop-source' 		: {},
 		'cc-loop-template' 	: {},
+		'cc-loop-tplsrc' 	: {},
 		'cc-loop-item' 			: {},
+		'cc-loop-itemsrc' 		: {},
 		'cc-loop-first' 		: {},
-		'cc-loop-last' 			: {}
+		'cc-loop-last' 			: {},
+		'cc-loop-odd' 			: {},
+		'cc-loop-even' 			: {}
 	},
 		
 	// ---------------------------
 	
-	$templates			: null,
+	$stack			: null,
 	processCCLoop	: function(ccattr,ccnode,node) {
 		
-		var $node				= $(node);
-		var $template 	= this.getTemplate($node);
-		var $olditems		= this.getOldItems($node);
-		var newitems		= [];
-		
-		var keys 			= this.getKeys(ccnode);
-		var each			= 'value';
-		var ctx				= ccattr.content.expression;
-		
-		if (ccnode.attributes['cc-loop-each']) {
-			each = ccnode.attributes['cc-loop-each'].content.value;
+		var $node				= $(node);		
+		if ($node.parents('[cc-loop]').length<this.config.maxnesting) {
+			var $templates 	= this.getTemplates($node);
+			var $olditems		= this.getOldItems($node);
+			var newitems		= [];
+			
+			var keys 			= this.getKeys(ccnode);
+			var each			= 'value';
+			var ctx				= ccattr.content.expression;
+			
+			if (ccnode.attributes['cc-loop-each']) {
+				each = ccnode.attributes['cc-loop-each'].content.value;
+			}
+			
+			//console.log(keys);
+			for (var idx=0; idx<keys.length; idx++) {
+				var itemctx = this.getItemContext(each,ctx,keys[idx],idx);
+				var items 	= this.getNewItems($olditems,$templates,itemctx,keys,idx);
+				console.log(itemctx,items);
+				newitems = newitems.concat(items);
+			}
+			this.appendNewItems($node,newitems);
+			this.removeOldItems($olditems);
+		} else {
+			Circular.log.error('@loop','processCCLoop','max nesting '+this.config.maxnesting+' reached - something wrong ?');
 		}
-		
-		//console.log(keys);
-		for (var idx=0; idx<keys.length; idx++) {
-			var itemctx = this.getItemContext(each,ctx,keys[idx],idx);
-			var $item 	= this.getNewItem($olditems,$template,itemctx,keys,idx);
-			//console.log(itemctx,$item);
-			newitems.push($item);
-		}
-		this.appendNewItems($node,newitems);
-		this.removeOldItems($olditems);
 	},
 	
-	getTemplate		: function($node) {
-		var tplsel = $node.attr('cc-loop-source');
-		if (!tplsel) return this.createTemplate($node);
+	getTemplates		: function($node) {
+		var tplsel = $node.attr('cc-loop-tplsrc');
+		if (!tplsel) return this.createTemplates($node);
 		else return $(tplsel);
 	},
 	
-	createTemplate	: function($node) {
-	
-		Circular.log.debug('@loop','createTemplate',$node);
+	createTemplates	: function($node) {
+
+		Circular.log.debug('@loop','createTemplates',$node);
 		
-		if (!this.$templates) {
-			this.$templates = Circular.engine.stack($('<div id="cc-loop-templates">'));
+		if (!this.$stack) {
+			this.$stack = Circular.engine.stack($('<div id="cc-loop-stack">'));
 		}
 		
-		var $template = $node.children('[cc-loop-template]');
-		if (!$template.size()) {
-			if ($node.children().length==1) {
-				$template = $node.children();
-				$template.attr('cc-loop-template','');
-			} else {
-				$node.wrapInner('<div cc-loop-template>');
-				$template = $node.children('[cc-loop-template]');
-			}
-		}
-		var tid = Circular.engine.nodeid($template);
-		
-		// todo: check if such template exists?
-		
-		// check all loop beneath this loop, not nested,
-		// and create template for them first
+		// check all loops beneath this loop, not nested,
+		// and create templates for them first
 		this.getSubloops($node).each(function() {
-			Circular.loop.createTemplate($(this));
+			Circular.loop.createTemplates($(this));
 		});
 		
-		Circular.engine.stack($template,this.$templates);
-		$node.attr('cc-loop-source','#'+tid);
-		return $template;
+		var $templates = [];
+		if (this.config.greedy) {
+			// we only process child *nodes*
+			$templates = $node.children();
+			$templates.attr('cc-loop-template','');
+		} else {
+			var $contents = $(node).contents();
+			if ($contents.length==1 && $contents.get(0).nodeType==Node.ELEMENT_NODE) {
+				$templates = $contents.eq(0);
+				$templates.attr('cc-loop-template','');
+			} else {
+				$node.wrapInner('<div cc-loop-template>');
+				$templates = $node.children('[cc-loop-template]');
+			}
+		}
+		
+		var selectors = [];
+		$templates.each(function() {
+			var tid = Circular.engine.nodeid(this);
+			// todo: check if such template exists?
+			Circular.engine.stack($(this),Circular.loop.$stack);
+			selectors.push('#'+tid);
+		});
+		$node.attr('cc-loop-tplsrc',selectors.join(','));
+		
+		return $templates;
+		
 	},
 	
 	getSubloops		: function($node) {
@@ -151,62 +169,74 @@ new CircularModule('loop',{
 		return itemctx;
 	},
 	
-	getNewItem			: function($olditems,$template,itemctx,keys,idx) {
-		var $newitem = $('[cc-loop-item][cc-context="{{'+itemctx+'}}"]',$olditems);
-		if (!$newitem.length || $newitem.data('cc-loop-modified')) {
-			$newitem = $template.clone();
-			$newitem.removeAttr('cc-loop-template').removeAttr('id').attr('cc-loop-item','');
-		} else {
-			$newitem.data('cc-loop-old',false);
-		}
-		$newitem.attr('cc-context',itemctx);
-		
-		// .. first,last..
-		if (idx==0) {
-			$newitem.addClass('cc-loop-first');
-		} else {
-			$newitem.removeClass('cc-loop-first');
-			var $remove = $('[cc-loop-first]',$newitem);
+	getNewItems			: function($olditems,$templates,itemctx,keys,idx) {
+		var newitems = [];
+		$templates.each(function() {
+			
+			var tplsel = '#'+$(this).attr('id');
+			var $newitem = $('[cc-loop-item][cc-context="'+itemctx+'"][cc-loop-itemsrc="'+tplsel+'"]',$olditems);
+			if (!$newitem.length || $newitem.data('cc-loop-modified')) {
+				$newitem = $(this).clone();
+				$newitem.removeAttr('cc-loop-template').removeAttr('id')
+					.attr('cc-loop-item','').attr('cc-loop-itemsrc',tplsel)
+					.attr('cc-context',itemctx);
+			} else {
+				$newitem.data('cc-loop-old',false);
+			}
+			
+			// .. first,last..
+			if (idx==0) {
+				$newitem.addClass('cc-loop-first');
+			} else {
+				$newitem.removeClass('cc-loop-first');
+				var search = '[cc-loop-first]';
+				var $remove = $(search,$newitem).addBack(search);
+				if ($remove.length) {
+					$newitem.data('cc-loop-modified',true);
+					$remove.remove();
+				}
+			}
+			if (idx==keys.length-1) {
+				$newitem.addClass('cc-loop-last');
+			} else {
+				$newitem.removeClass('cc-loop-last');
+				var search = '[cc-loop-last]';
+				var $remove = $(search,$newitem).addBack(search);
+				if ($remove.length) {
+					$newitem.data('cc-loop-modified',true);
+					$remove.remove();
+				}
+			}
+			
+			// index ..
+			var search = '[cc-loop-index][cc-loop-index!='+idx+']'
+			var $remove = $(search,$newitem).addBack(search);
 			if ($remove.length) {
 				$newitem.data('cc-loop-modified',true);
 				$remove.remove();
 			}
-		}
-		if (idx==keys.length-1) {
-			$newitem.addClass('cc-loop-last');
-		} else {
-			$newitem.removeClass('cc-loop-last');
-			var $remove = $('[cc-loop-last]',$newitem);
-			if ($remove.length) {
-				$newitem.data('cc-loop-modified',true);
-				$remove.remove();
+			
+			// odd,even ..
+			if (idx%2) {
+				$newitem.removeClass('cc-loop-odd').addClass('cc-loop-even');
+				var search = '[cc-loop-odd]';
+				var $remove = $(search,$newitem).addBack(search);
+				if ($remove.length) {
+					$newitem.data('cc-loop-modified',true);
+					$remove.remove();
+				}
+			} else {
+				$newitem.addClass('cc-loop-odd').removeClass('cc-loop-even');
+				var search = '[cc-loop-even]';
+				var $remove = $(search,$newitem).addBack(search);
+				if ($remove.length) {
+					$newitem.data('cc-loop-modified',true);
+					$remove.remove();
+				}
 			}
-		}
-		
-		// index ..
-		var $remove = $('[cc-loop-index][cc-loop-index!='+idx+']',$newitem);
-		if ($remove.length) {
-			$newitem.data('cc-loop-modified',true);
-			$remove.remove();
-		}
-		
-		// odd,even ..
-		if (idx%2) {
-			$newitem.removeClass('cc-loop-odd').addClass('cc-loop-even');
-			var $remove = $('[cc-loop-odd]',$newitem);
-			if ($remove.length) {
-				$newitem.data('cc-loop-modified',true);
-				$remove.remove();
-			}
-		} else {
-			$newitem.addClass('cc-loop-odd').removeClass('cc-loop-even');
-			var $remove = $('[cc-loop-even]',$newitem);
-			if ($remove.length) {
-				$newitem.data('cc-loop-modified',true);
-				$remove.remove();
-			}
-		}
-		return $newitem;
+			newitems.push($newitem);
+		});
+		return newitems;
 	},
 	
 	appendNewItems	: function($node,newitems) {
