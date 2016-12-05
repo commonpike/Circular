@@ -18,14 +18,16 @@ new CircularModule('loop',{
 		
 		},
 		'cc-loop-each'			: {},
+		'cc-loop-as'				: {},
 		'cc-loop-offset' 		: {},
 		'cc-loop-limit' 		: {},
 		'cc-loop-template' 	: {},
-		'cc-loop-tplsrc' 	: {},
+		'cc-loop-tplsrc' 		: {},
 		'cc-loop-item' 			: {},
-		'cc-loop-itemsrc' 		: {},
+		'cc-loop-itemsrc' 	: {},
 		'cc-loop-first' 		: {},
 		'cc-loop-last' 			: {},
+		'cc-loop-index' 		: {},
 		'cc-loop-odd' 			: {},
 		'cc-loop-even' 			: {}
 	},
@@ -43,17 +45,21 @@ new CircularModule('loop',{
 			
 			var keys 			= this.getKeys(ccnode);
 			var each			= 'value';
+			var loopas		= '';
 			var ctx				= ccattr.content.expression;
 			
 			if (ccnode.attributes['cc-loop-each']) {
 				each = ccnode.attributes['cc-loop-each'].content.value;
 			}
+			if (ccnode.attributes['cc-loop-as']) {
+				loopas = ccnode.attributes['cc-loop-as'].content.value;
+			}
 			
 			//console.log(keys);
 			for (var idx=0; idx<keys.length; idx++) {
-				var itemctx = this.getItemContext(each,ctx,keys[idx],idx);
+				var itemctx = this.getItemContext(each,ctx,keys[idx],idx,loopas);
 				var items 	= this.getNewItems($olditems,$templates,itemctx,keys,idx);
-				console.log(itemctx,items);
+				//console.log(itemctx,items);
 				newitems = newitems.concat(items);
 			}
 			this.appendNewItems($node,newitems);
@@ -83,13 +89,11 @@ new CircularModule('loop',{
 			Circular.loop.createTemplates($(this));
 		});
 		
-		var $templates = [];
-		if (this.config.greedy) {
-			// we only process child *nodes*
-			$templates = $node.children();
+		var $templates = $node.children();
+		if ($templates.length && this.config.greedy) {
 			$templates.attr('cc-loop-template','');
 		} else {
-			var $contents = $(node).contents();
+			var $contents = $node.contents();
 			if ($contents.length==1 && $contents.get(0).nodeType==Node.ELEMENT_NODE) {
 				$templates = $contents.eq(0);
 				$templates.attr('cc-loop-template','');
@@ -132,13 +136,18 @@ new CircularModule('loop',{
 		if (arr) {
 			var allkeys = Object.keys(arr);
 			var offset = 0;
-			if (ccnode.attributes['cc-offset']) {
-				offset = ccnode.attributes['cc-offset'].content.value;
+			if (ccnode.attributes['cc-loop-offset']) {
+				offset = parseInt(ccnode.attributes['cc-loop-offset'].content.value);
+				if (!offset) offset=0;
+				if (offset<0) offset=allkeys.length+offset;
 			}
-			var limit = allkeys.length;
-			if (ccnode.attributes['cc-limit']) {
-				limit = ccnode.attributes['cc-limit'].content.value;
+			var limit = allkeys.length-offset;
+			if (ccnode.attributes['cc-loop-limit']) {
+				limit = parseInt(ccnode.attributes['cc-loop-limit'].content.value);
+				if (!limit && limit!==0) limit=allkeys.length-offset;
+				if (limit<0) limit=allkeys.length-offset+limit;
 			}
+			console.log(offset,limit);
 			var keys = allkeys.slice(offset,offset+limit);
 			// sort, filter
 		} else {
@@ -147,29 +156,33 @@ new CircularModule('loop',{
 		return keys;
 	},
 	
-	getItemContext	: function(each,ctx,key,index) {
+	getItemContext	: function(each,ctx,key,index,loopas) {
 		var itemctx = '';
 		switch(each) {
 			
 			case 'key': 
-				itemctx = key;
+				var ekey = key.replace(/'/g, '\\\'');
+				itemctx = '\''+ekey+'\'';
 				break;
 			case 'index': 
 				itemctx = index;
 				break;
 			case 'item' :
 				var ekey = key.replace(/'/g, '\\\'');
-				itemctx = '{index:'+index+',key:\''+ekey+'\',value:'+ctx+'[\''+ekey+'\']'+'}';
+				itemctx = '({\'index\':'+index+',\'key\':\''+ekey+'\',\'value\':'+ctx+'[\''+ekey+'\']'+'})';
 				break;
 			default: 
 				var ekey = key.replace(/'/g, '\\\'');
 				itemctx = ctx+'[\''+ekey+'\']';
 				break;
 		}
+		if (loopas) itemctx = '({\''+loopas+'\':'+itemctx+'})';
+		console.log(itemctx);
 		return itemctx;
 	},
 	
 	getNewItems			: function($olditems,$templates,itemctx,keys,idx) {
+		// gets the new parsed templates for 1 element of the loop
 		var newitems = [];
 		$templates.each(function() {
 			
@@ -190,10 +203,15 @@ new CircularModule('loop',{
 			} else {
 				$newitem.removeClass('cc-loop-first');
 				var search = '[cc-loop-first]';
-				var $remove = $(search,$newitem).addBack(search);
-				if ($remove.length) {
-					$newitem.data('cc-loop-modified',true);
-					$remove.remove();
+				if ($newitem.is(search)) {
+					$newitem.remove();
+					return true;
+				} else {
+					var $remove = $(search,$newitem);
+					if ($remove.length) {
+						$newitem.data('cc-loop-modified',true);
+						$newitem = $newitem.not($remove);
+					}
 				}
 			}
 			if (idx==keys.length-1) {
@@ -201,37 +219,57 @@ new CircularModule('loop',{
 			} else {
 				$newitem.removeClass('cc-loop-last');
 				var search = '[cc-loop-last]';
-				var $remove = $(search,$newitem).addBack(search);
-				if ($remove.length) {
-					$newitem.data('cc-loop-modified',true);
-					$remove.remove();
+				if ($newitem.is(search)) {
+					$newitem.remove();
+					return true;
+				} else {
+					var $remove = $(search,$newitem);
+					if ($remove.length) {
+						$newitem.data('cc-loop-modified',true);
+						$newitem = $newitem.not($remove);
+					}
 				}
 			}
 			
 			// index ..
 			var search = '[cc-loop-index][cc-loop-index!='+idx+']'
-			var $remove = $(search,$newitem).addBack(search);
-			if ($remove.length) {
-				$newitem.data('cc-loop-modified',true);
-				$remove.remove();
+			if ($newitem.is(search)) {
+				$newitem.remove();
+				return true;
+			}else {
+				var $remove = $(search,$newitem);
+				if ($remove.length) {
+					$newitem.data('cc-loop-modified',true);
+					$newitem = $newitem.not($remove);
+				}
 			}
 			
 			// odd,even ..
 			if (idx%2) {
 				$newitem.removeClass('cc-loop-odd').addClass('cc-loop-even');
 				var search = '[cc-loop-odd]';
-				var $remove = $(search,$newitem).addBack(search);
-				if ($remove.length) {
-					$newitem.data('cc-loop-modified',true);
-					$remove.remove();
+				if ($newitem.is(search)) {
+					$newitem.remove();
+					return true;
+				} else {
+					var $remove = $(search,$newitem);
+					if ($remove.length) {
+						$newitem.data('cc-loop-modified',true);
+						$newitem = $newitem.not($remove);
+					}
 				}
 			} else {
 				$newitem.addClass('cc-loop-odd').removeClass('cc-loop-even');
 				var search = '[cc-loop-even]';
-				var $remove = $(search,$newitem).addBack(search);
-				if ($remove.length) {
-					$newitem.data('cc-loop-modified',true);
-					$remove.remove();
+				if ($newitem.is(search)) {
+					$newitem.remove();
+					return true;
+				} else {
+					var $remove = $(search,$newitem).addBack(search);
+					if ($remove.length) {
+						$newitem.data('cc-loop-modified',true);
+						$newitem = $newitem.not($remove);
+					}
 				}
 			}
 			newitems.push($newitem);

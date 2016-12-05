@@ -1,6 +1,6 @@
 <html>
 	<head>
-		<title>cc-loop rows</title>
+		<title>cc-loop-each</title>
 		
 		<!-- build:remove -->
 		<script src="../../../vendor/node_modules/jquery/dist/jquery.min.js"></script>
@@ -77,14 +77,14 @@
 					}
 				],
 				rates 	: [
-        		{ curr :"AED",rate:3.67365 },
-        		{ curr :"AFN",rate:48.3775 },
-        		{ curr :"ALL",rate:110.318335 },
-        		{ curr :"AMD",rate:409.144998 },
-        		{ curr :"YER",rate:215.043059 },
-        		{ curr :"ZAR",rate:8.428236 },
-        		{ curr :"ZMK",rate:4997.53 } ,
-        		{ curr :"ZWL",rate:322.355011 }
+        		{ "Currency" :"AED","Exchange rate":3.67365 },
+        		{ "Currency" :"AFN","Exchange rate":48.3775 },
+        		{ "Currency" :"ALL","Exchange rate":110.318335 },
+        		{ "Currency" :"AMD","Exchange rate":409.144998 },
+        		{ "Currency" :"YER","Exchange rate":215.043059 },
+        		{ "Currency" :"ZAR","Exchange rate":8.428236 },
+        		{ "Currency" :"ZMK","Exchange rate":4997.53 } ,
+        		{ "Currency" :"ZWL","Exchange rate":322.355011 }
     		],
     		items	: []
     
@@ -112,7 +112,7 @@
 		<style type="text/css">
 			.cc-loop-odd { background-color:#eee; }
 			.cc-loop-even .cc-loop-odd { background-color:white; }
-			th { background-color:#779; color:white; }
+			th { background-color:#779!important; color:white; }
 		</style>
 	</head>
 	<body cc-root cc-context="Model">
@@ -120,18 +120,42 @@
 		<article>
 
 			<section id="about">
-				<code>cc-loop</code> has some additional tags and classes
-				to manage row handling. Elements with attributes 
-				<code>cc-first</code> and <code>cc-last</code> will only
-				be display for the first and the last element in the loop.
-				Elements with tag <code>cc-loop-index="3"</code> will only
-				be displayed on the 3rd index of the loop. Elements with
-				tags <code>cc-loop-odd</code> and <code>cc-loop-even</code>
-				will only be displayed in odd and even entries of the loop.<br><br>
+				By default, <code>cc-loop</code> puts whatever you are looping in 
+				the context of each loop item. Within each item, <code>{{#this}}</code> 
+				would refer to the looped item, and <code>{{#foo}}</code> would refer
+				to the property 'foo' of that item, if it's an object.<br><br>
 				
-				Similarly, cc-loop adds some css classes to handle row styling:
-				<code>.cc-loop-first,.cc-loop-last,.cc-loop-odd,.cc-loop-even</code>.
+				That can quickly become confusing, especially within nested items.
+				By using <code>cc-loop-as</code>, you can specify a different name
+				for the word <code>this</code>. For example
+<xmp>
+<div cc-loop="#regions">
+	<div cc-loop="#this">
+		<ul cc-loop="#this">
+			<li>{{#this}}</li>
+		</ul>
+	</div>
+</div>
+</xmp>
+
+Could be written as 
+
+<xmp>
+<div cc-loop="#regions" cc-loop-as="region">
+	<div cc-loop="#region" cc-loop-as="country">
+		<ul cc-loop="#country" cc-loop-as="city">
+			<li>{{#city}}</li>
+		</ul>
+	</div>
+</div>
+</xmp>
+
+				When using <code>cc-loop-as</code>, <code>{{#this}}</code>
+				becomes quite useless.
 				
+				The below example uses <code>cc-loop-as</code> to separate 
+				<code>{{#propname}}</code>
+				and <code>{{#propvalue}}</code>.
 				
 			</section>
 			
@@ -148,16 +172,14 @@
 <!-- ....... -->		
 <div cc-srcbox>
 <table width="50%">
-	<tbody cc-loop="{{#items}}">
-		<tr cc-loop-first>
-			<th>key</th>
-			<th>value</th>
+	<thead cc-loop="{{#items}}" cc-loop-as="item" cc-loop-limit="1">
+		<tr cc-loop="{{#item}}" cc-loop-each="key" cc-loop-as="propname">
+			<th>{{#propname}}</th>
 		</tr>
-		<tr cc-loop="{{#this}}">
-			<td>{{#this}} <sup cc-loop-index="1">*</sup></td>
-		</tr>
-		<tr cc-loop-last>
-			<th colspan="2"><small>* taken from reliable sources</small></th>
+	</thead>
+	<tbody cc-loop="{{#items}}" cc-loop-as="item">
+		<tr cc-loop="{{#item}}" cc-loop-each="value" cc-loop-as="propvalue">
+			<td>{{#propvalue}}</td>
 		</tr>
 	</tbody>
 </table>

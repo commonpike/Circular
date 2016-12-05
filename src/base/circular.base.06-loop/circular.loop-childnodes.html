@@ -1,6 +1,6 @@
 <html>
 	<head>
-		<title>cc-loop rows</title>
+		<title>cc-loop nested</title>
 		
 		<!-- build:remove -->
 		<script src="../../../vendor/node_modules/jquery/dist/jquery.min.js"></script>
@@ -85,11 +85,12 @@
         		{ curr :"ZAR",rate:8.428236 },
         		{ curr :"ZMK",rate:4997.53 } ,
         		{ curr :"ZWL",rate:322.355011 }
-    		],
-    		items	: []
-    
+    		]    
 			};
-			Model.items = Model.colors;
+			
+			var Control = {
+				items : Model.colors
+			};
 			
 			Circular.init({
 				log : {
@@ -109,36 +110,21 @@
 
 				
 		</script>
-		<style type="text/css">
-			.cc-loop-odd { background-color:#eee; }
-			.cc-loop-even .cc-loop-odd { background-color:white; }
-			th { background-color:#779; color:white; }
-		</style>
 	</head>
-	<body cc-root cc-context="Model">
+	<body cc-root>
 		<!--@include["../../assets/header.inc"]-->
 		<article>
 
 			<section id="about">
-				<code>cc-loop</code> has some additional tags and classes
-				to manage row handling. Elements with attributes 
-				<code>cc-first</code> and <code>cc-last</code> will only
-				be display for the first and the last element in the loop.
-				Elements with tag <code>cc-loop-index="3"</code> will only
-				be displayed on the 3rd index of the loop. Elements with
-				tags <code>cc-loop-odd</code> and <code>cc-loop-even</code>
-				will only be displayed in odd and even entries of the loop.<br><br>
-				
-				Similarly, cc-loop adds some css classes to handle row styling:
-				<code>.cc-loop-first,.cc-loop-last,.cc-loop-odd,.cc-loop-even</code>.
-				
-				
+				This is just an example to show a node with a cc-loop attribute
+				can contain multiple childnodes (doh), which will turn into multiple
+				loop templates.
 			</section>
 			
 			<section id="demo">
 				<form id="controls">
 					<label>Show me</label>
-					<select onchange="Model.items = Model[$(this).val()]">
+					<select onchange="Control.items = Model[$(this).val()]">
 						<option value="colors">Colors</option>
 						<option value="rates">Rates</option>
 					</select>
@@ -147,18 +133,12 @@
 				
 <!-- ....... -->		
 <div cc-srcbox>
-<table width="50%">
+<table width="50%" cc-context="Control">
 	<tbody cc-loop="{{#items}}">
-		<tr cc-loop-first>
-			<th>key</th>
-			<th>value</th>
-		</tr>
 		<tr cc-loop="{{#this}}">
-			<td>{{#this}} <sup cc-loop-index="1">*</sup></td>
+			<td>{{#this}}</td>
 		</tr>
-		<tr cc-loop-last>
-			<th colspan="2"><small>* taken from reliable sources</small></th>
-		</tr>
+		<tr><td colspan="2"><hr></td></tr>
 	</tbody>
 </table>
 </div>
