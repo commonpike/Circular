@@ -3,47 +3,60 @@
 	template
 ----------------------- */
 
-new CircularModule({
+new CircularModule('template',{
 
-	name				: 'template',
-	requires		: ['debug','engine'],
-	attributes	: ['cc-template'],
-	css					: '.cc-template, [cc-template=""]{ display:none; }',
-
-	orgattr			: 'cc-template-origin',
+	settings		: {
+		insertcss = ['cc-template-source,[cc-template=""]{ display:none; }']
+	},
 	
-	in	: function(ccattr,ccnode,node) {
-		Circular.log.debug('@template.in',node);
-		var tplsel = ccattr.content.value;
-		var $node = $(node);
-		if (tplsel) {
-			// include the template if it isnt already
-			if (!$node.children('['+this.orgattr+'="'+tplsel+'"]').size()==1) {
-				var $tpl = $(tplsel);
-				if ($tpl.size()) {
-					Circular.watchdog.pass(node,'contentchanged');
-					$node.empty().addClass('cc-template-included');
-					$tpl.clone().appendTo($node)
-						.removeattr('id')
-						.removeattr('cc-template')
-						.attr(this.orgattr,tplsel)
-						.removeClass('cc-template')
-						.addClass('cc-template-clone');
+	attributes	: {
+	
+		'cc-template' : {
+			in : : function(ccattr,ccnode,node) {
+				Circular.log.debug('@template','cc-template.in',node);
+				var tplsel = ccattr.content.value;
+				var $node = $(node);
+				if (tplsel) {
+					// include the template if it isnt already
+					if (!$node.children('[cc-template-origin="'+tplsel+'"]').size()==1) {
+						var $tpl = $(tplsel);
+						if ($tpl.length) {
+							// todo: create tranclude-base
+							$node.empty();
+							$tpl.clone().appendTo($node)
+								.removeattr('id')
+								.removeattr('cc-template')
+								.removeattr('cc-template-source')
+								.attr('cc-template-origin',tplsel)
+						} else {
+							Circular.log.error('@template','cc-template.in','no such template',tplsel);
+						}
+					} else {
+						Circular.log.debug('@template','cc-template.in','already included');
+					}
+					
 				} else {
-					Circular.log.error('@template.in','no such template',tplsel);
+					// this is a template, ignore
+					Circular.log.debug('@template','cc-template.in','is a template');
+					node.removeattr('cc-template').attr('cc-template-source');
+					return false;
 				}
-			} else {
-				Circular.log.debug('@template.in','already included');
 			}
-			
-		} else {
-			// this is a template, ignore
-			Circular.log.debug('@template.in','is a template');
-			$node.addClass('cc-template');
-			return false;
+		},
+		'cc-template-source'	: {
+			in	: function() {
+				return false;	// dont process this
+			}
+		},
+		'cc-template-origin'	: {}
+		
+	},
+	
+	comments : {
+		'cc:template' : function() {
+		
 		}
 	}
-
 	
 		
 });

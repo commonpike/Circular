@@ -22,14 +22,17 @@ new CircularModule('loop',{
 		'cc-loop-offset' 		: {},
 		'cc-loop-limit' 		: {},
 		'cc-loop-template' 	: {},
-		'cc-loop-tplsrc' 		: {},
 		'cc-loop-item' 			: {},
-		'cc-loop-itemsrc' 	: {},
+		'cc-loop-tplsource' : {},	// the actual template
+		'cc-loop-tplorigin' : {},	// a ref to the source
 		'cc-loop-first' 		: {},
 		'cc-loop-last' 			: {},
 		'cc-loop-index' 		: {},
 		'cc-loop-odd' 			: {},
-		'cc-loop-even' 			: {}
+		'cc-loop-even' 			: {},
+		'cc-loop-sort' 			: {},
+		'cc-loop-sortas' 		: {},
+		'cc-loop-sortby' 		: {}
 	},
 		
 	// ---------------------------
@@ -70,7 +73,7 @@ new CircularModule('loop',{
 	},
 	
 	getTemplates		: function($node) {
-		var tplsel = $node.attr('cc-loop-tplsrc');
+		var tplsel = $node.attr('cc-loop-template');
 		if (!tplsel) return this.createTemplates($node);
 		else return $(tplsel);
 	},
@@ -91,15 +94,15 @@ new CircularModule('loop',{
 		
 		var $templates = $node.children();
 		if ($templates.length && this.config.greedy) {
-			$templates.attr('cc-loop-template','');
+			$templates.attr('cc-loop-tplsource','');
 		} else {
 			var $contents = $node.contents();
 			if ($contents.length==1 && $contents.get(0).nodeType==Node.ELEMENT_NODE) {
 				$templates = $contents.eq(0);
-				$templates.attr('cc-loop-template','');
+				$templates.attr('cc-loop-tplsource','');
 			} else {
-				$node.wrapInner('<div cc-loop-template>');
-				$templates = $node.children('[cc-loop-template]');
+				$node.wrapInner('<div cc-loop-tplsource>');
+				$templates = $node.children('[cc-loop-tplsource]');
 			}
 		}
 		
@@ -110,7 +113,7 @@ new CircularModule('loop',{
 			Circular.engine.stack($(this),Circular.loop.$stack);
 			selectors.push('#'+tid);
 		});
-		$node.attr('cc-loop-tplsrc',selectors.join(','));
+		$node.attr('cc-loop-template',selectors.join(','));
 		
 		return $templates;
 		
@@ -134,22 +137,50 @@ new CircularModule('loop',{
 		var arr = ccnode.attributes['cc-loop'].content.result;
 		//console.log(ccnode,arr);
 		if (arr) {
+		
+		
 			var allkeys = Object.keys(arr);
-			var offset = 0;
+			
+			// sort, sortas, sortby
+			var sort 		= 'foo';		// ascending, descending
+			var sortas 	= 'string';	// number,string,stringnc
+			var sortby 	= false;
+			
+			// sort, sortby, sortas			
+			if (ccnode.attributes['cc-loop-sort']) {
+				sort = ccnode.attributes['cc-loop-sort'].content.value;
+				if (!Circular.parser.boolish(sort)) sort = false;
+				if (sort==='') sort = 'ascending';
+			}
+			if (ccnode.attributes['cc-loop-sortas']) {
+				sortas = ccnode.attributes['cc-loop-sortas'].content.value;
+				if (!sortas) sortas = 'string';
+			}
+			if (ccnode.attributes['cc-loop-sortby']) {
+				sortby = ccnode.attributes['cc-loop-sortby'].content.value;
+				if (!sortby) sortby = false;
+			}
+			if (sort) {
+				allkeys = allkeys.sort(this.compareFunction(sort,sortas,sortby,arr)); 
+			}
+							
+					
+			// offset, limit
+			var offset 	= 0;
+			var limit 	= false;
 			if (ccnode.attributes['cc-loop-offset']) {
 				offset = parseInt(ccnode.attributes['cc-loop-offset'].content.value);
-				if (!offset) offset=0;
-				if (offset<0) offset=allkeys.length+offset;
 			}
-			var limit = allkeys.length-offset;
 			if (ccnode.attributes['cc-loop-limit']) {
 				limit = parseInt(ccnode.attributes['cc-loop-limit'].content.value);
-				if (!limit && limit!==0) limit=allkeys.length-offset;
-				if (limit<0) limit=allkeys.length-offset+limit;
 			}
-			console.log(offset,limit);
+			if (!offset) offset=0;
+			if (offset<0) offset=allkeys.length+offset;
+			if (!limit && limit!==0) limit=allkeys.length-offset;
+			if (limit<0) limit=allkeys.length-offset+limit;
+
 			var keys = allkeys.slice(offset,offset+limit);
-			// sort, filter
+			
 		} else {
 			Circular.log.error('@loop','getKeys','no result',ccnode);
 		}
@@ -177,7 +208,7 @@ new CircularModule('loop',{
 				break;
 		}
 		if (loopas) itemctx = '({\''+loopas+'\':'+itemctx+'})';
-		console.log(itemctx);
+		//console.log(itemctx);
 		return itemctx;
 	},
 	
@@ -187,11 +218,11 @@ new CircularModule('loop',{
 		$templates.each(function() {
 			
 			var tplsel = '#'+$(this).attr('id');
-			var $newitem = $('[cc-loop-item][cc-context="'+itemctx+'"][cc-loop-itemsrc="'+tplsel+'"]',$olditems);
+			var $newitem = $('[cc-loop-item][cc-context="'+itemctx+'"][cc-loop-tplorigin="'+tplsel+'"]',$olditems);
 			if (!$newitem.length || $newitem.data('cc-loop-modified')) {
 				$newitem = $(this).clone();
-				$newitem.removeAttr('cc-loop-template').removeAttr('id')
-					.attr('cc-loop-item','').attr('cc-loop-itemsrc',tplsel)
+				$newitem.removeAttr('cc-loop-tplsource').removeAttr('id')
+					.attr('cc-loop-item','').attr('cc-loop-tplorigin',tplsel)
 					.attr('cc-context',itemctx);
 			} else {
 				$newitem.data('cc-loop-old',false);
@@ -290,9 +321,49 @@ new CircularModule('loop',{
 				$this.remove();
 			}
 		});
-	}
+	},
 
-	
+	compareFunction(sort,sortas,sortby,arr) {
+		switch(sortas) {
+			case 'number' :
+				if (sort=='descending') {
+					if (sortby) return function(a, b) { return parseFloat(arr[b][sortby])-parseFloat(arr[a][sortby]); }
+					else return function(a, b) { return parseFloat(b)-parseFloat(a); }
+				} else {
+					if (sortby) return function(a, b) { return parseFloat(arr[a][sortby])-parseFloat(arr[b][sortby]); }
+					else return function(a, b) { return parseFloat(a)-parseFloat(b); }
+				}
+				break;
+			case 'string' :
+				if (sort=='descending') {
+					if (sortby) return function(a, b) { return arr[b][sortby].toString().localeCompare(arr[a][sortby].toString()); }
+					else return function(a, b) { return b.toString().localeCompare(a.toString()); }
+				} else {
+					if (sortby) return function(a, b) { return arr[a][sortby].toString().localeCompare(arr[b][sortby].toString()); }
+					else return function(a, b) { return a.toString().localeCompare(b.toString()); }
+				}
+				break;
+			case 'stringnc' :
+				if (sort=='descending') {
+					if (sortby) return function(a, b) { 
+						return arr[b][sortby].toString().toUpperCase().localeCompare(arr[a][sortby].toString().toUpperCase()); 
+					}
+					return function(a, b) { 
+						return b.toString().toUpperCase().localeCompare(a.toString().toUpperCase()); 
+					}
+				} else {
+					if (sortby) return function(a, b) { 
+						return arr[b][sortby].toString().toUpperCase().localeCompare(arr[a][sortby].toString().toUpperCase()); 
+					}
+					return function(a, b) { 
+						return a.toString().toUpperCase().localeCompare(b.toString().toUpperCase()); 
+					}
+				}
+				break;
+			default :
+				return function(a, b) { return 0; }
+		}
+	}
 	
 		
 });

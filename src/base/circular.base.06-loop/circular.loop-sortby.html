@@ -47,74 +47,41 @@
 		
 			var Model = {	
 				colors	: [
-					{
-							"colorName":"red",
-							"hexValue":"#f00"
-					},
-					{
-							"colorName":"green",
-							"hexValue":"#0f0"
-					},
-					{
-							"colorName":"blue",
-							"hexValue":"#00f"
-					},
-					{
-							"colorName":"cyan",
-							"hexValue":"#0ff"
-					},
-					{
-							"colorName":"magenta",
-							"hexValue":"#f0f"
-					},
-					{
-							"colorName":"yellow",
-							"hexValue":"#ff0"
-					},
-					{
-							"colorName":"black",
-							"hexValue":"#000"
-					}
+					{ "colorName":"red", 		"hexValue":"#f00" },
+					{ "colorName":"green", 	"hexValue":"#0f0" },
+					{ "colorName":"blue", 	"hexValue":"#00f" },
+					{ "colorName":"cyan", 	"hexValue":"#0ff" },
+					{ "colorName":"magenta","hexValue":"#f0f" },
+					{ "colorName":"yellow",	"hexValue":"#ff0" },
+					{ "colorName":"black", 	"hexValue":"#000" }
 				],
 				rates 	: [
-        		{ "Currency" :"AED","Exchange rate":3.67365 },
-        		{ "Currency" :"AFN","Exchange rate":48.3775 },
-        		{ "Currency" :"ALL","Exchange rate":110.318335 },
-        		{ "Currency" :"AMD","Exchange rate":409.144998 },
-        		{ "Currency" :"YER","Exchange rate":215.043059 },
-        		{ "Currency" :"ZAR","Exchange rate":8.428236 },
-        		{ "Currency" :"ZMK","Exchange rate":4997.53 } ,
-        		{ "Currency" :"ZWL","Exchange rate":322.355011 }
+					{ "Currency" :"AED","Exchange rate":3.67365 },
+					{ "Currency" :"AFN","Exchange rate":48.3775 },
+					{ "Currency" :"ALL","Exchange rate":110.318335 },
+					{ "Currency" :"AMD","Exchange rate":409.144998 },
+					{ "Currency" :"YER","Exchange rate":215.043059 },
+					{ "Currency" :"ZAR","Exchange rate":8.428236 },
+					{ "Currency" :"ZMK","Exchange rate":4997.53 } ,
+					{ "Currency" :"ZWL","Exchange rate":322.355011 }
     		],
     
 			};
 			
 			var Control	= {
-				items : Model.colors,
-				select	: function(list) {
-					this.items=Model[list];
-					$('.srcbox-output tbody')
-						.attr('cc-loop-offset','')
-						.attr('cc-loop-limit','');
-					$('#select-offset,#select-limit').val();
-				}
+				items 	: Model.rates,
+				offset	: 0,
+				limit		: null,
+				sort		: '',
+				sortas	: '',
+				sortby	: ''
 			};
 					
 			
 			Circular.init({
 				log : {
 					debug : true
-				},
-				engine : {
-					debug : false
-				},
-				registry : {
-					debug : false
-				},
-				watchdog : {
-					debug : false
 				}
-				
 			});
 
 				
@@ -130,70 +97,85 @@
 		<article>
 
 			<section id="about">
-				You can control the length of the loop using
-				<code>cc-loop-offset</code> and <code>cc-loop-limit</code>.
 				
-				By default, the offset is 0 and the limit is the length
-				of the loop minus the offset.
-				
-				If the offset or the limit are negative, they are taken to be
-				that many items from the end of the loop. So offset:-5,limit:-4
-				will return one item, the fifth from the end.<br><br>
-				
-				Below example writes the value selected in the dropdowns
-				into the tbody <code>cc-loop-</code> attributes .. straight into the dom.
+				<code>cc-loop-sortby</code> 
 				
 			</section>
 			
 			<section id="demo">
 				<form id="controls">
 					<label>Show me</label>
-					<select onchange="Control.select($(this).val())">
-						<option value="colors">Colors</option>
+					<select onchange="Control.items = Model[$(this).val()]">
 						<option value="rates">Rates</option>
+						<option value="colors">Colors</option>
+					</select>
+
+					<label>Sort</label>
+					<select id='select-sort' onchange="Control.sort=$(this).val()">
+						<option value="">(none)</option>
+						<option value="false">false</option>
+						<option value="ascending">ascending</option>
+						<option value="descending">descending</option>
 					</select>
 					
-					<label>Offset</label>
-					<select id='select-offset' onchange="$('.srcbox-output tbody').attr('cc-loop-offset',$(this).val())">
-						<optgroup cc-loop="{{#items}}" cc-loop-each="index">
+					<label>Sortas</label>
+					<select id='select-sortas'  onchange="Control.sortas=$(this).val()">
+						<option value="">(none)</option>
+						<option value="number">number</option>
+						<option value="string">string</option>
+						<option value="stringnc">stringnc</option>
+					</select>
+					
+					<label>Sortby</label>
+					<select id="select-sortby" cc-loop="{{#items}}" cc-loop-limit="1" onchange="Control.sortby=$(this).val()">
+						<optgroup cc-loop="{{#this}}" cc-loop-each="key">
 							<option selected cc-loop-first value="">(none)</option>
-							<option cc-loop-first>0</option>
-							<option>{{#this+1}}</option>
-						</optgroup>
-						<optgroup cc-loop="{{#items}}" cc-offset="1" cc-loop-each="index">
-							<option>{{-#this-1}}</option>
+							<option>{{#this}}</option>
 						</optgroup>
 					</select>
-					
-					<label>Limit</label>
-					<select id='select-limit'  onchange="$('.srcbox-output tbody').attr('cc-loop-limit',$(this).val())">
-						<optgroup cc-loop="{{#items}}" cc-loop-each="index">
-							<option selected cc-loop-first value="">(none)</option>
-							<option cc-loop-first>0</option>
-							<option>{{#this+1}}</option>
-						</optgroup>
-						<optgroup cc-loop="{{#items}}" cc-loop-each="index">
-							<option>{{-#this-1}}</option>
-						</optgroup>
-					</select>
-					
+	
 				</form>
 				<div id="results">
 				
 <!-- ....... -->		
 <div cc-srcbox>
+
 <table width="50%">
-	<thead cc-loop="{{#items}}" cc-loop-limit="1">
-		<tr cc-loop="{{#this}}" cc-loop-each="key">
-			<th>{{#this}}</th>
+	<tbody cc-loop="{{#items}}" 
+		cc-loop-each="item"
+		cc-loop-sort="{{#sort}}" 
+		cc-loop-sortas="{{#sortas}}"  
+		cc-loop-sortby="{{#sortby}}">
+		<tr cc-loop-first>
+			<th>key</th>
+			<td>
+				<table width="100%">
+					<tbody>
+						<tr cc-loop="{{#value}}" cc-loop-each="key">
+							<th width="50%">{{#this}}</th>
+						</tr>
+					</tbody>
+				</table>
+			</td>
 		</tr>
-	</thead>
-	<tbody cc-loop="{{#items}}" cc-loop-offset="" cc-loop-limit="">
-		<tr cc-loop="{{#this}}">
-			<td>{{#this}}</td>
+		<tr>
+			<th>{{#key}}</th>
+			<td>
+				<table width="100%">
+					<tbody>
+						<tr cc-loop="{{#value}}"  cc-loop-each="value">
+							<td width="50%">{{#this}}</td>
+						</tr>
+					</tbody>
+				</table>
+			</td>
+		</tr>
+		<tr cc-loop-last>
+			<th colspan="3"><small>take it from reliable sources</small></th>
 		</tr>
 	</tbody>
 </table>
+
 </div>
 <!-- ....... -->		
 

@@ -1,6 +1,6 @@
 <html>
 	<head>
-		<title>cc-loop nested</title>
+		<title>cc-loop-offset,cc-loop-limit</title>
 		
 		<!-- build:remove -->
 		<script src="../../../vendor/node_modules/jquery/dist/jquery.min.js"></script>
@@ -77,20 +77,29 @@
 					}
 				],
 				rates 	: [
-        		{ curr :"AED",rate:3.67365 },
-        		{ curr :"AFN",rate:48.3775 },
-        		{ curr :"ALL",rate:110.318335 },
-        		{ curr :"AMD",rate:409.144998 },
-        		{ curr :"YER",rate:215.043059 },
-        		{ curr :"ZAR",rate:8.428236 },
-        		{ curr :"ZMK",rate:4997.53 } ,
-        		{ curr :"ZWL",rate:322.355011 }
-    		]    
+        		{ "Currency" :"AED","Exchange rate":3.67365 },
+        		{ "Currency" :"AFN","Exchange rate":48.3775 },
+        		{ "Currency" :"ALL","Exchange rate":110.318335 },
+        		{ "Currency" :"AMD","Exchange rate":409.144998 },
+        		{ "Currency" :"YER","Exchange rate":215.043059 },
+        		{ "Currency" :"ZAR","Exchange rate":8.428236 },
+        		{ "Currency" :"ZMK","Exchange rate":4997.53 } ,
+        		{ "Currency" :"ZWL","Exchange rate":322.355011 }
+    		],
+    
 			};
 			
-			var Control = {
-				items : Model.colors
+			var Control	= {
+				items : Model.colors,
+				select	: function(list) {
+					this.items=Model[list];
+					this.offset=0;
+					this.limit=null;
+				},
+				offset	: 0,
+				limit		: null
 			};
+					
 			
 			Circular.init({
 				log : {
@@ -110,35 +119,78 @@
 
 				
 		</script>
+		<style type="text/css">
+			.cc-loop-odd { background-color:#eee; }
+			.cc-loop-even .cc-loop-odd { background-color:white; }
+			th { background-color:#779!important; color:white; }
+		</style>
 	</head>
-	<body cc-root>
+	<body cc-root cc-context="Control">
 		<!--@include["../../assets/header.inc"]-->
 		<article>
 
 			<section id="about">
-				This is just an example to show cc-loop can contain
-				multiple children (doh), which will turn into multiple
-				loop templates.
+				You can control the length of the loop using
+				<code>cc-loop-offset</code> and <code>cc-loop-limit</code>.
+				
+				By default, the offset is 0 and the limit is the length
+				of the loop minus the offset.
+				
+				If the offset or the limit are negative, they are taken to be
+				that many items from the end of the loop. So offset:-5,limit:-4
+				will return one item, the fifth from the end.<br><br>
+				
+				Below example uses a plain vanilla js controller to manage offset and limit.
+				
 			</section>
 			
 			<section id="demo">
 				<form id="controls">
 					<label>Show me</label>
-					<select onchange="Control.items = Model[$(this).val()]">
+					<select onchange="Control.select($(this).val())">
 						<option value="colors">Colors</option>
 						<option value="rates">Rates</option>
 					</select>
+					
+					<label>Offset</label>
+					<select id='select-offset' onchange="Control.offset=$(this).val()">
+						<optgroup cc-loop="{{#items}}" cc-loop-each="index">
+							<option selected cc-loop-first value="">(none)</option>
+							<option cc-loop-first>0</option>
+							<option>{{#this+1}}</option>
+						</optgroup>
+						<optgroup cc-loop="{{#items}}" cc-offset="1" cc-loop-each="index">
+							<option>{{-#this-1}}</option>
+						</optgroup>
+					</select>
+					
+					<label>Limit</label>
+					<select id='select-limit'  onchange="Control.limit=$(this).val()">
+						<optgroup cc-loop="{{#items}}" cc-loop-each="index">
+							<option selected cc-loop-first value="">(none)</option>
+							<option cc-loop-first>0</option>
+							<option>{{#this+1}}</option>
+						</optgroup>
+						<optgroup cc-loop="{{#items}}" cc-loop-each="index">
+							<option>{{-#this-1}}</option>
+						</optgroup>
+					</select>
+					
 				</form>
 				<div id="results">
 				
 <!-- ....... -->		
 <div cc-srcbox>
-<table width="50%" cc-context="Control">
-	<tbody cc-loop="{{#items}}">
+<table width="50%">
+	<thead cc-loop="{{#items}}" cc-loop-limit="1">
+		<tr cc-loop="{{#this}}" cc-loop-each="key">
+			<th>{{#this}}</th>
+		</tr>
+	</thead>
+	<tbody cc-loop="{{#items}}" cc-loop-offset="{{#offset}}" cc-loop-limit="{{#limit}}">
 		<tr cc-loop="{{#this}}">
 			<td>{{#this}}</td>
 		</tr>
-		<tr><td colspan="2"><hr></td></tr>
 	</tbody>
 </table>
 </div>

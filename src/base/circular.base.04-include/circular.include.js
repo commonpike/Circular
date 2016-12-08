@@ -45,7 +45,7 @@ new CircularModule('include',{
 				comment.parentNode.removeChild(comment);
  			}).fail(function(data) {
  				Circular.log.debug('@include',arg,'fail',data);
- 				var node = document.createComment('ERROR: @include[JSON.stringify]');
+ 				var node = document.createComment('ERROR: cc:include '+JSON.stringify(data));
  				comment.parentNode.insertBefore(node,comment);
 				comment.parentNode.removeChild(comment);
  			});
