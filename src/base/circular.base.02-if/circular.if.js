@@ -29,7 +29,7 @@ new CircularModule('if',{
 				}
 				
 				// manage if
-				if (Circular.parser.boolish(ccattr.content.value)) {
+				if (ccattr.content.value!=='' && Circular.parser.boolish(ccattr.content.value)) {
 					Circular.log.debug('@if','cc-if','eject.unflag',node);
 					Circular.eject.unflag(node,ccnode,'cc-if');
 					return true;
@@ -38,6 +38,9 @@ new CircularModule('if',{
 					Circular.eject.flag(node,ccnode,'cc-if');
 					return false;
 				}
+			},
+			sanitize	: function(value) {
+				return (!!value).toString();
 			}
 		},
 		
@@ -45,7 +48,7 @@ new CircularModule('if',{
 			in	: function(ccattr,ccnode,node) {
 				
 				// manage else
-				if (!Circular.parser.boolish(ccattr.content.value)) {
+				if (ccattr.content.value==='' || !Circular.parser.boolish(ccattr.content.value)) {
 					Circular.log.debug('@if','cc-else','eject.unflag',node);
 					Circular.eject.unflag(node,ccnode,'cc-else');
 					return true;
@@ -55,6 +58,9 @@ new CircularModule('if',{
 					return false;
 				}
 				
+			},
+			sanitize	: function(value) {
+				return (!!value).toString();
 			}
 		}
 	}

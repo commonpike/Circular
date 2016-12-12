@@ -74,66 +74,48 @@
 
 			<section id="about">
 				<p>
-					<code>cc-template</code> allows you to define a template source
-					and repeat that in several places. This makes sense, for example, if the template
-					contains complex logic or formatting you don't want
-					to repeat manually, or if you want to be able to switch displays, like below.<br><br>
-					An empty <code>cc-template</code> or <code>cc-template-source</code> tag indicates
-					that the node *is* a template. A <code>cc-template</code> tag with a value
-					indicates you want to include that template inside the current node. It 
-					uses the value as a css selector to find the template to include.
+					You can use a <code>&lt!--@template["#selector"]--></code> comment
+					to include templates, too. The upside is, you don't get all
+					that semanticly bad nested blurb. The downside is, your comments
+					aren't being watched, so you can't update stuff dynamically.
 				</p>
 				
 			</section>
 			
 			<section id="demo">
-				<form id="controls" onsubmit="return false">
-					<label>Show me</label>
-					<select onchange="$('.winner').attr('cc-template',$(this).val())">
-						<option value="#oneliner1">Oneliner 1</option>
-						<option value="#oneliner2">Oneliner 2</option>
-						<option value="#oneliner3">Oneliner 3</option>
-					</select>
-					<button onclick="$('body').append('<span cc-template id=&quot;oneliner3&quot;><i>{{#firstname}}</i>, <b>{{#date}}</b></span>'); $(this).hide()">
-						Create Oneliner 3
-					</button>
-				</form>
 				<div id="results">
 
 <!-- ....... -->		
 <div cc-srcbox>
 
-<span cc-template id="oneliner1">
+<span cc-template id="oneliner">
 	<i>{{#firstname}}</i><!--
 	--><i cc-if="{{#nickname}}"> "{{#nickname}}"</i><!--
 	--><i cc-if="{{#lastname}}"> {{#lastname}}</i><!--
 	-->, <b>{{#date}}</b>
 </span>
 
-<span cc-template-source id="oneliner2">
-	<b>{{#date}}</b>:
-	<span cc-if="{{#nickname}}">
-		"{{#nickname}}" ({{#firstname}}<span cc-if="{{#lastname}}"> {{#lastname}}</span>)
-	</span>
-	<span cc-else>
-		{{#firstname}} {{#lastname}}
-	</span>
-</span>
 
 <!-- the 3 top winners -->
 
 <h2>First prize</h2>
-<p class="winner" cc-template="#oneliner1" cc-context="{{#winners[0]}}"></p>
+<p cc-context="{{#winners[0]}}">
+	<!--@template["#oneliner"]-->
+</p>
 
 <hr>
 
 <h3>Second prize</h3>
-<p class="winner" cc-template="#oneliner1" cc-context="{{#winners[1]}}"></p>
+<p cc-context="{{#winners[1]}}">
+	<!--@template["#oneliner"]-->
+</p>
 
 <hr>
 
 <h4>Third prize</h4>
-<p class="winner" cc-template="#oneliner1" cc-context="{{#winners[2]}}"></p>
+<p cc-context="{{#winners[2]}}">
+	<!--@template["#oneliner"]-->
+</p>
 
 </div>
 
