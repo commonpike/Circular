@@ -60,27 +60,24 @@ new CircularModule('template',{
 	
 	comments : {
 		'template'	: function(comment,arg) {
-			Circular.log.debug('@template','comment',arg);
-			//var newcomment = $("<!--@template-origin[\""+arg+"\"]-->").get(0);
- 			//comment.parentNode.insertBefore(newcomment,comment);
- 			$(arg).each(function() {
- 				var $clone = $(this).clone()
- 					.removeAttr('id')
-					.removeAttr('cc-template')
-					.removeAttr('cc-template-source');
-				$clone.attr('cc-template-origin',arg);
-				var clone = $clone.get(0);
- 				comment.parentNode.insertBefore(clone,comment);
- 				// process it right away - works without, too
- 				Circular.engine.process(clone);
- 			});
- 			
-			comment.parentNode.removeChild(comment);
-						
-		},
-		'template-origin' : function(comment,arg) {
-			// ignore
-			return;
+			Circular.log.debug('@template','cc:template',arg);
+			var $tpl = $(arg);
+			if ($tpl.length) {
+				$tpl.each(function() {
+					var $clone = $(this).clone()
+						.removeAttr('id')
+						.removeAttr('cc-template')
+						.removeAttr('cc-template-source');
+					$clone.attr('cc-template-origin',arg);
+					var clone = $clone.get(0);
+					comment.parentNode.insertBefore(clone,comment);
+					// process it right away - works without, too
+					Circular.engine.process(clone);
+				});		
+				comment.parentNode.removeChild(comment);
+			} else {
+				Circular.log.error('@template','cc:template','no such template',arg);
+			}
 		}
 	},
 	

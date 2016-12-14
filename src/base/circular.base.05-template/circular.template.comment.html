@@ -1,6 +1,6 @@
 <html>
 	<head>
-		<title>cc-loop-each</title>
+		<title>cc:template</title>
 		
 		<!-- build:remove -->
 		<script src="../../../vendor/node_modules/jquery/dist/jquery.min.js"></script>
@@ -61,8 +61,6 @@
 			Circular.init({
 				log : {
 					debug : true
-				}, engine : {
-					debug: true
 				}
 			});
 			
@@ -71,12 +69,12 @@
 </head>
 <body cc-root cc-context="Model">
 		
-		<!--@include["../../assets/header.inc"]-->
+		<!--cc:include("../../assets/header.inc")-->
 		<article>
 
 			<section id="about">
 				<p>
-					You can use a <code>&lt!--@template["#selector"]--></code> comment
+					You can use a <code>&lt!--cc:template("#selector")--></code> comment
 					to include templates, too. The upside is, you don't get all
 					that semanticly bad nested blurb. The downside is, your comments
 					aren't being watched, so you can't update stuff dynamically.
@@ -102,21 +100,21 @@
 
 <h2>First prize</h2>
 <p cc-context="{{#winners[0]}}">
-	<!--@template["#oneliner"]-->
+	<!--cc:template("#oneliner")-->
 </p>
 
 <hr>
 
 <h3>Second prize</h3>
 <p cc-context="{{#winners[1]}}">
-	<!--@template["#oneliner"]-->
+	<!--cc:template("#oneliner")-->
 </p>
 
 <hr>
 
 <h4>Third prize</h4>
 <p cc-context="{{#winners[2]}}">
-	<!--@template["#oneliner"]-->
+	<!--cc:template("#oneliner")-->
 </p>
 
 </div>
@@ -132,6 +130,6 @@
 			</section>
 		</article>
 		
-		<!--@include["../../assets/footer.inc"]-->
+		<!--cc:include("../../assets/footer.inc")-->
 	</body>
 </html>

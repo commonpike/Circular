@@ -54,7 +54,7 @@
 </head>
 <body cc-root>
 		
-		<!--@include["../../assets/header.inc"]-->
+		<!--cc:include("../../assets/header.inc")-->
 		<article>
 
 			<section id="about">
@@ -63,7 +63,8 @@
 					the content that was originally inside the node before the template
 					was inserted. This basicly allows you to hardcode content in a node,
 					and apply a template to format it later. Notice how this page
-					does not use a cc-context at all - all the data is inside the html :-)
+					does not use a cc-context or a javascript Model at all - all the 
+					data is hardcoded inside the html, and formatted using cc-transclude :-)
 				</p>
 				
 			</section>
@@ -87,15 +88,15 @@
 
 <span cc-template id="oneliner1">
 	<i cc-transclude=".firstname"></i><!--
-	--><span cc-transclude=".nickname"></span></i><!--
-	--><span cc-transclude=".lastname"></span><!--
+	--><span cc-transclude=".nickname" cc-transclude-pad></span><!--
+	--><i cc-transclude=".lastname" cc-transclude-pad></i><!--
 	-->, <b cc-transclude=".date"></b>
 </span>
 
 <span cc-template-source id="oneliner2">
 	<b cc-transclude=".date"></b>:
 	<span cc-transclude-if=".nickname">
-		"<span cc-translude=".nickname"></span>"
+		"<span cc-transclude=".nickname"></span>"
 	</span>
 	<span cc-transclude=".firstname"></span>
 	<span cc-transclude=".lastname"></span>
@@ -140,6 +141,6 @@
 			</section>
 		</article>
 		
-		<!--@include["../../assets/footer.inc"]-->
+		<!--cc:include("../../assets/footer.inc")-->
 	</body>
 </html>

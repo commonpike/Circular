@@ -297,6 +297,72 @@ new CircularModule('parser', {
 		return value;
 	},
 	
+	parseval	: function(original,ctx) {
+		this.debug('@parser.parseval',original);
+		
+		// parses *and* evaluates the original into a result:
+		
+		// checks if the original is an {{expression}}
+		// if parse, parses original into expression
+		// else puts original (minus brackets and flags) in expression
+		// if flags evaulate, evaluates the expression
+		// returns the result. does NOT watch paths.
+		
+		var result = original;
+		var expression = '';
+		var exprmatches = this.match(original);
+		if (exprmatches) {
+			if (exprmatches[0]===original) {
+			
+			
+				// this is a single full expression "{{#foo|we}}"
+
+				var inner 		= original.substring(2,original.length-2);
+				var flagged 	= this.getFlags(inner);
+				
+				if (flagged.parse) {
+					expression = this.parse(flagged.expression,ctx);
+				} else {
+					expression = flagged.expression;
+				}
+								
+			} else {
+			
+				// this is a stringlike thing, "foo {{#bar|pew}} quz"
+				// all expressions must always be evaluated
+				// any watched paths in any expression will watch that path
+				// for the whole attribute.
+
+				expression = this.replace(original,function(match,inner) {
+					var flagged = Circular.parser.getFlags(inner);					
+					var parsed = '';
+					if (flagged.parse) {
+						parsed = Circular.parser.parse(flagged.expression,ctx);
+					} else {
+						parsed = inner;
+					}
+					
+					return '"+('+parsed+')+"';
+				});
+				// tell eval that this is a stringthing
+				expression = '"'+expression+'"';
+
+
+			}			
+			
+			result = this.eval(expression);
+			
+			this.debug("@parser.parseval",original,expression,result);
+			
+			
+		} else {
+			this.debug('@parser.parseval','no match');
+			result = this.eval(original);
+		}
+		
+		return result;
+	},
+	
 	boolish	: function(str) {
 		if (str) {
 			if (str==='no') 		return false;

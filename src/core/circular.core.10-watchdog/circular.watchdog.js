@@ -138,7 +138,11 @@ new CircularModule('watchdog', {
 				case 'attributes':
 					if (record.oldValue===null || record.target.getAttribute(record.attributeName)===null) {
 						Circular.watchdog.catch(record.target,'event','attrsetchanged');
+						//console.log(record);
+						//alert('attrsetchanged');
 					} else {
+						//console.log(record);
+						//alert('attrdomchanged');
 						Circular.watchdog.catch(record.target,'event','attrdomchanged',record.attributeName);
 					}
 					break;
