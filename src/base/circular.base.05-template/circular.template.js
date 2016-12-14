@@ -61,11 +61,20 @@ new CircularModule('template',{
 	comments : {
 		'template'	: function(comment,arg) {
 			Circular.log.debug('@template','comment',arg);
-			$(arg).each(function() {
- 				comment.parentNode.insertBefore(this,comment);
+			//var newcomment = $("<!--@template-origin[\""+arg+"\"]-->").get(0);
+ 			//comment.parentNode.insertBefore(newcomment,comment);
+ 			$(arg).each(function() {
+ 				var $clone = $(this).clone()
+ 					.removeAttr('id')
+					.removeAttr('cc-template')
+					.removeAttr('cc-template-source');
+				$clone.attr('cc-template-origin',arg);
+				var clone = $clone.get(0);
+ 				comment.parentNode.insertBefore(clone,comment);
+ 				// process it right away - works without, too
+ 				Circular.engine.process(clone);
  			});
- 			var newcomment = $("<!--@template-origin["+arg+"]-->").get(0);
- 			comment.parentNode.insertBefore(newcomment,comment);
+ 			
 			comment.parentNode.removeChild(comment);
 						
 		},

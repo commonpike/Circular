@@ -1241,7 +1241,7 @@ new CircularModule('engine', {
 		var mod = Circular.modules.comm2mod[comm];
 		if (mod) {
 			var arg = undefined;
-			if (sarg) arg = Circular.parser.eval(sarg);
+			if (sarg) arg = this.parsevalComment(sarg,Circular.context.get());
 			Circular[mod].comments[comm](node,arg);
 			return true;
 		} else {
@@ -1249,6 +1249,75 @@ new CircularModule('engine', {
 		}
 		return false;
 	},
+	
+	parsevalComment	: function(original,ctx) {
+		this.debug('@engine.parsevalComment',original);
+		
+		
+		// checks if the original is an {{expression}}
+		// if parse, parses original into expression
+		// else puts original (minus brackets and flags) in expression
+		// if flags evaulate, evaluates the expression
+		// returns the result. does NOT watch paths.
+		
+		var result = original;
+		var expression = '';
+		var evaulate = false;
+		var exprmatches = Circular.parser.match(original);
+		if (exprmatches) {
+			if (exprmatches[0]===original) {
+			
+			
+				// this is a single full expression "{{#foo|we}}"
+
+				var inner 		= original.substring(2,original.length-2);
+				var flagged 	= Circular.parser.getFlags(inner);
+				
+				if (flagged.parse) {
+					expression = Circular.parser.parse(flagged.expression,ctx);
+				} else {
+					expression = flagged.expression;
+				}
+								
+			} else {
+			
+				// this is a stringlike thing, "foo {{#bar|pew}} quz"
+				// all expressions must always be evaluated
+				// any watched paths in any expression will watch that path
+				// for the whole attribute.
+
+				expression = Circular.parser.replace(original,function(match,inner) {
+					var flagged = Circular.parser.getFlags(inner);					
+					var parsed = '';
+					if (flagged.parse) {
+						parsed = Circular.parser.parse(flagged.expression,ctx);
+					} else {
+						parsed = inner;
+					}
+					
+					return '"+('+parsed+')+"';
+				});
+				// tell eval that this is a stringthing
+				expression = '"'+expression+'"';
+
+
+			}			
+			
+			result = Circular.parser.eval(expression);
+			
+			this.debug("@engine.parsevalComment",original,expression,result);
+			
+			
+		} else {
+			this.debug('@engine.parsevalComment','no match');
+			result = Circular.parser.eval(original);
+		}
+		
+		return result;
+	},
+	
+	
+	
 	
 	debug	: function() {
 		if (this.config.debug) {
