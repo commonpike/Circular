@@ -1,0 +1,7 @@
+<b>{{#date}}</b>:
+<span cc-if="{{#nickname}}">
+	"{{#nickname}}" ({{#firstname}}<span cc-if="{{#lastname}}"> {{#lastname}}</span>)
+</span>
+<span cc-else>
+	{{#firstname}} {{#lastname}}
+</span>

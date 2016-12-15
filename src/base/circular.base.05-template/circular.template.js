@@ -24,7 +24,7 @@ new CircularModule('template',{
 					return Circular.template.attributes['cc-template-source'].in(ccattr,ccnode,node);
 				} else {
 					// this asks for a template
-					return Circular.template.processCCTemplate(ccattr,ccnode,node);
+					return Circular.template.insert(node,ccattr.content.value);
 				}				
 				
 			}
@@ -61,34 +61,27 @@ new CircularModule('template',{
 	comments : {
 		'template'	: function(comment,arg) {
 			Circular.log.debug('@template','cc:template',arg);
-			var $tpl = $(arg);
-			if ($tpl.length) {
-				$tpl.each(function() {
-					var $clone = $(this).clone()
-						.removeAttr('id')
-						.removeAttr('cc-template')
-						.removeAttr('cc-template-source');
-					$clone.attr('cc-template-origin',arg);
-					var clone = $clone.get(0);
-					comment.parentNode.insertBefore(clone,comment);
-					// process it right away - works without, too
-					Circular.engine.process(clone);
-				});		
-				comment.parentNode.removeChild(comment);
-			} else {
-				Circular.log.error('@template','cc:template','no such template',arg);
-			}
+			Circular.template.replace(comment,arg);
 		}
 	},
 	
 	//------------------------
 	
-	processCCTemplate(ccattr,ccnode,node) {
+	create	: function(node) {
+		// not used internally
+		var $stack = this.getStack();
 		var $node = $(node);
-		var tplsel = ccattr.content.value;
+		Circular.engine.nodeid(node);
+		$node.attr('cc-template-source','');
+		Circular.engine.stack($wrap,$stack);
+		return $wrap;
+	},
+	
+	insert	: function(node,sel) {
 		// include the template if it isnt already
-		if (!$node.children('[cc-template-origin="'+tplsel+'"]').length) {
-			var $tpl = $(tplsel);
+		var $node = $(node);
+		if (!$node.children('[cc-template-origin="'+sel+'"]').length) {
+			var $tpl = $(sel);
 			if ($tpl.length) {
 				this.createTranscludeBase($node);
 				$node.empty();
@@ -96,10 +89,10 @@ new CircularModule('template',{
 					.removeAttr('id')
 					.removeAttr('cc-template')
 					.removeAttr('cc-template-source')
-					.attr('cc-template-origin',tplsel);
+					.attr('cc-template-origin',sel);
 				$node.removeAttr('cc-template-pending');
 			} else {
-				Circular.log.warn('@template','processCCTemplate','no such template',tplsel);
+				Circular.log.warn('@template','processCCTemplate','no such template',sel);
 				if (!$node.is('[cc-template-pending]')) {
 					$node.attr('cc-template-pending','');
 				}
@@ -109,20 +102,41 @@ new CircularModule('template',{
 		}
 	},
 	
+	
+	replace	: function(node,sel) {
+		var $tpl = $(sel);
+		if ($tpl.length) {
+			$tpl.each(function() {
+				var $clone = $(this).clone()
+					.removeAttr('id')
+					.removeAttr('cc-template')
+					.removeAttr('cc-template-source');
+				$clone.attr('cc-template-origin',sel);
+				var clone = $clone.get(0);
+				node.parentNode.insertBefore(clone,node);
+				// process it right away - works without, too
+				Circular.engine.process(clone);
+			});		
+			node.parentNode.removeChild(node);
+		} else {
+			Circular.log.error('@template','cc:template','no such template',sel);
+		}
+	},
+	
+	
+	//------------------------
+
+	
 	createTranscludeBase($node) {
-		Circular.log.debug('@template','createTranscludeBase');
 		var tbasename = Circular.modules.prefix('cc-transclude-base');
 		var tbase 		= $node.attr(tbasename);
 		if (!tbase) {
 			if ($node.children().length) {
-				if (!this.$stack) {
-					Circular.log.debug('@template','createTranscludeBase','creating stack');
-					Circular.engine.stack('<div id="cc-template-stack">');
-					this.$stack = $('#cc-template-stack');
-				}
+				Circular.log.debug('@template','createTranscludeBase');
+				var $stack = this.getStack();
 				var $trans = $('<div cc-template-transclude>');
 				var transid = Circular.engine.nodeid($trans);
-				Circular.engine.stack($trans,this.$stack);
+				Circular.engine.stack($trans,$stack);
 				Circular.log.debug('@template','createTranscludeBase','appending children',transid);
 				$node.children().appendTo($trans);
 				$node.attr(tbasename,'#'+transid);
@@ -130,6 +144,15 @@ new CircularModule('template',{
 				$node.attr(tbasename,'#none#');
 			}
 		}
+	},
+	
+	getStack	: function() {
+		if (!this.$stack) {
+			Circular.log.debug('@template','getStack','creating stack');
+			Circular.engine.stack('<div id="cc-template-stack">');
+			this.$stack = $('#cc-template-stack');
+		}
+		return this.$stack;
 	}
 		
 });

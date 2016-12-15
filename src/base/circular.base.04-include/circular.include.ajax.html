@@ -1,6 +1,6 @@
 <html>
 	<head>
-		<title>cc-template cc-tranclude</title>
+		<title>cc-include ajax</title>
 		
 		<!-- build:remove -->
 		<script src="../../../vendor/node_modules/jquery/dist/jquery.min.js"></script>
@@ -18,7 +18,7 @@
 		<script src="../../core/circular.core.09-engine/circular.engine.js"></script>
 		<script src="../../core/circular.core.10-watchdog/circular.watchdog.js"></script>
 		
-		<script src="../../base/circular.base.03-transclude/circular.transclude.js"></script>
+		<script src="../../base/circular.base.02-if/circular.if.js"></script>
 		<script src="../../base/circular.base.04-include/circular.include.js"></script>
 		<script src="../../base/circular.base.05-template/circular.template.js"></script>
 		<script src="../../contrib/circular.srcbox/circular.srcbox.js"></script>
@@ -42,7 +42,22 @@
 		<link rel="stylesheet" href="http://circularjs.net/current/assets/docs.css">	
 		/build -->
 			
-		<script>			
+		<script>
+			var Model = {	
+				winners	: [{
+					firstname 	: 'Hank',
+					date				: '2015-03-02'
+				}, {
+					firstname 	: 'Jezebel',
+					nickname 		: 'The Rock',
+					date				: '2015-03-05'
+				}, {
+					firstname 	: 'John',
+					lastname		: 'Jagger',
+					date				: '2015-03-09'
+				}]
+			};
+						
 			Circular.init({
 				log : {
 					debug : true
@@ -52,20 +67,21 @@
 		</script>
 		
 </head>
-<body cc-root>
+<body cc-root cc-context="Model">
 		
 		<!--cc:include("../../assets/header.inc")-->
 		<article>
 
 			<section id="about">
 				<p>
-					<code>cc-transclude</code>, when used within a template, includes
-					the content that was originally inside the node before the template
-					was inserted. This basicly allows you to hardcode content in a node,
-					and apply a template to format it later. Notice how this page
-					does not use a cc-context or a javascript Model at all - all the 
-					data is hardcoded inside the html, and formatted using cc-transclude.
-					There is virtually no javascript, except circular.js :-)
+					<code>cc-include</code> takes the same arguments as <code>jquery.ajax</code>.
+					If it's just a string, it will load that. But if you pass an object using an
+					<code>{{expression}}</code>, it will use that. This allows you to send passwords,
+					change mime types, fix caching, etcetera.<br><br>
+					Note how passing an object to an expression requires 3 {{{ brackets, like<br>
+					<code>&lt;div cc-include="{{{url:'foo.html',method:'GET'}|e}}">&lt;/div></code><br>
+					The <code>|e</code> flags tells circular not to parse (p) or watch (w) the object, but
+					only evaluate (e) it..
 				</p>
 				
 			</section>
@@ -73,61 +89,36 @@
 			<section id="demo">
 				<form id="controls" onsubmit="return false">
 					<label>Show me</label>
-					<select onchange="$('.winner').attr('cc-template',$(this).val())">
-						<option value="#oneliner1">Oneliner 1</option>
-						<option value="#oneliner2">Oneliner 2</option>
-						<option value="#oneliner3">Oneliner 3</option>
+					<select onchange="$('.winner').attr('cc-include','\{{'+$(this).val()+'|e\}}')">
+						<option value="{url:'circular.include.inc00.html',method:'GET'}">Oneliner 1</option>
+						<option value="{url:'circular.include.inc01.html',method:'GET'}">Oneliner 2</option>
 					</select>
-					<button onclick="$('body').append('<span cc-template id=&quot;oneliner3&quot;><i cc-transclude=&quot;.firstname&quot;></i>, <b cc-transclude=&quot;.date&quot;</b></span>'); $(this).hide()">
-						Create Oneliner 3
-					</button>
 				</form>
 				<div id="results">
 
 <!-- ....... -->		
 <div cc-srcbox>
 
-<span cc-template id="oneliner1">
-	<i cc-transclude=".firstname"></i><!--
-	--><span cc-transclude=".nickname" cc-transclude-pad></span><!--
-	--><i cc-transclude=".lastname" cc-transclude-pad></i><!--
-	-->, <b cc-transclude=".date"></b>
-</span>
-
-<span cc-template-source id="oneliner2">
-	<b cc-transclude=".date"></b>:
-	<span cc-transclude-if=".nickname">
-		"<span cc-transclude=".nickname"></span>"
-	</span>
-	<span cc-transclude=".firstname"></span>
-	<span cc-transclude=".lastname"></span>
-</span>
-
 <!-- the 3 top winners -->
 
 <h2>First prize</h2>
-<p class="winner" cc-template="#oneliner1">
-	<span class="firstname">Hank</span>
-	<span class="date">2015-03-02</span>
-</p>
+<p class="winner" 
+	cc-include="{{{url:'circular.include.inc00.html',method:'GET'}|e}}" 
+	cc-context="{{#winners[0]}}"></p>
 
 <hr>
 
 <h3>Second prize</h3>
-<p class="winner" cc-template="#oneliner1">
-	<span class="firstname">Jezebel</span>
-	<span class="nickname">The Rock</span>
-	<span class="date">2015-03-05</span>
-</p>
+<p class="winner"  
+	cc-include="{{{url:'circular.include.inc00.html',method:'GET'}|e}}" 
+	cc-context="{{#winners[1]}}"></p>
 
 <hr>
 
 <h4>Third prize</h4>
-<p class="winner" cc-template="#oneliner1">
-	<span class="firstname">John</span>
-	<span class="lastname">Jagger</span>
-	<span class="date">2015-03-09</span>
-</p>
+<p class="winner"  
+	cc-include="{{{url:'circular.include.inc00.html',method:'GET'}|e}}" 
+	cc-context="{{#winners[2]}}"></p>
 
 </div>
 

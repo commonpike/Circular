@@ -1,6 +1,6 @@
 <html>
 	<head>
-		<title>cc-template cc-tranclude</title>
+		<title>cc:template</title>
 		
 		<!-- build:remove -->
 		<script src="../../../vendor/node_modules/jquery/dist/jquery.min.js"></script>
@@ -18,7 +18,7 @@
 		<script src="../../core/circular.core.09-engine/circular.engine.js"></script>
 		<script src="../../core/circular.core.10-watchdog/circular.watchdog.js"></script>
 		
-		<script src="../../base/circular.base.03-transclude/circular.transclude.js"></script>
+		<script src="../../base/circular.base.02-if/circular.if.js"></script>
 		<script src="../../base/circular.base.04-include/circular.include.js"></script>
 		<script src="../../base/circular.base.05-template/circular.template.js"></script>
 		<script src="../../contrib/circular.srcbox/circular.srcbox.js"></script>
@@ -42,7 +42,22 @@
 		<link rel="stylesheet" href="http://circularjs.net/current/assets/docs.css">	
 		/build -->
 			
-		<script>			
+		<script>
+			var Model = {	
+				winners	: [{
+					firstname 	: 'Hank',
+					date	: '2015-03-02'
+				}, {
+					firstname 	: 'Jezebel',
+					nickname 	: 'The Rock',
+					date	: '2015-03-05'
+				}, {
+					firstname 	: 'John',
+					lastname		: 'Jagger',
+					date				: '2015-03-09'
+				}]
+			};
+						
 			Circular.init({
 				log : {
 					debug : true
@@ -52,81 +67,47 @@
 		</script>
 		
 </head>
-<body cc-root>
+<body cc-root cc-context="Model">
 		
 		<!--cc:include("../../assets/header.inc")-->
 		<article>
 
 			<section id="about">
 				<p>
-					<code>cc-transclude</code>, when used within a template, includes
-					the content that was originally inside the node before the template
-					was inserted. This basicly allows you to hardcode content in a node,
-					and apply a template to format it later. Notice how this page
-					does not use a cc-context or a javascript Model at all - all the 
-					data is hardcoded inside the html, and formatted using cc-transclude.
-					There is virtually no javascript, except circular.js :-)
+					You can use a <code>&lt!--cc:include("http://url.com/foo")--></code> comment
+					to include templates, too. The upside is, you don't get all
+					that semanticly bad nested blurb. The downside is, your comments
+					aren't being watched, so you can't update stuff dynamically.
 				</p>
 				
 			</section>
 			
 			<section id="demo">
-				<form id="controls" onsubmit="return false">
-					<label>Show me</label>
-					<select onchange="$('.winner').attr('cc-template',$(this).val())">
-						<option value="#oneliner1">Oneliner 1</option>
-						<option value="#oneliner2">Oneliner 2</option>
-						<option value="#oneliner3">Oneliner 3</option>
-					</select>
-					<button onclick="$('body').append('<span cc-template id=&quot;oneliner3&quot;><i cc-transclude=&quot;.firstname&quot;></i>, <b cc-transclude=&quot;.date&quot;</b></span>'); $(this).hide()">
-						Create Oneliner 3
-					</button>
-				</form>
 				<div id="results">
 
 <!-- ....... -->		
 <div cc-srcbox>
 
-<span cc-template id="oneliner1">
-	<i cc-transclude=".firstname"></i><!--
-	--><span cc-transclude=".nickname" cc-transclude-pad></span><!--
-	--><i cc-transclude=".lastname" cc-transclude-pad></i><!--
-	-->, <b cc-transclude=".date"></b>
-</span>
-
-<span cc-template-source id="oneliner2">
-	<b cc-transclude=".date"></b>:
-	<span cc-transclude-if=".nickname">
-		"<span cc-transclude=".nickname"></span>"
-	</span>
-	<span cc-transclude=".firstname"></span>
-	<span cc-transclude=".lastname"></span>
-</span>
 
 <!-- the 3 top winners -->
 
 <h2>First prize</h2>
-<p class="winner" cc-template="#oneliner1">
-	<span class="firstname">Hank</span>
-	<span class="date">2015-03-02</span>
+<p cc-context="{{#winners[0]}}">
+	<!--cc:include("circular.include.inc00.html")-->
 </p>
 
 <hr>
 
 <h3>Second prize</h3>
-<p class="winner" cc-template="#oneliner1">
-	<span class="firstname">Jezebel</span>
-	<span class="nickname">The Rock</span>
-	<span class="date">2015-03-05</span>
+<p cc-context="{{#winners[1]}}">
+	<!--cc:include("circular.include.inc00.html")-->
 </p>
 
 <hr>
 
 <h4>Third prize</h4>
-<p class="winner" cc-template="#oneliner1">
-	<span class="firstname">John</span>
-	<span class="lastname">Jagger</span>
-	<span class="date">2015-03-09</span>
+<p cc-context="{{#winners[2]}}">
+	<!--cc:include("circular.include.inc00.html")-->
 </p>
 
 </div>

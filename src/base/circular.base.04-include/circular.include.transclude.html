@@ -1,6 +1,6 @@
 <html>
 	<head>
-		<title>cc-template cc-tranclude</title>
+		<title>cc-include cc-transclude</title>
 		
 		<!-- build:remove -->
 		<script src="../../../vendor/node_modules/jquery/dist/jquery.min.js"></script>
@@ -59,13 +59,13 @@
 
 			<section id="about">
 				<p>
-					<code>cc-transclude</code>, when used within a template, includes
-					the content that was originally inside the node before the template
+					<code>cc-transclude</code>, when used within an include, includes
+					the content that was originally inside the node before the external file
 					was inserted. This basicly allows you to hardcode content in a node,
-					and apply a template to format it later. Notice how this page
+					and apply a external file to format it later. Notice how this page
 					does not use a cc-context or a javascript Model at all - all the 
-					data is hardcoded inside the html, and formatted using cc-transclude.
-					There is virtually no javascript, except circular.js :-)
+					data is hardcoded inside the html, and formatted using cc-transclude
+					within the external file :-)
 				</p>
 				
 			</section>
@@ -73,40 +73,21 @@
 			<section id="demo">
 				<form id="controls" onsubmit="return false">
 					<label>Show me</label>
-					<select onchange="$('.winner').attr('cc-template',$(this).val())">
-						<option value="#oneliner1">Oneliner 1</option>
-						<option value="#oneliner2">Oneliner 2</option>
-						<option value="#oneliner3">Oneliner 3</option>
+					<select onchange="$('.winner').attr('cc-include',$(this).val())">
+						<option value="circular.include.inc02.html">Oneliner 1</option>
+						<option value="circular.include.inc03.html">Oneliner 2</option>
 					</select>
-					<button onclick="$('body').append('<span cc-template id=&quot;oneliner3&quot;><i cc-transclude=&quot;.firstname&quot;></i>, <b cc-transclude=&quot;.date&quot;</b></span>'); $(this).hide()">
-						Create Oneliner 3
-					</button>
 				</form>
 				<div id="results">
 
 <!-- ....... -->		
 <div cc-srcbox>
 
-<span cc-template id="oneliner1">
-	<i cc-transclude=".firstname"></i><!--
-	--><span cc-transclude=".nickname" cc-transclude-pad></span><!--
-	--><i cc-transclude=".lastname" cc-transclude-pad></i><!--
-	-->, <b cc-transclude=".date"></b>
-</span>
-
-<span cc-template-source id="oneliner2">
-	<b cc-transclude=".date"></b>:
-	<span cc-transclude-if=".nickname">
-		"<span cc-transclude=".nickname"></span>"
-	</span>
-	<span cc-transclude=".firstname"></span>
-	<span cc-transclude=".lastname"></span>
-</span>
 
 <!-- the 3 top winners -->
 
 <h2>First prize</h2>
-<p class="winner" cc-template="#oneliner1">
+<p class="winner" cc-include="circular.include.inc02.html">
 	<span class="firstname">Hank</span>
 	<span class="date">2015-03-02</span>
 </p>
@@ -114,7 +95,7 @@
 <hr>
 
 <h3>Second prize</h3>
-<p class="winner" cc-template="#oneliner1">
+<p class="winner" cc-include="circular.include.inc02.html">
 	<span class="firstname">Jezebel</span>
 	<span class="nickname">The Rock</span>
 	<span class="date">2015-03-05</span>
@@ -123,7 +104,7 @@
 <hr>
 
 <h4>Third prize</h4>
-<p class="winner" cc-template="#oneliner1">
+<p class="winner" cc-include="circular.include.inc02.html">
 	<span class="firstname">John</span>
 	<span class="lastname">Jagger</span>
 	<span class="date">2015-03-09</span>
