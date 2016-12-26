@@ -48,12 +48,30 @@
 		
 			var Control = { 
 				// dynamic stuff
+				load	: function(preset) {
+					for (var key in preset) {
+						this[key]=preset[key];
+					}
+				}
 			};
 			
-			var Preset = {
-				mytext 			: 'one too many',
-				mymultisel	: ['one','two']
-			};
+			var presets = [
+				{},
+				{
+					mytext 			: 'one too many',
+					mymultisel	: ['one','two'],
+					mytextarea	: 'feliz navidad'
+				},
+				{
+					mytext 			: 'one, two, tree',
+					mycheck 		: ['one'],
+					myradio 		: 'two',
+					mysinglesel	: 'one',
+					mymultisel	: ['one'],
+					mytextarea	: 'ducks in a pond'
+				}
+			];
+				
 			
 			Circular.init({
 				log : {
@@ -103,7 +121,12 @@
 			
 			<section id="demo">
 				<form id="controls">
-					<button type="button" onclick="Control=Preset">Set some prefab values</button>
+					<label>some preset values</label>
+					<select onchange="Control.load(presets[this.selectedIndex])">
+						<option selected>none</option>
+						<option>one</option>
+						<option>two</option>
+					</select>
 				</form>
 				<div id="results">
 				

@@ -24,6 +24,9 @@ new CircularModule('input',{
 		},
 		'cc-input-value'	: {
 			// watch but ignore
+		},
+		'cc-input-target'	: {
+			// just for checkboxes; ignore
 		}
 		
 	},
@@ -68,6 +71,7 @@ new CircularModule('input',{
 						Circular.input.write(target,$node,inpval);
 					},evdata.timeout);
 				});
+				
 			} else {
 				Circular.log.error('@input','processCCInput','node is not a form element, and no cc-input-value set',node);
 			}
@@ -124,9 +128,17 @@ new CircularModule('input',{
 			part = $node.attr('name');
 			if (!part) part = $node.attr('id');
 			if (part) {
-				target = Circular.context.get()+'["'+part+'"]';
+				//target = Circular.context.get()+'["'+part+'"]';
+				target = Circular.context.get()+'.'+part;
 				Circular.log.debug('@input','getTarget','induced',target);
+				Circular.queue.add(function() {
+					$node.attr('cc-input','{{'+target+'}}');
+				});
 			}
+		}
+		if ($(node).is('input[type=checkbox]')) {
+			// save this so we can find those later
+			$(node).attr('cc-input-target',target);
 		}
 		// may be undefined;
 		return target;
@@ -179,7 +191,7 @@ new CircularModule('input',{
 				
 				if ($node.is('[type=checkbox]')) {
 					var name = $node.attr('name');
-					var $all = $('input[type="checkbox"][name="'+name+'"]',$node.get(0).form);
+					var $all = $('input[type="checkbox"][cc-input-target="'+target+'"]',$node.get(0).form);
 					var elems = [];
 					$all.each(function() {
 						if (this.checked) {
