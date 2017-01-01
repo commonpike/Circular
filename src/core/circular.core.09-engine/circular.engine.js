@@ -1099,21 +1099,25 @@ new CircularModule('engine', {
 			ccattr.content.value = ccattr.content.original;
 		}
 		
+		var setter = null;
 		if (ccattr.properties.module) {
-			var sane = '';
 			var uname = Circular.modules.unprefix(ccattr.properties.name);
-			var sanitize = Circular[ccattr.properties.module]['attributes'][uname]['sanitize'];
-			if (sanitize) sane=sanitize(ccattr.content.value);
-			else sane = ccattr.content.value;
-		} else sane = ccattr.content.value;
-		
-		if (node.getAttribute(ccattr.properties.name)!=sane) {
+			var setter = Circular[ccattr.properties.module]['attributes'][uname]['set'];
+		}
+		if (!setter) setter = this.setAttribute;
+		setter(ccattr,ccnode,node);
+
+	},
+	
+	setAttribute		: function(ccattr,ccnode,node)  {
+		Circular.engine.debug('@engine.setAttribute');
+		var value = ccattr.content.value;		
+		if (node.getAttribute(ccattr.properties.name)!=value) {
 			if (Circular.watchdog  && ccnode.flags.watched ) { // watched was commented ?
 				Circular.watchdog.pass(node,'attrdomchanged',ccattr.properties.name);
 			}
-			node.setAttribute(ccattr.properties.name,sane);
+			node.setAttribute(ccattr.properties.name,value);
 		}
-		
 	},
 	
 	processChildren	: function(node,context) {

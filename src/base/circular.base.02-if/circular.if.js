@@ -39,9 +39,16 @@ new CircularModule('if',{
 					return false;
 				}
 			},
-			sanitize	: function(value) {
-				return (!!value).toString();
-			}
+			set	: function(ccattr,ccnode,node) {
+				Circular.log.debug('@content','attributes.cc-if.set');
+				var value = (!!ccattr.content.value).toString();	
+				if (node.getAttribute(ccattr.properties.name)!=value) {
+					if (Circular.watchdog  && ccnode.flags.watched ) { // watched was commented ?
+						Circular.watchdog.pass(node,'attrdomchanged',ccattr.properties.name);
+					}
+					node.setAttribute(ccattr.properties.name,value);
+				}
+			}	
 		},
 		
 		'cc-else': {
@@ -59,9 +66,16 @@ new CircularModule('if',{
 				}
 				
 			},
-			sanitize	: function(value) {
-				return (!!value).toString();
-			}
+			set	: function(ccattr,ccnode,node) {
+				Circular.log.debug('@content','attributes.cc-else.set');
+				var value = (!!ccattr.content.value).toString();	
+				if (node.getAttribute(ccattr.properties.name)!=value) {
+					if (Circular.watchdog  && ccnode.flags.watched ) { // watched was commented ?
+						Circular.watchdog.pass(node,'attrdomchanged',ccattr.properties.name);
+					}
+					node.setAttribute(ccattr.properties.name,value);
+				}
+			}	
 		}
 	}
 	

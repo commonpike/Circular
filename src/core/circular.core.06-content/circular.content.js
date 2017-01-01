@@ -24,10 +24,17 @@ new CircularModule('content',{
 					$(node).addClass('cc-content-generated');
 				}
 			},
-			sanitize	: function(value) {
-				if (value.length>16) return value.substring(0,16)+'(...)';
-				return value;
-			}
+			set	: function(ccattr,ccnode,node) {
+				Circular.log.debug('@content','attributes.cccontent.set','ignore');
+				/*var value = ccattr.content.value;	
+				if (value.length>16) value = value.substring(0,16)+'(...)';
+				if (node.getAttribute(ccattr.properties.name)!=value) {
+					if (Circular.watchdog  && ccnode.flags.watched ) { // watched was commented ?
+						Circular.watchdog.pass(node,'attrdomchanged',ccattr.properties.name);
+					}
+					node.setAttribute(ccattr.properties.name,value);
+				}*/
+			}			
 		}
 	}
 	

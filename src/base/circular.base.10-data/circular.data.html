@@ -1,0 +1,118 @@
+<html>
+	<head>
+		<title>cc-data</title>
+		
+		<!-- build:remove -->
+		<script src="../../../vendor/node_modules/jquery/dist/jquery.min.js"></script>
+		<script src="../../../vendor/node_modules/esprima/dist/esprima.js"></script>
+		<script src="../../../vendor/node_modules/observe-js/src/observe.js"></script>
+		<script src="../../core/circular.core.00/circular.core.js"></script>
+		<script src="../../core/circular.core.01-modules/circular.modules.js"></script>
+		<script src="../../core/circular.core.02-log/circular.log.js"></script>
+		<script src="../../core/circular.core.03-queue/circular.queue.js"></script>
+		<script src="../../core/circular.core.04-parser/circular.parser.js"></script>
+		<script src="../../core/circular.core.05-context/circular.context.js"></script>
+		<script src="../../core/circular.core.06-content/circular.content.js"></script>
+		<script src="../../core/circular.core.07-eject/circular.eject.js"></script>
+		<script src="../../core/circular.core.08-registry/circular.registry.js"></script>
+		<script src="../../core/circular.core.09-engine/circular.engine.js"></script>
+		<script src="../../core/circular.core.10-watchdog/circular.watchdog.js"></script>
+		
+		<script src="../../base/circular.base.02-if/circular.if.js"></script>
+		<script src="../../base/circular.base.10-data/circular.data.js"></script>
+		<script src="../../base/circular.base.04-include/circular.include.js"></script>
+		<script src="../../contrib/circular.srcbox/circular.srcbox.js"></script>
+		
+		<link rel="stylesheet" href="../../assets/docs.css">	
+		
+		<!-- /build -->
+		
+		
+		<!-- build:template:dist
+		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+		<script src="../../../js/circular.min.js"></script>
+		<script src="../../../js/circular.srcbox.js"></script>
+		<link rel="stylesheet" href="../../../assets/docs.css">	
+		/build -->
+		
+		<!-- build:template:live
+		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+		<script src="http://circularjs.net/current/js/circular.min.js"></script>
+		<script src="http://circularjs.net/current/js/circular.srcbox.js"></script>
+		<link rel="stylesheet" href="http://circularjs.net/current/assets/docs.css">	
+		/build -->
+			
+		
+
+		<script>
+		
+			
+				
+			
+			Circular.init({
+				log : {
+					debug : true
+				},
+				engine : {
+					debug : false
+				},
+				registry : {
+					debug : false
+				},
+				watchdog : {
+					debug : false
+				}
+				
+			});
+
+				
+		</script>
+		
+	</head>
+	<body cc-root>
+		<!--cc:include("../../assets/header.inc")-->
+		<article>
+
+			<section id="about">
+				The <code>cc-data</code> attribute ...
+			</section>
+			
+			<section id="demo">
+				<form id="controls">
+					<label>load json file</label>
+					<select onchange="$('.srcbox table').attr('cc-data',$(this).val())">
+						<option value="../../assets/colors.json">colors.json</option>
+						<option value="../../assets/rates.json">rates.json</option>
+					</select>
+				</form>
+				<div id="results">
+				
+<!-- ....... -->		
+<div cc-srcbox>
+<table cc-data="../../assets/colors.json">
+	<tbody>
+		<tr>
+			<td>{{#this[0].name}}</td>
+			<td>{{#this[0].value}}</td>
+		</tr>
+		<tr>
+			<td>{{#this[1].name}}</td>
+			<td>{{#this[1].value}}</td>
+		</tr>
+		<tr>
+			<td>{{#this[2].name}}</td>
+			<td>{{#this[2].value}}</td>
+		</tr>
+	</tbody>
+</table>
+</div>
+<!-- ....... -->		
+
+				</div>
+				
+			</section>
+		</article>
+		
+		<!--cc:include("../../assets/footer.inc")-->
+	</body>
+</html>

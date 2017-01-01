@@ -17,7 +17,11 @@ new CircularModule('input',{
 				Circular.log.debug('@input','cc-input.in',node);
 				Circular.input.processCCInput(ccattr,ccnode,node);		
 				
-			}
+			},
+			set	: function(ccattr,ccnode,node) {
+				Circular.log.debug('@input','attributes.cc-input.set','ignore');
+				
+			}	
 		},
 		'cc-input-event'	: {
 			// watch but ignore
