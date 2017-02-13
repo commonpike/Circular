@@ -925,13 +925,16 @@ new CircularModule('engine', {
 				}
 			} 
 			
-			// see if the context changed
-			var context = Circular.context.get();
-			if (context!=ccnode.properties.innercontext) {
-				ccnode.properties.innercontext=context;
-				ccnode.flags.icontextchanged=true;
-			}
+			
+			
 				
+		}
+		
+		// see if the context changed
+		var context = Circular.context.get();
+		if (context!=ccnode.properties.innercontext) {
+			ccnode.properties.innercontext=context;
+			ccnode.flags.icontextchanged=true;
 		}
 		
 		// return true if none (or only the last one)
