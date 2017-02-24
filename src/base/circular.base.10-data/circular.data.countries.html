@@ -102,9 +102,9 @@
 	</thead>
 	<tbody cc-loop="{{#RestResponse.result}}">
 		<tr>
-			<td>{{#alpha2_code}}</td>
-			<td>{{#alpha3_code}}</td>
-			<td>{{#name}}</td>
+			<td cc-content="{{#alpha2_code}}">loading..</td>
+			<td cc-content="{{#alpha3_code}}">loading..</td>
+			<td cc-content="{{#name}}">loading..</td>
 		</tr>
 	</tbody>
 </table>

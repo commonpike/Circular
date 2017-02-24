@@ -12,8 +12,22 @@ function CircularModule(name,def) {
 		if (!def.settings)				def.settings 			= { name : name };		
 		if (!def.attributes)			def.attributes 		= { };
 		
-		// store this
+		// store name
 		def.settings.name = name;
+		
+		// store base
+		if (!def.settings.basedir) {
+			var path = '#undefined#';
+			stack=((new Error).stack).split("\n");
+    	if(stack[0]=="Error") { // Chromium
+      	var m; if(m=stack[2].match(/([^( ]*):[0-9]+:[0-9]+/)) {
+      		path = m[1]; 
+      	}
+      } else { // FF,OO - untested
+      	path = stack[1].split("@")[1].split(":").slice(0,-1).join(":"); 
+    	}
+    	def.settings.basedir = path.split('/').slice(0,-1).join('/');
+		}
 		
 		if (def.settings.name=='modules') {
 			def.add(def);
@@ -97,31 +111,57 @@ new CircularModule('modules', {
 		}
 		
 		// loop all modules, process includes and config
-		var css = '';
 		this.modnames.forEach(function(modname) {
 		
-			if (Circular[modname].settings.insertcss) {
-				Circular[modname].settings.insertcss.forEach(function(str) {
-					css += str;
-				})
-			}
-			
 			// extend config from init call and attach it globally, too
 			if (Circular[modname].config) {
 				if (config[modname]) $.extend(true,Circular[modname].config,config[modname]);
 				Circular.config[modname] = Circular[modname].config;
 			}
 			
-		});
-		
-		if (css) {
-			var styleElement = document.createElement("style");
-			styleElement.type = "text/css";
-			document.head.appendChild(styleElement);
+			if (Circular[modname].settings.insertcss) {
+				Circular[modname].settings.insertcss.forEach(function(str) {
+					var uri = Circular.parser.parseURI(str,Circular[modname].settings.basedir)
+					if (uri) {
+						var styleElement = document.createElement("link");
+						styleElement.setAttribute("rel","stylesheet");
+						styleElement.setAttribute("type","text/css");
+						styleElement.setAttribute("href",uri);
+						document.head.appendChild(styleElement);
+					} else {
+						var styleElement = document.createElement("style");
+						styleElement.setAttribute("type","text/css");
+						document.head.appendChild(styleElement);
+						styleElement.appendChild(document.createTextNode(str));
+					}
+				})
+			}
 			
-			// ruff stuff. probs in ie<9
-			styleElement.appendChild(document.createTextNode(css));
-		}
+			if (Circular[modname].settings.insertjs) {
+				Circular[modname].settings.loading=0;
+				Circular[modname].settings.insertjs.forEach(function(str) {
+					var uri = Circular.parser.parseURI(str,Circular[modname].settings.basedir)
+					if (uri) {
+						Circular[modname].settings.loading++;
+						var scriptElement = document.createElement("script");
+						scriptElement.setAttribute("type","text/javascript");
+						scriptElement.onload = function() {
+							Circular[modname].settings.loading--;
+						};
+						scriptElement.setAttribute("src",uri);
+						document.head.appendChild(scriptElement);
+					} else {
+						var scriptElement = document.createElement("script");
+						scriptElement.setAttribute("type","text/javascript");
+						document.head.appendChild(scriptElement);
+						scriptElement.appendChild(document.createTextNode(str));
+					}
+				})
+			}
+			
+
+		});	
+		
 		
 		for(var mc=0; mc<this.modnames.length; mc++) {
 			var modname = this.modnames[mc];

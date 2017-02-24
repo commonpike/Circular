@@ -13,6 +13,7 @@ new CircularModule('parser', {
 		// exprregex		: /{[{\[]([\s\S]*?(?=[}\]]}))[}\]]+}/g,
 		exprregex				: /{{([\s\S]*?(?=}}))}}/g,
 		flagregex				: /\|[pew]+$/,
+		uriregex				: /(?:^[a-z][a-z0-9+.-]*:|\/\/)/i,
 		evalfail				: undefined,
 		rootscope				: 'window', // bad idea
 		debug						: false
@@ -374,6 +375,13 @@ new CircularModule('parser', {
 			if (str==='') return true;
 			return false;
 		}
+	},
+	
+	parseURI	: function(str,base) {
+		if (this.config.uriregex.test(str)) return uri;
+		if (str.indexOf('/')==0) return document.location.origin+str;
+		if (str.indexOf('./')==0) return document.location.origin+base+str.substring(1);
+		return false;
 	},
 	
 	debug	: function() {
