@@ -15,7 +15,6 @@ new CircularModule('loop',{
 			in	: function(ccattr,ccnode,node) {
 				this.processCCLoop(ccattr,ccnode,node);
 			}
-		
 		},
 		'cc-loop-each'			: {},
 		'cc-loop-as'				: {},
@@ -142,7 +141,7 @@ new CircularModule('loop',{
 			var allkeys = Object.keys(arr);
 			
 			// sort, sortas, sortby
-			var sort 		= 'foo';		// ascending, descending
+			var sort 		= '';		// ascending, descending
 			var sortas 	= 'string';	// number,string,stringnc
 			var sortby 	= false;
 			
@@ -231,9 +230,20 @@ new CircularModule('loop',{
 			// .. first,last..
 			if (idx==0) {
 				$newitem.addClass('cc-loop-first');
+				var search = '[cc-loop-first="false"]';
+				if ($newitem.is(search)) {
+					$newitem.remove();
+					return true;
+				} else {
+					var $remove = $(search,$newitem);
+					if ($remove.length) {
+						$newitem.data('cc-loop-modified',true);
+						$newitem = $newitem.not($remove);
+					}
+				}
 			} else {
 				$newitem.removeClass('cc-loop-first');
-				var search = '[cc-loop-first]';
+				var search = '[cc-loop-first][cc-loop-first!="false"]';
 				if ($newitem.is(search)) {
 					$newitem.remove();
 					return true;
@@ -247,9 +257,20 @@ new CircularModule('loop',{
 			}
 			if (idx==keys.length-1) {
 				$newitem.addClass('cc-loop-last');
+				var search = '[cc-loop-last="false"]';
+				if ($newitem.is(search)) {
+					$newitem.remove();
+					return true;
+				} else {
+					var $remove = $(search,$newitem);
+					if ($remove.length) {
+						$newitem.data('cc-loop-modified',true);
+						$newitem = $newitem.not($remove);
+					}
+				}
 			} else {
 				$newitem.removeClass('cc-loop-last');
-				var search = '[cc-loop-last]';
+				var search = '[cc-loop-last][cc-loop-last!="false"]';
 				if ($newitem.is(search)) {
 					$newitem.remove();
 					return true;
@@ -261,6 +282,7 @@ new CircularModule('loop',{
 					}
 				}
 			}
+			
 			
 			// index ..
 			var search = '[cc-loop-index][cc-loop-index!='+idx+']'

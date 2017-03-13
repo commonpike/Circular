@@ -42,8 +42,15 @@ new CircularModule('srcbox',{
 				
 				// copy the contents in the output
 				// and remove the original node
-				$('.srcbox-output',$srcbox).append($node.contents());
+				$output = $('.srcbox-output',$srcbox);
+				$output.append($node.contents());
+				$.each(node.attributes, function(i, a){
+					if (a.name!='class' && a.name!='id' && a.name!=ccattr.properties.name) {
+						$output.attr(a.name,a.value);
+					}
+				});
 				$srcbox.attr('id',$node.attr('id'));
+				$srcbox.addClass(node.className);
 				$node.remove();
 				$srcbox.srcbox();
 				
@@ -97,7 +104,7 @@ new CircularModule('srcbox',{
 		
 		// should probably use a nice plugin for these
 		
-		$this=$(this);
+		var $this=$(this);
 		$this.css({
 			'position':'relative',
 			'width':'100%',
@@ -113,9 +120,13 @@ new CircularModule('srcbox',{
 				'height':'3em',
 				'cursor':'pointer'
 			}).click(function() {
-				$(this).siblings('dt').removeClass('current');
-				$(this).siblings('dd').removeClass('current').hide();
-				$(this).addClass('current').next().addClass('current').show();
+				var $this = $(this);
+				$this.siblings('dt').removeClass('current');
+				$this.siblings('dd').removeClass('current').hide();
+				$this.addClass('current').next().addClass('current').show();
+				if ($this.next().is('.srcbox-processed')) {
+					Circular.srcbox.update('#'+$this.parents('.srcbox').attr('id'),true);
+				}
 			});
 		});
 		$("dd",$this).css({

@@ -47,10 +47,26 @@
 		
 			Model	= {
 				date	: new Date(),
-				hours : 0
+				hour 	: 0,
+				
 			};
-			Model.date.setHours(0);
-			Model.date.setMinutes(0);
+			
+			Control = { 
+				setHour	: function(h) {
+					if (h || h===0) Model.date.setHours(h);
+					Model.hour = Model.date.getHours();
+					Circular.log.write(Model.date);
+				},
+				reset		: function() {
+					Control.setHour();
+					$('#demo select option').each(function() {
+						var val = $(this).attr('value');
+						if (val<=Model.hour) $('#demo select').val(val);
+					});
+					$('#demo select').trigger('change');
+				}
+			}
+			
 			
 			Circular.init({
 				log : {
@@ -58,10 +74,13 @@
 				}
 			});
 
-				
+			$(document).ready(function() {
+				Control.reset();
+			});
+			
 		</script>
 	</head>
-	<body cc-root cc-context="Model">
+	<body cc-root>
 		<!--cc:include("../../assets/header.inc")-->
 		<article>
 
@@ -72,9 +91,9 @@
 			</section>
 			
 			<section id="demo">
-				<form id="controls">
+				<form id="controls" cc-context="Control">
 					<label>Set the time:</label>
-					<select onchange="{{#date.setHours($this.val()); #hours=#date.getHours(); @log.write(#date)|p}}">
+					<select onchange="{{#setHour($this.val())|p}}">
 						<option value="0">00:00</option>
 						<option value="4">04:00</option>
 						<option value="8">08:00</option>
@@ -86,11 +105,12 @@
 				<div id="results">
 				
 <!-- ....... -->		
-<div cc-srcbox>
-<div class="daytime" cc-if="{{#hours>6}}">
-	<h1 cc-if="{{#hours<12}}">Good Morning</h1>
-	<h1 cc-if="{{#hours>=12 && #hours<18}}">Good Afternoon</h1>
-	<h1 cc-if="{{#hours>=18}}">Good Evening</h1>
+<div cc-srcbox cc-context="Model">
+<small>{{#hour}}:00 hours</small>
+<div class="daytime" cc-if="{{#hour>6}}">
+	<h1 cc-if="{{#hour<12}}">Good Morning</h1>
+	<h1 cc-if="{{#hour>=12 && #hour<18}}">Good Afternoon</h1>
+	<h1 cc-if="{{#hour>=18}}">Good Evening</h1>
 </div>
 <div class="nighttime" cc-else>
 	<h1>Good Night</h1>

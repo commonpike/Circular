@@ -76,7 +76,7 @@ Circular.init({
 });
 </xmp>
 				which sets two options, one for the 'log' module and one for the 'engine' module.
-				Init happens on document.ready. If you don't use <code>Circular.init()</code>, init
+				Init happens on <code>document.ready</code>. If you don't use <code>Circular.init()</code>, init
 				will happen automatically with default options on <code>document.ready</code>.
 			</section>
 			
@@ -86,8 +86,8 @@ Circular.init({
 				
 <!-- ....... -->		
 <div cc-srcbox>
-<h1 cc-content="@log.config.debug = {{@log.config.debug}}"></h1>
-<h1 cc-content="@engine.config.debug = {{@engine.config.debug}}"></h1>
+<h1>@log.config.debug = {{@log.config.debug}}</h1>
+<h1>@engine.config.debug = {{@engine.config.debug}}</h1>
 </div>
 <!-- ....... -->		
 

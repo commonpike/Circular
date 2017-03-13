@@ -45,6 +45,7 @@ new CircularModule('engine', {
 		this.recycle($root,true);
 	},
 	
+	
 	recycle	: function(nodes,now) {
 		this.debug('@engine.recycle ');
 		if (nodes instanceof jQuery) {
@@ -126,7 +127,125 @@ new CircularModule('engine', {
 		return sorted;
 		
 	},
+
 	
+	
+/*	
+	recycle	: function(nodes,now) {
+	
+		this.debug('@engine.recycle ');
+		if (nodes instanceof jQuery) {
+			nodes = nodes.toArray();
+		} else if (!Array.isArray(nodes)) {
+			nodes = [nodes];
+		}
+		
+		if (!nodes) return this.start();
+		
+		if (!now) {
+			Circular.queue.add(function() {
+				Circular.engine.recycle(nodes,true);
+			});
+			return true;
+		}
+		//alert('recycle');
+
+		nodes.forEach(function(node) {
+			// lock nodes
+			Circular.registry.lock(node);
+		});
+		
+		var trees = this.treeify(nodes);
+		
+		trees.forEach(function(tree) {
+			this.recycleTree(tree);
+		},this);
+
+		
+		return true;
+	},
+	
+	recycleTree	: function(tree) {
+		this.debug('recycleTree',tree);
+		if ((document.contains && document.contains(tree.node)) || 
+			(document.body.contains(tree.node) || document.head.contains(tree.node))) {
+		//	console.log('get',node);
+			var ccnode = Circular.registry.get(tree.node,true);
+			if (ccnode.flags.locked) {
+				this.debug('@engine.recycle ','Recycling',tree.node);
+				this.process(tree.node);
+			} else {
+				this.debug('@engine.recycle ','Node was already recycled',tree.node,ccnode);
+			}
+		} else {
+			// is this leaking ?
+			this.debug('@engine.recycle ','Node was removed',tree.node,ccnode);
+			Circular.registry.unlock(tree.node);
+		}
+		tree.children.forEach(function(tree) {
+			this.recycle(tree);
+		},this);
+	},
+	
+	treeify	: function(nodes) {
+			
+		//console.log(nodes);
+		
+		var trees = [];
+		nodes.forEach(function(node,index) {
+		
+			var newtree = {
+				index		: index,
+				node		: node,
+				children: [],
+				parent 	: -1
+			}
+			trees[index] = newtree;
+			
+			trees.forEach(function(looptree) {
+				
+				if (looptree.index!=index) {
+					var parent,child;
+					if (newtree.node.contains(looptree.node)) {
+						parent = newtree; 
+						child = looptree;
+					} else if (looptree.node.contains(newtree.node)) {
+						parent = looptree; 
+						child = newtree;
+					}
+					if (parent) {
+						if (child.parent==-1) {
+							// ill be your first parent
+							child.parent=parent.index;
+						} else if (!parent.node.contains(trees[child.parent].node)) {
+							// I am a closer parent 
+							child.parent=parent.index;
+						} else {
+							// I'm your grandparent, ok
+						}
+					}
+				}
+			});			
+		});				
+		
+		// lets assemble the tree
+		
+		trees.forEach(function(tree) {
+			if(tree.parent !== -1) {
+				trees[tree.parent].children.push(tree);
+			}
+		});
+						
+		// and cut off dupe branches
+		
+		var roots = trees.filter(function(tree) { 
+			return (tree.parent == -1); 
+		});
+						
+		return roots;
+	},
+	
+*/
 	getContext	: function(node) {
 		this.debug('@engine.getContext',node.nodeName);
 		// you rarely need this. while cycling the document,
@@ -252,7 +371,7 @@ new CircularModule('engine', {
 				Circular.registry.set(node,ccnode,true);
 				if (ccnode.flags.recurse) {
 					this.processChildren(node,ccnode.properties.innercontext);
-				} else this.debug('@engine.processElementNode','flags.recurse=false');
+				} else this.debug('@engine.processElementNode','pristine','flags.recurse=false');
 				this.processAttributesOut(node,ccnode);
 				Circular.eject.postprocess(node,ccnode);
 				Circular.registry.set(node,ccnode,true);
@@ -280,7 +399,7 @@ new CircularModule('engine', {
 					if (ccnode.flags.icontextchanged || ccnode.flags.contentchanged) {
 						this.processChildren(node,ccnode.properties.innercontext);
 					} else this.debug('@engine.processElementNode','no need to recurse');
-				}  else this.debug('@engine.processElementNode','flags.recurse=false');
+				}  else this.debug('@engine.processElementNode','attrsetchanged','flags.recurse=false');
 				this.processAttributesOut(node,ccnode);
 				Circular.eject.postprocess(node,ccnode);
 				Circular.registry.set(node,ccnode,true);
@@ -304,7 +423,7 @@ new CircularModule('engine', {
 					if (ccnode.flags.icontextchanged || ccnode.flags.contentchanged) { 
 						this.processChildren(node,ccnode.properties.innercontext);
 					} else this.debug('@engine.processElementNode','no need to recurse');
-				}  else this.debug('@engine.processElementNode','flags.recurse=false');
+				}  else this.debug('@engine.processElementNode','attrdomchanged','flags.recurse=false');
 				this.processAttributesOut(node,ccnode);
 				Circular.eject.postprocess(node,ccnode);
 				Circular.registry.set(node,ccnode,true);
@@ -325,7 +444,7 @@ new CircularModule('engine', {
 					if (ccnode.flags.icontextchanged || ccnode.flags.contentchanged) { 
 						this.processChildren(node,ccnode.properties.innercontext);
 					} else this.debug('@engine.processElementNode','no need to recurse');
-				}  else this.debug('@engine.processElementNode','flags.recurse=false');
+				}  else this.debug('@engine.processElementNode','attrdatachanged','flags.recurse=false');
 				this.processAttributesOut(node,ccnode);
 				Circular.eject.postprocess(node,ccnode);
 				Circular.registry.set(node,ccnode,true);
@@ -345,7 +464,7 @@ new CircularModule('engine', {
 				if (ccnode.flags.recurse) {
 					if (ccnode.flags.icontextchanged || ccnode.flags.contentchanged) {
 						this.processChildren(node,ccnode.properties.innercontext);
-					} else this.debug('@engine.processElementNode','no need to recurse');
+					} else this.debug('@engine.processElementNode','ocontextchanged','no need to recurse');
 				}  else this.debug('@engine.processElementNode','flags.recurse=false');
 				this.processAttributesOut(node,ccnode);
 				Circular.eject.postprocess(node,ccnode);
@@ -366,7 +485,7 @@ new CircularModule('engine', {
 			if (ccnode.index.length) {
 				if (ccnode.flags.recurse) {
 					this.processChildren(node,ccnode.properties.innercontext);
-				}  else this.debug('@engine.processElementNode','flags.recurse=false');
+				}  else this.debug('@engine.processElementNode','contentchanged','flags.recurse=false');
 			} else {
 				this.processChildren(node,ccnode.properties.innercontext);
 			}
@@ -563,11 +682,13 @@ new CircularModule('engine', {
 				
 		}
 		
-		// see if the context changed
-		var context = Circular.context.get();
-		if (context!=ccnode.properties.innercontext) {
-			ccnode.properties.innercontext=context;
-			ccnode.flags.icontextchanged=true;
+		if (ccnode.flags.recurse) {
+			// set the inner context
+			var context = Circular.context.get();
+			if (context!=ccnode.properties.innercontext) {
+				ccnode.properties.innercontext=context;
+				ccnode.flags.icontextchanged=true;
+			}
 		}
 		
 		// return true if none (or only the last one)

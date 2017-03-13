@@ -1,56 +1,112 @@
+<!DOCTYPE html>
 <html>
 	<head>
-		<title>Circular.queue</title>
+		<title>Circular.modules</title>
+		
+		<!-- build:remove -->
+		<script src="../../../vendor/node_modules/jquery/dist/jquery.min.js"></script>
+		<script src="../../../vendor/node_modules/esprima/dist/esprima.js"></script>
+		<script src="../../../vendor/node_modules/observe-js/src/observe.js"></script>
+		<script src="../../core/circular.core.00/circular.core.js"></script>
+		<script src="../../core/circular.core.01-modules/circular.modules.js"></script>
+		<script src="../../core/circular.core.02-log/circular.log.js"></script>
+		<script src="../../core/circular.core.03-queue/circular.queue.js"></script>
+		<script src="../../core/circular.core.04-parser/circular.parser.js"></script>
+		<script src="../../core/circular.core.05-context/circular.context.js"></script>
+		<script src="../../core/circular.core.06-content/circular.content.js"></script>
+		<script src="../../core/circular.core.07-eject/circular.eject.js"></script>
+		<script src="../../core/circular.core.08-registry/circular.registry.js"></script>
+		<script src="../../core/circular.core.09-engine/circular.engine.js"></script>
+		<script src="../../core/circular.core.10-watchdog/circular.watchdog.js"></script>
+		
+		<script src="../../base/circular.base.04-include/circular.include.js"></script>
+		<script src="../../base/circular.base.06-loop/circular.loop.js"></script>
+		<script src="../../contrib/circular.srcbox/circular.srcbox.js"></script>
+		
+		<link rel="stylesheet" href="../../assets/docs.css">	
+		
+		<!-- /build -->
+		
+		
+		<!-- build:template:dist
+		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+		<script src="../../../js/circular.min.js"></script>
+		<script src="../../../js/circular.srcbox.js"></script>
+		<link rel="stylesheet" href="../../../assets/docs.css">	
+		/build -->
+		
+		<!-- build:template:live
+		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+		<script src="http://circularjs.net/current/js/circular.min.js"></script>
+		<script src="http://circularjs.net/current/js/circular.srcbox.js"></script>
+		<link rel="stylesheet" href="http://circularjs.net/current/assets/docs.css">	
+		/build -->
+			
+		
+
 		<script>
 		
-			
-			if (document.location.href.indexOf('circular/src/core')!=-1) {
 
-				document.write('\
-					<script src="../../../vendor/node_modules/jquery/dist/jquery.min.js"><'+'/script>\
-					<script src="../../../vendor/node_modules/esprima/dist/esprima.js"><'+'/script>\
-					<script src="../../../vendor/node_modules/observe-js/src/observe.js"><'+'/script>\
-					<script src="../../core/circular.core.00/circular.core.js"><'+'/script>\
-					<script src="../../core/circular.core.01-modules/circular.modules.js"><'+'/script>\
-					<script src="../../core/circular.core.02-log/circular.log.js"><'+'/script>\
-					<script src="../../core/circular.core.03-queue/circular.queue.js"><'+'/script>\
-					<script src="../../core/circular.core.04-context/circular.context.js"><'+'/script>\
-					<script src="../../core/circular.core.05-root/circular.root.js"><'+'/script>\
-					<script src="../../core/circular.core.06-content/circular.content.js"><'+'/script>\
-					<script src="../../core/circular.core.07-parser/circular.parser.js"><'+'/script>\
-					<script src="../../core/circular.core.08-registry/circular.registry.js"><'+'/script>\
-					<script src="../../core/circular.core.09-engine/circular.engine.js"><'+'/script>\
-					<script src="../../core/circular.core.10-watchdog/circular.watchdog.js"><'+'/script>\
-				')
+			Circular.init({
+				log : {
+					debug : false
+				},
+				engine : {
+					debug : false
+				}
+			});
 
-			} else if (document.location.href.indexOf('circular/dist/docs/core')!=-1) {
-			
-				document.write('<script src="../../../js/circular.min.js"><'+'/script>');
 				
-			} else {
-			
-				document.write('<script src="http://circularjs.net/current/js/circular.min.js"><'+'/script>');
-				
-			}
-			
 		</script>
-		
-		<style type="text/css">
-			body { font-family: sans-serif; }
-		</style>
 	</head>
-	<body>
-		<b>Installed modules:</b><br>
-		<ol>
-			<script>for (var name in Circular.modules.name2idx) {
-				document.write('<li>'+name+':'+Circular.modules.name2idx[name]+'</li>');
-			}</script>
-		</ol>
-		<b>Registered attributes:</b><br>
-		<ol>
-			<script>for (var name in Circular.modules.attr2idx) {
-				document.write('<li>'+name+':'+Circular.modules.attr2idx[name]+'</li>');
-			}</script>
-		</ol>
+	<body cc-root>
+		<!--cc:include("../../assets/header.inc")-->
+		<article>
+
+			<section id="about">
+				Everything in Circular is a module. Even the modules module is a module. Core and Base modules 
+				are included in circular.js. Contrib modules need to be loaded by yourself. <br><br>
+				You can also write your own modules, simply by writing
+<xmp>
+new CircularModule('foo',{
+	config	: {
+		bar : []
+	}
+}
+</xmp>
+				Modules can, amongst others, define custom attributes and comments.
+			</section>
+			
+			<section id="demo">
+
+				<div id="results">
+				
+<!-- ....... -->		
+<div cc-srcbox>
+<h1>Installed modules</h1>
+<p cc-loop="{{@modules.modnames}}">
+	<span>{{#this}}</span>
+	<span cc-loop-last="false">, </span>
+</p>
+<h1>Custom attributes</h1>
+<p cc-loop="{{@modules.attrnames}}">
+	<span>{{#this}}</span>
+	<span cc-loop-last="false">, </span>
+</p>
+<h1>Custom comments</h1>
+<p cc-loop="{{@modules.commnames}}">
+	<span>{{#this}}</span>
+	<span cc-loop-last="false">, </span>
+</p>
+</div>
+<!-- ....... -->		
+
+
+				</div>
+				
+			</section>
+		</article>
+		
+		<!--cc:include("../../assets/footer.inc")-->
 	</body>
 </html>

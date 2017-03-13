@@ -51,18 +51,7 @@ new CircularModule('modules', {
 		debug					: false,
 	},
 	
-	settings 			: {
-	
-	},
 
-	attributes		: {
-	
-	},
-	
-	comments			: {
-	
-	},
-	
 	init	: function(config) {
 
 		this.debug('Circular.modules.init');
@@ -184,6 +173,7 @@ new CircularModule('modules', {
 	attr2mod		: {
 		// map attribute names to modules
 	},
+	commnames		: [],
 	comm2mod		: {
 		// map comment names to modules
 	},
@@ -257,6 +247,7 @@ new CircularModule('modules', {
 
 				// store the comment handlers
 				for (var c in mod.comments) {
+					this.commnames.push(c);
 					this.comm2mod[c]=mod.settings.name
 				}
 				

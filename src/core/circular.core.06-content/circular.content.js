@@ -17,7 +17,11 @@ new CircularModule('content',{
 	attributes		: {
 		'cc-content' : {
 			in		: function(ccattr,ccnode,node) {
-				val = ccattr.content.value;
+				if (ccattr.content.expression) {
+					val = ccattr.content.result;
+				} else {
+					val = ccattr.content.value;
+				}
 				Circular.log.debug('@content','cc-content','setting content',val);
 				node.textContent=val;
 				if (Circular.content.config.addclass) {
