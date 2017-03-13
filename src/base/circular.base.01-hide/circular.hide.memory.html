@@ -1,0 +1,179 @@
+<html>
+	<head>
+		<title>cc-if: memory</title>
+		
+		<!-- build:remove -->
+		<script src="../../../vendor/node_modules/jquery/dist/jquery.min.js"></script>
+		<script src="../../../vendor/node_modules/esprima/dist/esprima.js"></script>
+		<script src="../../../vendor/node_modules/observe-js/src/observe.js"></script>
+		<script src="../../core/circular.core.00/circular.core.js"></script>
+		<script src="../../core/circular.core.01-modules/circular.modules.js"></script>
+		<script src="../../core/circular.core.02-log/circular.log.js"></script>
+		<script src="../../core/circular.core.03-queue/circular.queue.js"></script>
+		<script src="../../core/circular.core.04-parser/circular.parser.js"></script>
+		<script src="../../core/circular.core.05-context/circular.context.js"></script>
+		<script src="../../core/circular.core.06-content/circular.content.js"></script>
+		<script src="../../core/circular.core.07-eject/circular.eject.js"></script>
+		<script src="../../core/circular.core.08-registry/circular.registry.js"></script>
+		<script src="../../core/circular.core.09-engine/circular.engine.js"></script>
+		<script src="../../core/circular.core.10-watchdog/circular.watchdog.js"></script>
+		
+		<script src="../../base/circular.base.01-hide/circular.hide.js"></script>
+		<script src="../../base/circular.base.02-if/circular.if.js"></script>
+		<script src="../../base/circular.base.04-include/circular.include.js"></script>
+		<script src="../../base/circular.base.06-loop/circular.loop.js"></script>
+		<script src="../../contrib/circular.srcbox/circular.srcbox.js"></script>
+		
+		<link rel="stylesheet" href="../../assets/docs.css">	
+		
+		<!-- /build -->
+		
+		
+		<!-- build:template:dist
+		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+		<script src="../../../js/circular.min.js"></script>
+		<script src="../../../js/circular.srcbox.js"></script>
+		<link rel="stylesheet" href="../../../assets/docs.css">	
+		/build -->
+		
+		<!-- build:template:live
+		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+		<script src="http://circularjs.net/current/js/circular.min.js"></script>
+		<script src="http://circularjs.net/current/js/circular.srcbox.js"></script>
+		<link rel="stylesheet" href="http://circularjs.net/current/assets/docs.css">	
+		/build -->
+			
+		
+
+		<script>
+		
+			Memory = {
+				size		: 4,
+				prevcell: null,
+				memory 	: [],
+				check		: function(cell) {
+					Circular.log.info('memory','check',cell);
+					var success = true;
+					if (!cell.done) {
+						
+						cell.open=true;
+						if (this.prevcell==null) {
+							this.prevcell=cell;
+							success=false;
+						}
+						if (this.prevcell==cell) {
+							success=false;
+						}
+						if (success) {
+							Circular.log.info('memory','check',cell.value,this.prevcell.value);
+							if (cell.value==this.prevcell.value) {
+								Circular.log.info('memory','check','success');
+								clearTimeout(this.prevcell.timer);
+								this.prevcell.open=true;
+								cell.done=this.prevcell.done=true;
+								this.prevcell=null;
+							} else {
+								Circular.log.info('memory','check','fail');
+								success = false;
+								this.prevcell=cell;
+							}
+						} 
+						if (!success) {
+							cell.timer = setTimeout(function() {
+								cell.open=false;
+							},2000);
+						} 
+					}
+				},
+				
+				init	: function() {
+					Circular.log.info('memory','init');
+					this.memory = [];
+					var numvals = Math.floor(this.size*this.size/2);
+					for (var val=0; val<numvals;val++) {
+						for (var i=0; i<2; i++) {
+							var rndrow=0, rndcol=0, start=true;
+							while ((this.memory[rndrow] && this.memory[rndrow][rndcol])||start) {
+								start 	= false;
+								rndrow 	= Math.floor(Math.random()*this.size);
+								rndcol 	= Math.floor(Math.random()*this.size);
+							}
+							if (!this.memory[rndrow]) this.memory[rndrow]=[];
+							this.memory[rndrow][rndcol]={
+								value	: val,
+								open	: false,
+								done	: false,
+								timer	: null
+							};
+						}
+					}
+				}
+			}
+			Memory.init();
+			
+			Circular.init({
+				log : {
+					debug : false
+				}
+			});
+
+			
+			
+		</script>
+		<style type="text/css">
+			#results table td {
+				padding:2px;
+				width:100px;
+				height:100px;
+				text-align:center;
+				font-size:2em;
+				background-color:black;
+				color:white;
+			}
+			#results table td div {
+				line-height:96px;
+				background-color:white;
+				color:black;
+			}
+		</style>
+	</head>
+	<body cc-root>
+		<!--cc:include("../../assets/header.inc")-->
+		<article>
+
+			<section id="about">
+				This page contains a <code>Memory</code> object that holds a two dimensional
+				array of cells. The output below just displays the cell if the cell is marked
+				'open'. If you click on a cell it calls <code>Memory.check()</code> which
+				marks a cell 'open' and does its magic. There is nothing in the Memory object that
+				writes to the output - all that is just Circular 'binding'. 
+			</section>
+			
+			<section id="demo">
+				<div id="results">
+				
+<!-- ....... -->		
+<div cc-srcbox>
+	<table>
+		<tbody cc-loop="{{Memory.memory}}">
+			<tr cc-loop="{{#this}}">
+				<td onclick="{{Memory.check(#this)|p}}">	
+					<div cc-show="{{#open}}">{{#value}}</div>
+				</td>
+			</tr>
+		</tbody>
+	</table>
+</div>
+		
+</div>
+<!-- ....... -->		
+
+
+				</div>
+				
+			</section>
+		</article>
+		
+		<!--cc:include("../../assets/footer.inc")-->
+	</body>
+</html>
