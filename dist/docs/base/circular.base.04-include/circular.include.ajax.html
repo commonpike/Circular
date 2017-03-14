@@ -1,0 +1,104 @@
+<html>
+	<head>
+		<title>cc-include ajax</title>
+				
+		
+		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+		<script src="../../../js/circular.min.js"></script>
+		<script src="../../../js/circular.srcbox.js"></script>
+		<link rel="stylesheet" href="../../assets/docs.css">
+			
+		<script>
+			var Model = {	
+				winners	: [{
+					firstname 	: 'Hank',
+					date				: '2015-03-02'
+				}, {
+					firstname 	: 'Jezebel',
+					nickname 		: 'The Rock',
+					date				: '2015-03-05'
+				}, {
+					firstname 	: 'John',
+					lastname		: 'Jagger',
+					date				: '2015-03-09'
+				}]
+			};
+						
+			Circular.init({
+				log : {
+					debug : true
+				}
+			});
+			
+		</script>
+		
+</head>
+<body cc-root cc-context="Model">
+		
+		<!--cc:include("../../assets/header.inc")-->
+		<article>
+
+			<section id="about">
+				<p>
+					<code>cc-include</code> takes the same arguments as <code>jquery.ajax</code>.
+					If it's just a string, it will load that. But if you pass an object using an
+					<code>{{expression}}</code>, it will use that. This allows you to send passwords,
+					change mime types, fix caching, etcetera.<br><br>
+					Note how passing an object to an expression requires 3 {{{ brackets, like<br>
+					<code>&lt;div cc-include="{{{url:'foo.html',method:'GET'}|e}}">&lt;/div></code><br>
+					The <code>|e</code> flags tells circular not to parse (p) or watch (w) the object, but
+					only evaluate (e) it..
+				</p>
+				
+			</section>
+			
+			<section id="demo">
+				<form id="controls" onsubmit="return false">
+					<label>Show me</label>
+					<select onchange="$('.winner').attr('cc-include','\{{'+$(this).val()+'|e\}}')">
+						<option value="{url:'circular.include.inc00.html',method:'GET'}">Oneliner 1</option>
+						<option value="{url:'circular.include.inc01.html',method:'GET'}">Oneliner 2</option>
+					</select>
+				</form>
+				<div id="results">
+
+<!-- ....... -->		
+<div cc-srcbox>
+
+<!-- the 3 top winners -->
+
+<h2>First prize</h2>
+<p class="winner" 
+	cc-include="{{{url:'circular.include.inc00.html',method:'GET'}|e}}" 
+	cc-context="{{#winners[0]}}"></p>
+
+<hr>
+
+<h3>Second prize</h3>
+<p class="winner"  
+	cc-include="{{{url:'circular.include.inc00.html',method:'GET'}|e}}" 
+	cc-context="{{#winners[1]}}"></p>
+
+<hr>
+
+<h4>Third prize</h4>
+<p class="winner"  
+	cc-include="{{{url:'circular.include.inc00.html',method:'GET'}|e}}" 
+	cc-context="{{#winners[2]}}"></p>
+
+</div>
+
+
+
+
+<!-- ....... -->		
+
+
+				</div>
+				
+			</section>
+		</article>
+		
+		<!--cc:include("../../assets/footer.inc")-->
+	</body>
+</html>

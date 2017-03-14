@@ -1,0 +1,157 @@
+<html>
+	<head>
+		<title>cc-loop-offset,cc-loop-limit</title>
+				
+		
+		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+		<script src="../../../js/circular.min.js"></script>
+		<script src="../../../js/circular.srcbox.js"></script>
+		<link rel="stylesheet" href="../../assets/docs.css">
+			
+		
+
+		<script>
+		
+			var Model = {	
+				colors	: [
+					{ "colorName":"red", 		"hexValue":"#f00" },
+					{ "colorName":"green", 	"hexValue":"#0f0" },
+					{ "colorName":"blue", 	"hexValue":"#00f" },
+					{ "colorName":"cyan", 	"hexValue":"#0ff" },
+					{ "colorName":"magenta","hexValue":"#f0f" },
+					{ "colorName":"yellow",	"hexValue":"#ff0" },
+					{ "colorName":"black", 	"hexValue":"#000" }
+				],
+				rates 	: [
+					{ "Currency" :"AED","Exchange rate":3.67365 },
+					{ "Currency" :"AFN","Exchange rate":48.3775 },
+					{ "Currency" :"ALL","Exchange rate":110.318335 },
+					{ "Currency" :"AMD","Exchange rate":409.144998 },
+					{ "Currency" :"YER","Exchange rate":215.043059 },
+					{ "Currency" :"ZAR","Exchange rate":8.428236 },
+					{ "Currency" :"ZMK","Exchange rate":4997.53 } ,
+					{ "Currency" :"ZWL","Exchange rate":322.355011 }
+    		],
+    
+			};
+			
+			var Control	= {
+				items 	: Model.rates,
+				offset	: 0,
+				limit		: null,
+				sort		: '',
+				sortas	: '',
+				sortby	: ''
+			};
+					
+			
+			Circular.init({
+				log : {
+					debug : true
+				}
+			});
+
+				
+		</script>
+		<style type="text/css">
+			.cc-loop-odd { background-color:#eee; }
+			.cc-loop-even .cc-loop-odd { background-color:white; }
+			th { background-color:#779!important; color:white; }
+		</style>
+	</head>
+	<body cc-root cc-context="Control">
+		<!--cc:include("../../assets/header.inc")-->
+		<article>
+
+			<section id="about">
+				
+				<code>cc-loop-sortby</code> 
+				
+			</section>
+			
+			<section id="demo">
+				<form id="controls">
+					<label>Show me</label>
+					<select onchange="Control.items = Model[$(this).val()]">
+						<option value="rates">Rates</option>
+						<option value="colors">Colors</option>
+					</select>
+
+					<label>Sort</label>
+					<select id='select-sort' onchange="Control.sort=$(this).val()">
+						<option value="">(none)</option>
+						<option value="false">false</option>
+						<option value="ascending">ascending</option>
+						<option value="descending">descending</option>
+					</select>
+					
+					<label>Sortas</label>
+					<select id='select-sortas'  onchange="Control.sortas=$(this).val()">
+						<option value="">(none)</option>
+						<option value="number">number</option>
+						<option value="string">string</option>
+						<option value="stringnc">stringnc</option>
+					</select>
+					
+					<label>Sortby</label>
+					<select id="select-sortby" cc-loop="{{#items}}" cc-loop-limit="1" onchange="Control.sortby=$(this).val()">
+						<optgroup cc-loop="{{#this}}" cc-loop-each="key">
+							<option selected cc-loop-first value="">(none)</option>
+							<option>{{#this}}</option>
+						</optgroup>
+					</select>
+	
+				</form>
+				<div id="results">
+				
+<!-- ....... -->		
+<div cc-srcbox>
+
+<table width="50%">
+	<tbody cc-loop="{{#items}}" 
+		cc-loop-each="item"
+		cc-loop-sort="{{#sort}}" 
+		cc-loop-sortas="{{#sortas}}"  
+		cc-loop-sortby="{{#sortby}}">
+		<tr cc-loop-first>
+			<th>key</th>
+			<td>
+				<table width="100%">
+					<tbody>
+						<tr cc-loop="{{#value}}" cc-loop-each="key">
+							<th width="50%">{{#this}}</th>
+						</tr>
+					</tbody>
+				</table>
+			</td>
+		</tr>
+		<tr>
+			<th>{{#key}}</th>
+			<td>
+				<table width="100%">
+					<tbody>
+						<tr cc-loop="{{#value}}"  cc-loop-each="value">
+							<td width="50%">{{#this}}</td>
+						</tr>
+					</tbody>
+				</table>
+			</td>
+		</tr>
+		<tr cc-loop-last>
+			<th colspan="3"><small>take it from reliable sources</small></th>
+		</tr>
+	</tbody>
+</table>
+
+</div>
+<!-- ....... -->		
+
+
+				</div>
+				
+			</section>
+		</article>
+		
+		<!--cc:include("../../assets/footer.inc")-->
+	</body>
+</html>

@@ -1,0 +1,147 @@
+
+/* ----------------------
+	Circular.srcbox
+----------------------- */
+
+
+			
+new CircularModule('srcbox',{
+
+	
+	settings		: {
+		insertcss	: [
+			"dl.srcbox i.reload {position: absolute;  right: 1em; top: 3.5em; font-style: normal; cursor:pointer; } ",
+			"dl.srcbox i.reload:before { width : 1em; height : 1em; content: \"\\27F3\" }",
+			"dl.srcbox i.source {position: absolute;  right: 1em; top: 3.5em; font-style: normal; cursor:pointer; } ",
+			"dl.srcbox i.source:before { width : 3em; height : 1em; content: \"</>\" }"
+		]
+	},
+	
+	attributes	: {
+		'cc-srcbox' : {
+			in	: function(ccattr,ccnode,node) {
+				Circular.log.debug('@srcbox','cc-srcbox',node);
+				var $node = $(node);
+				var nodeid = Circular.engine.nodeid($node);
+				var $srcbox = '\
+					<dl class="srcbox">	\
+						<dt>output</dt>\
+						<dd class="srcbox-output"></dd>\
+						<dt>processed</dt>\
+						<dd class="srcbox-processed">\
+						<i class="reload"></i>\
+						<xmp></xmp></dd>\
+						<dt>input</dt>\
+						<dd class="srcbox-input">\
+						<i class="source"></i>\
+						<xmp></xmp></dd>\
+					</dl>\
+				';				
+				$node.after($srcbox);
+				$srcbox = $node.next(); // we lost it ?
+				
+				// copy the contents in the output
+				// and remove the original node
+				$output = $('.srcbox-output',$srcbox);
+				$output.append($node.contents());
+				$.each(node.attributes, function(i, a){
+					if (a.name!='class' && a.name!='id' && a.name!=ccattr.properties.name) {
+						$output.attr(a.name,a.value);
+					}
+				});
+				$srcbox.attr('id',$node.attr('id'));
+				$srcbox.addClass(node.className);
+				$node.remove();
+				$srcbox.srcbox();
+				
+				// show unparsed content in input
+				var $input = $('.srcbox-input xmp',$srcbox);
+				var $output = $('.srcbox-output',$srcbox);
+				$input.get(0).textContent=$output.get(0).innerHTML;
+				
+				// parse the output
+				Circular.engine.process($('.srcbox-output',$srcbox));
+				
+				// show the parsed content in processed
+				Circular.srcbox.update('#'+nodeid,true);
+				
+				return false;
+			}
+		
+		}
+	},
+	
+	update	: function(ref,now) {
+		if (!now) {
+			// wait for the watchdog to queue changes first
+			var timeout = Circular.watchdog.config.timeout*2;
+			if (Circular.watchdog.settings.emulated) {
+				timeout += Circular.watchdog.config.muinterval;
+			}
+			setTimeout(function() {
+				Circular.queue.add(function() {
+					Circular.srcbox.update(ref,true);
+				})
+			},timeout);
+		} else {
+			if (!ref) ref = 'dl.srcbox';
+			var $srcbox = $(ref);
+			$srcbox.each(function() {
+				var $processed = $('.srcbox-processed xmp',this);
+				var $output = $('.srcbox-output',this);
+				$processed.get(0).textContent=$output.get(0).innerHTML;
+			});
+		}
+	}
+	
+		
+});
+
+
+(function ( $ ) {
+ 
+	$.fn.srcbox = function() {
+		
+		// should probably use a nice plugin for these
+		
+		var $this=$(this);
+		$this.css({
+			'position':'relative',
+			'width':'100%',
+			'padding-top':'3em'
+		});
+		var $tabs = $("dt",$this);
+		$tabs.each(function(idx) {
+			$(this).css({
+				'position':'absolute',
+				'top':0,'z-index':2,
+				'left':idx*(100/$tabs.size())+'%',
+				'width':100/$tabs.size()+'%',
+				'height':'3em',
+				'cursor':'pointer'
+			}).click(function() {
+				var $this = $(this);
+				$this.siblings('dt').removeClass('current');
+				$this.siblings('dd').removeClass('current').hide();
+				$this.addClass('current').next().addClass('current').show();
+				if ($this.next().is('.srcbox-processed')) {
+					Circular.srcbox.update('#'+$this.parents('.srcbox').attr('id'),true);
+				}
+			});
+		});
+		$("dd",$this).css({
+			'margin-left'	: 0
+		}).hide();
+		$("dt:first",$this).addClass('current');
+		$("dd:first",$this).addClass('current').show(); 
+			
+		$("i.reload",$this).click(function() {
+			Circular.srcbox.update('#'+$this.attr('id'),true);
+		});
+		$("i.source",$this).click(function() {
+			window.open('view-source:'+document.location.href,'_blank');
+		});
+
+	}
+ 
+}( jQuery ));

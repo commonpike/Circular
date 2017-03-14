@@ -1,0 +1,72 @@
+<html>
+	<head>
+		<title>@context</title>
+				
+		
+		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+		<script src="../../../js/circular.min.js"></script>
+		<script src="../../../js/circular.srcbox.js"></script>
+		<link rel="stylesheet" href="../../assets/docs.css">
+			
+
+		<script>
+			var Model = {
+				foo	: 'This is Model.foo',
+				bar	: {
+					quz : 'This is Model.bar.quz'
+				}
+			}
+		</script>
+		
+	</head>
+	<body cc-root>
+		<!--cc:include("../../assets/header.inc")-->
+		<article>
+
+			<section id="about">
+				While cycling your document, the @engine keeps a running 'context'
+				using the @context module. Every expression in your document is 
+				parsed using that context. For example, if the context is the string
+				"Beatles.songs", <code>{{#links}}</code>
+				really means "Beatles.songs.links" (and <code>{{#this}}</code> just means
+				"Beatles.songs").<br><br>
+				
+				The context module provides an attribute, <code>cc-context</code>, which
+				you use to define the context on a node and all its children.
+				The below snippet uses this object model:
+<xmp>
+var Model = {
+	foo	: 'This is Model.foo',
+	bar	: {
+		quz : 'This is Model.bar.quz'
+	}
+}
+</xmp>
+			Notice how the context is 'just a string'. You do not need to use 
+			an <code>{{expression}}</code> to set the context, unless you want it to be parsed.
+			</section>
+			
+			<section id="demo">
+			
+				
+				
+				<div id="results">
+				
+<!-- ....... -->		
+<div cc-srcbox>
+<div cc-context="Model">
+	<p>{{#foo}}</p>
+	<p cc-context="{{#bar}}">{{#quz}}</p>
+</div>
+</div>
+<!-- ....... -->		
+
+
+				</div>
+				
+			</section>
+		</article>
+		
+		<!--cc:include("../../assets/footer.inc")-->
+	</body>
+</html>

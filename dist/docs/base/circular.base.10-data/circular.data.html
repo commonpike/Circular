@@ -1,0 +1,84 @@
+<html>
+	<head>
+		<title>cc-data</title>
+				
+		
+		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+		<script src="../../../js/circular.min.js"></script>
+		<script src="../../../js/circular.srcbox.js"></script>
+		<link rel="stylesheet" href="../../assets/docs.css">
+			
+		
+
+		<script>
+		
+			
+				
+			
+			Circular.init({
+				log : {
+					debug : true
+				},
+				engine : {
+					debug : false
+				},
+				registry : {
+					debug : false
+				},
+				watchdog : {
+					debug : false
+				}
+				
+			});
+
+				
+		</script>
+		
+	</head>
+	<body cc-root>
+		<!--cc:include("../../assets/header.inc")-->
+		<article>
+
+			<section id="about">
+				The <code>cc-data</code> attribute ...
+			</section>
+			
+			<section id="demo">
+				<form id="controls">
+					<label>load json file</label>
+					<select onchange="$('.srcbox table').attr('cc-data',$(this).val())">
+						<option value="../../assets/colors.json">colors.json</option>
+						<option value="../../assets/rates.json">rates.json</option>
+					</select>
+				</form>
+				<div id="results">
+				
+<!-- ....... -->		
+<div cc-srcbox>
+<table cc-data="../../assets/colors.json">
+	<tbody>
+		<tr>
+			<td>{{#this[0].name}}</td>
+			<td>{{#this[0].value}}</td>
+		</tr>
+		<tr>
+			<td>{{#this[1].name}}</td>
+			<td>{{#this[1].value}}</td>
+		</tr>
+		<tr>
+			<td>{{#this[2].name}}</td>
+			<td>{{#this[2].value}}</td>
+		</tr>
+	</tbody>
+</table>
+</div>
+<!-- ....... -->		
+
+				</div>
+				
+			</section>
+		</article>
+		
+		<!--cc:include("../../assets/footer.inc")-->
+	</body>
+</html>

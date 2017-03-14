@@ -1,0 +1,164 @@
+<html>
+	<head>
+		<title>cc-loop-each</title>
+				
+		
+		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+		<script src="../../../js/circular.min.js"></script>
+		<script src="../../../js/circular.srcbox.js"></script>
+		<link rel="stylesheet" href="../../assets/docs.css">
+			
+		
+
+		<script>
+		
+			var Model = {	
+				colors	: [
+					{
+							"colorName":"red",
+							"hexValue":"#f00"
+					},
+					{
+							"colorName":"green",
+							"hexValue":"#0f0"
+					},
+					{
+							"colorName":"blue",
+							"hexValue":"#00f"
+					},
+					{
+							"colorName":"cyan",
+							"hexValue":"#0ff"
+					},
+					{
+							"colorName":"magenta",
+							"hexValue":"#f0f"
+					},
+					{
+							"colorName":"yellow",
+							"hexValue":"#ff0"
+					},
+					{
+							"colorName":"black",
+							"hexValue":"#000"
+					}
+				],
+				rates 	: [
+        		{ "Currency" :"AED","Exchange rate":3.67365 },
+        		{ "Currency" :"AFN","Exchange rate":48.3775 },
+        		{ "Currency" :"ALL","Exchange rate":110.318335 },
+        		{ "Currency" :"AMD","Exchange rate":409.144998 },
+        		{ "Currency" :"YER","Exchange rate":215.043059 },
+        		{ "Currency" :"ZAR","Exchange rate":8.428236 },
+        		{ "Currency" :"ZMK","Exchange rate":4997.53 } ,
+        		{ "Currency" :"ZWL","Exchange rate":322.355011 }
+    		],
+    		items	: []
+    
+			};
+			Model.items = Model.colors;
+			
+			Circular.init({
+				log : {
+					debug : true
+				},
+				engine : {
+					debug : false
+				},
+				registry : {
+					debug : false
+				},
+				watchdog : {
+					debug : false
+				}
+				
+			});
+
+				
+		</script>
+		<style type="text/css">
+			.cc-loop-odd { background-color:#eee; }
+			.cc-loop-even .cc-loop-odd { background-color:white; }
+			th { background-color:#779!important; color:white; }
+		</style>
+	</head>
+	<body cc-root cc-context="Model">
+		<!--cc:include("../../assets/header.inc")-->
+		<article>
+
+			<section id="about">
+				By default, <code>cc-loop</code> puts whatever you are looping in 
+				the context of each loop item. Within each item, <code>{{#this}}</code> 
+				would refer to the looped item, and <code>{{#foo}}</code> would refer
+				to the property 'foo' of that item, if it's an object.<br><br>
+				
+				That can quickly become confusing, especially within nested items.
+				By using <code>cc-loop-as</code>, you can specify a different name
+				for the word <code>this</code>. For example
+<xmp>
+<div cc-loop="#regions">
+	<div cc-loop="#this">
+		<ul cc-loop="#this">
+			<li>{{#this}}</li>
+		</ul>
+	</div>
+</div>
+</xmp>
+
+Could be written as 
+
+<xmp>
+<div cc-loop="#regions" cc-loop-as="region">
+	<div cc-loop="#region" cc-loop-as="country">
+		<ul cc-loop="#country" cc-loop-as="city">
+			<li>{{#city}}</li>
+		</ul>
+	</div>
+</div>
+</xmp>
+
+				When using <code>cc-loop-as</code>, <code>{{#this}}</code>
+				becomes quite useless.
+				
+				The below example uses <code>cc-loop-as</code> to separate 
+				<code>{{#propname}}</code>
+				and <code>{{#propvalue}}</code>.
+				
+			</section>
+			
+			<section id="demo">
+				<form id="controls">
+					<label>Show me</label>
+					<select onchange="Model.items = Model[$(this).val()]">
+						<option value="colors">Colors</option>
+						<option value="rates">Rates</option>
+					</select>
+				</form>
+				<div id="results">
+				
+<!-- ....... -->		
+<div cc-srcbox>
+<table width="50%">
+	<thead cc-loop="{{#items}}" cc-loop-as="item" cc-loop-limit="1">
+		<tr cc-loop="{{#item}}" cc-loop-each="key" cc-loop-as="propname">
+			<th>{{#propname}}</th>
+		</tr>
+	</thead>
+	<tbody cc-loop="{{#items}}" cc-loop-as="item">
+		<tr cc-loop="{{#item}}" cc-loop-each="value" cc-loop-as="propvalue">
+			<td>{{#propvalue}}</td>
+		</tr>
+	</tbody>
+</table>
+</div>
+<!-- ....... -->		
+
+
+				</div>
+				
+			</section>
+		</article>
+		
+		<!--cc:include("../../assets/footer.inc")-->
+	</body>
+</html>

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Circular.modules</title>
+				
+		
+		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+		<script src="../../../js/circular.min.js"></script>
+		<script src="../../../js/circular.srcbox.js"></script>
+		<link rel="stylesheet" href="../../assets/docs.css">
+			
+		
+
+		<script>
+		
+
+			Circular.init({
+				log : {
+					debug : false
+				},
+				engine : {
+					debug : false
+				}
+			});
+
+				
+		</script>
+	</head>
+	<body cc-root>
+		<!--cc:include("../../assets/header.inc")-->
+		<article>
+
+			<section id="about">
+				Everything in Circular is a module. Even the modules module is a module. Core and Base modules 
+				are included in circular.js. Contrib modules need to be loaded by yourself. <br><br>
+				You can also write your own modules, simply by writing
+<xmp>
+new CircularModule('foo',{
+	config	: {
+		bar : []
+	}
+}
+</xmp>
+				Modules can, amongst others, define custom attributes and comments.
+			</section>
+			
+			<section id="demo">
+
+				<div id="results">
+				
+<!-- ....... -->		
+<div cc-srcbox>
+<h1>Installed modules</h1>
+<p cc-loop="{{@modules.modnames}}">
+	<span>{{#this}}</span>
+	<span cc-loop-last="false">, </span>
+</p>
+<h1>Custom attributes</h1>
+<p cc-loop="{{@modules.attrnames}}">
+	<span>{{#this}}</span>
+	<span cc-loop-last="false">, </span>
+</p>
+<h1>Custom comments</h1>
+<p cc-loop="{{@modules.commnames}}">
+	<span>{{#this}}</span>
+	<span cc-loop-last="false">, </span>
+</p>
+</div>
+<!-- ....... -->		
+
+
+				</div>
+				
+			</section>
+		</article>
+		
+		<!--cc:include("../../assets/footer.inc")-->
+	</body>
+</html>

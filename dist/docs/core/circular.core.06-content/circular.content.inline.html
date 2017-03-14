@@ -1,0 +1,52 @@
+<html>
+	<head>
+		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+		<script>
+		
+			
+			if (document.location.href.indexOf('circular/src/core')!=-1) {
+
+				document.write('\
+					<script src="../../../vendor/node_modules/jquery/dist/jquery.min.js"><'+'/script>\
+					<script src="../../../vendor/node_modules/esprima/esprima.js"><'+'/script>\
+					<script src="../../../vendor/node_modules/observe-js/src/observe.js"><'+'/script>\
+					<script src="../../core/circular.core.00/circular.core.js"><'+'/script>\
+					<script src="../../core/circular.core.01-log/circular.log.js"><'+'/script>\
+					<script src="../../core/circular.core.02-debug/circular.debug.js"><'+'/script>\
+					<script src="../../core/circular.core.03-queue/circular.queue.js"><'+'/script>\
+					<script src="../../core/circular.core.04-context/circular.context.js"><'+'/script>\
+					<script src="../../core/circular.core.05-root/circular.root.js"><'+'/script>\
+					<script src="../../core/circular.core.06-content/circular.content.js"><'+'/script>\
+					<script src="../../core/circular.core.07-parser/circular.parser.js"><'+'/script>\
+					<script src="../../core/circular.core.08-registry/circular.registry.js"><'+'/script>\
+					<script src="../../core/circular.core.09-engine/circular.engine.js"><'+'/script>\
+					<script src="../../core/circular.core.10-watchdog/circular.watchdog.js"><'+'/script>\
+				')
+
+			} else if (document.location.href.indexOf('circular/dist/docs/core')!=-1) {
+			
+				document.write('<script src="../../../js/circular.min.js"><'+'/script>');
+				
+			} else {
+			
+				document.write('<script src="http://circularjs.net/current/js/circular.min.js"><'+'/script>');
+				
+			}
+			
+		</script>
+		<script>
+		
+			var Model = {
+				currentpage	:  {
+					title : 'Hello World'
+				}
+			}
+			
+			Circular.init();
+			
+		</script>
+	</head>
+	<body cc-context="{{Model.currentpage}}">
+		<h1>{{#title}}</h1>
+	</body>
+</html>

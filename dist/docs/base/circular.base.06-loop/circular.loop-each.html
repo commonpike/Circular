@@ -1,0 +1,181 @@
+<html>
+	<head>
+		<title>cc-loop-each</title>
+				
+		
+		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+		<script src="../../../js/circular.min.js"></script>
+		<script src="../../../js/circular.srcbox.js"></script>
+		<link rel="stylesheet" href="../../assets/docs.css">
+			
+		
+
+		<script>
+		
+			var Model = {	
+				colors	: [
+					{
+							"colorName":"red",
+							"hexValue":"#f00"
+					},
+					{
+							"colorName":"green",
+							"hexValue":"#0f0"
+					},
+					{
+							"colorName":"blue",
+							"hexValue":"#00f"
+					},
+					{
+							"colorName":"cyan",
+							"hexValue":"#0ff"
+					},
+					{
+							"colorName":"magenta",
+							"hexValue":"#f0f"
+					},
+					{
+							"colorName":"yellow",
+							"hexValue":"#ff0"
+					},
+					{
+							"colorName":"black",
+							"hexValue":"#000"
+					}
+				],
+				rates 	: [
+        		{ "Currency" :"AED","Exchange rate":3.67365 },
+        		{ "Currency" :"AFN","Exchange rate":48.3775 },
+        		{ "Currency" :"ALL","Exchange rate":110.318335 },
+        		{ "Currency" :"AMD","Exchange rate":409.144998 },
+        		{ "Currency" :"YER","Exchange rate":215.043059 },
+        		{ "Currency" :"ZAR","Exchange rate":8.428236 },
+        		{ "Currency" :"ZMK","Exchange rate":4997.53 } ,
+        		{ "Currency" :"ZWL","Exchange rate":322.355011 }
+    		],
+    		items	: []
+    
+			};
+			Model.items = Model.colors;
+			
+			Circular.init({
+				log : {
+					debug : true
+				},
+				engine : {
+					debug : false
+				},
+				registry : {
+					debug : false
+				},
+				watchdog : {
+					debug : false
+				}
+				
+			});
+
+				
+		</script>
+		<style type="text/css">
+			.cc-loop-odd { background-color:#eee; }
+			.cc-loop-even .cc-loop-odd { background-color:white; }
+			th { background-color:#779!important; color:white; }
+		</style>
+	</head>
+	<body cc-root cc-context="Model">
+		<!--cc:include("../../assets/header.inc")-->
+		<article>
+
+			<section id="about">
+				By default, <code>cc-loop</code> puts the value of the current
+				element in the loop in the context of each loop item. If the loop
+				runs on an array of objects, you can simply refer to the property
+				'foo' of each object by writing <code>{{#foo}}</code> in each item.
+				<code>{{#this}}</code> would refer to the whole item.<br><br>
+				
+				But if you happen to loop an object, there is no way of getting to the *keys* 
+				(or property names) of the object. To control what cc-loop
+				shows for each item, there is <code>cc-loop-each</code>.<br><br>
+				
+				<code>cc-loop-each</code> can take one of four values:
+				<code>index</code>, <code>key</code>,<code>value</code> and <code>item</code>.<br><br>
+				<ul>
+					<li>With <code>cc-loop-each="index"</code>, the number of the
+					iteration in the loop will be set as the context of each loop item;
+					<code>{{#this}}</code> will refer to 0,1,2, etc.</li>
+					
+					<li>With <code>cc-loop-each="key"</code>, the key of each
+					element in the loop will be set as the context of each loop item;
+					<code>{{#this}}</code> will refer to the key.</li>
+					
+					<li>With <code>cc-loop-each="value"</code>, the default, 
+					the value of each element as the loop will be set in 
+					the context of each loop item;
+					<code>{{#this}}</code> will refer to the value.</li>
+					
+					<li>With <code>cc-loop-each="item"</code>, the context of each 
+					loop item is set to a new object with three properties: index, key and value.
+					That way, <code>{{#index}}</code> will refer to the current index, <code>{{#key}}</code>
+					will refer to the current key, and <code>{{#value}}</code> will refer 
+					to the current value. <code>{{#this}}</code> is rather useless.</li>
+				</ul>	
+				
+				The below example uses a mix of all these values.
+				
+			</section>
+			
+			<section id="demo">
+				<form id="controls">
+					<label>Show me</label>
+					<select onchange="Model.items = Model[$(this).val()]">
+						<option value="colors">Colors</option>
+						<option value="rates">Rates</option>
+					</select>
+				</form>
+				<div id="results">
+				
+<!-- ....... -->		
+<div cc-srcbox>
+<table width="50%">
+	<tbody cc-loop="{{#items}}" cc-loop-each="item">
+		<tr cc-loop-first>
+			<th>index</th>
+			<td>
+				<table width="100%">
+					<tbody>
+						<tr cc-loop="{{#value}}" cc-loop-each="key">
+							<th width="50%">{{#this}}</th>
+						</tr>
+					</tbody>
+				</table>
+			</td>
+		</tr>
+		<tr>
+			<th>{{#index+1}}</th>
+			<td>
+				<table width="100%">
+					<tbody>
+						<tr cc-loop="{{#value}}"  cc-loop-each="value">
+							<td width="50%">{{#this}}</td>
+						</tr>
+					</tbody>
+				</table>
+			</td>
+		</tr>
+		<tr cc-loop-last>
+			<th colspan="3"><small>take it from reliable sources</small></th>
+		</tr>
+	</tbody>
+</table>
+</div>
+<!-- ....... -->		
+
+
+				</div>
+				
+			</section>
+		</article>
+		
+		<!--cc:include("../../assets/footer.inc")-->
+	</body>
+</html>

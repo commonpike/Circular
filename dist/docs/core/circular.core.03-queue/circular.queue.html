@@ -1,0 +1,72 @@
+<html>
+	<head>
+		<title>@queue</title>
+				
+		
+		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+		<script src="../../../js/circular.min.js"></script>
+		<script src="../../../js/circular.srcbox.js"></script>
+		<link rel="stylesheet" href="../../assets/docs.css">
+			
+
+		<script>
+			Circular.init({
+				queue: {
+					debug:true
+				},
+				log: {
+					debug:true
+				}
+			});
+		</script>
+		
+	</head>
+	<body cc-root>
+		<!--cc:include("../../assets/header.inc")-->
+		<article>
+
+			<section id="about">
+				Circular is constantly making cycles through your dom to read and 
+				write updates, store things in the registry and watch for new changes.
+				If you want to modify things inside this ecosystem, be sure not to
+				interfere with those cycles. <br><br>
+				Each step of those cycles is run from a queue. If you want to do
+				something *in between cycles*, queue your code using  <code>@queue.add()</code>.
+<xmp>
+	Circular.queue.add(function() { $('#stuff').append('otherstuff'); });
+</xmp>
+				Failing to do this may result in several Circular threads running
+				simultaneously, causing Circular to die, or changes being undone
+				or not being picked up by Circular.
+				<br><br>
+				If the queue is empty, your code will be executed immediately.
+			</section>
+			
+			<section id="demo">
+			
+				<form id="controls" onsubmit="return false">
+					<b>Open your console and click one of the buttons below:</b><br>
+					<button onclick="Circular.queue.add(function() { alert('hey'); });">Circular.queue.add(function() { alert('hey'); });</button><br>
+					<button onclick="Circular.queue.add(function() { alert('hey'); });Circular.queue.add(function() { alert('ho'); });">Same, but twice</button><br>
+					<button onclick="$('#results h1').attr('cc-content','Hey. Ho. Let\'s go.'); Circular.queue.add(function() { alert('The attribute is written.\nClick OK to have Circular process changes'); })">
+						Write a new attribute and block Circular to process changes
+					</button>
+				</form>
+				
+				<div id="results">
+				
+<!-- ....... -->		
+<div cc-srcbox>
+<h1 cc-log="You found it :-)">Look in your console !</h1>
+</div>
+<!-- ....... -->		
+
+
+				</div>
+				
+			</section>
+		</article>
+		
+		<!--cc:include("../../assets/footer.inc")-->
+	</body>
+</html>

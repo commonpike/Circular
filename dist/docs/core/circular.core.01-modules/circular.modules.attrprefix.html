@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>@config.modules.attrprefix</title>
+				
+		
+		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+		<script src="../../../js/circular.min.js"></script>
+		<script src="../../../js/circular.srcbox.js"></script>
+		<link rel="stylesheet" href="../../assets/docs.css">
+		
+		
+		<script>
+		
+			var Model = {
+				message	: 'hello'
+			}
+			
+			Circular.init({
+				modules : {
+					attrprefix	: 'square-'
+				}, 
+				log 	: {
+					debug : true
+				}
+			});
+
+				
+		</script>
+	</head>
+	<body square-root square-context="Model">
+		<!--cc:include("../../assets/header.inc")-->
+		<article>
+
+			<section id="about">
+				You can change the default 'cc-' prefix of all custom attributes to something
+				else (like the html5 compliant 'data-cc-'). Below example uses
+<pre>
+Circular.init({
+	modules : { attrprefix	: 'square-' }
+})
+</pre>
+			If you do this, <b>all</b> attribute names in your html that originally started
+			with <code>cc-</code> need to start with <code>square-</code> instead.
+
+			</section>
+			
+			<section id="demo">
+			
+				<form id="controls">
+						<input type="radio" name="test" onclick="{{#message='hello'|p}}" checked>#message='hello'</a> 
+						<input type="radio" name="test" onclick="{{#message='goodbye'|p}}">#message='goodbye'</a>
+				</form>
+				
+				<div id="results">
+				
+<!-- ....... -->		
+<div square-srcbox>
+<h1 square-content="{{#message}}"></h1>
+</div>
+<!-- ....... -->		
+
+
+				</div>
+				
+			</section>
+		</article>
+		
+		<!--cc:include("../../assets/footer.inc")-->
+	</body>
+</html>

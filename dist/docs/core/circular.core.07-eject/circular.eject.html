@@ -1,0 +1,47 @@
+<html>
+	<head>
+		<title>Circular.eject</title>
+				
+		
+		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+		<script src="../../../js/circular.min.js"></script>
+		
+		<!-- build:template:live
+			<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+			<script src="http://circularjs.net/current/js/circular.min.js"></script>
+		/build -->
+			
+			
+		<style type="text/css">body { font-family: sans-serif; }</style>
+		<script>
+			Circular.init({
+				log : {
+					debug : true
+				},
+				engine : {
+					debug :true
+				}
+			});
+		</script>
+	</head>
+	<body cc-root>
+	
+	
+		<form id="controls">
+			<input type="checkbox" checked onclick="$('#output-heart').attr('cc-eject',!this.checked)">Heart
+			<input type="checkbox" checked onclick="$('#output-groovy').attr('cc-eject',!this.checked)">Groovy
+		</form>
+		
+		
+		<div id="output">
+			<p>Wild thing</p>
+			<p id="output-heart" cc-eject="false">
+				You make my heart sing
+			</p>
+			<p id="output-groovy" cc-eject="false">
+				You make everything groovy
+			</p>
+		</div>
+		
+	</body>
+</html>
