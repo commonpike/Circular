@@ -1,27 +1,107 @@
 <html>
 	<head>
-		<title>Circular.hide</title>
+		<title>cc-hide,cc-show</title>
+				
+		
 		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
 		<script src="../../../js/circular.min.js"></script>
-		<style type="text/css">
-			body { font-family: sans-serif; }
-		</style>
+		<script src="../../../js/circular.srcbox.js"></script>
+		<link rel="stylesheet" href="../../assets/docs.css">
+		
+		<!-- build:template:live
+		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+		<script src="http://circularjs.net/current/js/circular.min.js"></script>
+		<script src="http://circularjs.net/current/js/circular.srcbox.js"></script>
+		<link rel="stylesheet" href="http://circularjs.net/current/assets/docs.css">	
+		/build -->
+			
+		
+
 		<script>
 		
-			var Model = {
-				hours : (new Date()).getHours()
-			};
+			Model	= {
+				date	: new Date(),
+				hour 	: 0,
 				
-			// check the time every minute
-			setInterval(function() {
-				Model.hours = (new Date()).getHours();
-			},1000*60); 
+			};
 			
+			Control = { 
+				setHour	: function(h) {
+					if (h || h===0) Model.date.setHours(h);
+					Model.hour = Model.date.getHours();
+					Circular.log.write(Model.date);
+				},
+				reset		: function() {
+					Control.setHour();
+					$('#demo select option').each(function() {
+						var val = $(this).attr('value');
+						if (val<=Model.hour) $('#demo select').val(val);
+					});
+					$('#demo select').trigger('change');
+				}
+			}
+			
+			
+			Circular.init({
+				log : {
+					debug : true
+				}
+			});
+
+			$(document).ready(function() {
+				Control.reset();
+			});
+
+				
 		</script>
 	</head>
-	<body cc-root cc-context="Model">
-		<div cc-hide="{{#hours>12}}">Good morning</div> 
-		<div cc-hide="{{#hours<12 || #hours>18}}">Good day</div> 
-		<div cc-hide="{{#hours<18}}">Good evening</div> 
+	<body cc-root>
+		<!--cc:include("../../assets/header.inc")-->
+		<article>
+
+			<section id="about">
+				<code>cc-hide</code> and <code>cc-show</code> do what you expect:
+				they hide and show a node, using css. <br>
+				<code>cc-hide</code> is processed before the node if traversed. 
+				If a node is hidden, Circular doesn't bother processing its children either.
+				<code>cc-show</code> is processed after the node is traversed.
+				
+			</section>
+			
+			<section id="demo" cc-context="Control">
+				<form id="controls">
+					<label>Set the time:</label>
+					<select onchange="{{#setHour($this.val())|p}}">
+						<option value="0">00:00</option>
+						<option value="4">04:00</option>
+						<option value="8">08:00</option>
+						<option value="12">12:00</option>
+						<option value="16">16:00</option>
+						<option value="20">20:00</option>
+					</select>
+				</form>
+				<div id="results">
+				
+<!-- ....... -->		
+<div cc-srcbox  cc-context="Model">
+<small>{{#hour}}:00 hours</small>
+<div class="daytime" cc-hide="{{#hour<6}}">
+	<h1 cc-show="{{#hour<12}}">Good Morning</h1>
+	<h1 cc-show="{{#hour>=12 && #hour<18}}">Good Afternoon</h1>
+	<h1 cc-show="{{#hour>=18}}">Good Evening</h1>
+</div>
+<div class="nighttime" cc-hide="{{#hour>=6}}">
+	<h1>Good Night</h1>
+</div>
+</div>
+<!-- ....... -->		
+
+
+				</div>
+				
+			</section>
+		</article>
+		
+		<!--cc:include("../../assets/footer.inc")-->
 	</body>
 </html>

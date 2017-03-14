@@ -335,7 +335,7 @@ new CircularModule('loop',{
 		$node.append(newitems);
 	},
 	
-	removeOldItems($olditems) {
+	removeOldItems	: function($olditems) {
 		Circular.log.debug('@loop','removeOldItems',$olditems);
 		$olditems.each(function() {
 			var $this = $(this);
@@ -345,7 +345,7 @@ new CircularModule('loop',{
 		});
 	},
 
-	compareFunction(sort,sortas,sortby,arr) {
+	compareFunction	: function(sort,sortas,sortby,arr) {
 		switch(sortas) {
 			case 'number' :
 				if (sort=='descending') {

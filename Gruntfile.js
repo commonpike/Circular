@@ -113,10 +113,24 @@ module.exports = function(grunt) {
 	});
 	
 	// run 'grunt' to generate a working dist folder
-	grunt.registerTask('default', ["clean:before","concat","uglify","copy","processhtml:dist","clean:after"]);
+	grunt.registerTask('default', [
+		"clean:before",
+		"concat",
+		"uglify",
+		"copy",
+		"processhtml:dist",
+		"clean:after"
+	]);
 
 	// run 'grunt release' to generate a new release ready to go online
 	// in due time we may add version numbers, git management, ftp and such
-	grunt.registerTask('release', ["clean:before","concat","uglify","copy","processhtml:live","clean:after"]);
+	grunt.registerTask('release', [
+		"clean:before",
+		"concat",
+		"uglify",
+		"copy",
+		"processhtml:live",
+		"clean:after"
+	]);
 	
 }

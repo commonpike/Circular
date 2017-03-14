@@ -1,3 +1,156 @@
 /* ---------------------
 	circularjs.net assets/docs.css
 ---------------------- */
+
+body {
+	font-family:arial,sans-serif;
+	padding:0; margin:0;
+	background-color: #779;
+	color:white;
+}
+a {
+	color:white;
+	text-decoration:underline;
+}
+a[onclick] { 
+	cursor:pointer; 
+	text-decoration:underline;
+}
+
+header {	
+	padding: 1em 1em 0;
+	font-family:'Helvetica','Helvetica Neue',sans-serif;
+}
+
+	header h1 {
+		font-family:monospace;
+		font-weight:normal;
+		margin:.25em 0;
+	}
+	#branding {
+		font-variant: small-caps;
+	}    
+		
+		#logo {
+			width:1em;
+			height:1em;
+			vertical-align:middle;
+		}
+	
+
+
+
+article {
+	margin-top:2em;
+	background-color:rgba(255,255,255,.7); 
+	color:#666;
+}
+	article a {
+		color:#779;
+		text-decoration:none;
+	}
+	article table {
+		color:#779;
+	}
+	section {
+		line-height:1.5;
+		padding: 1em;
+	}
+		
+		section#demo {
+			padding:0;
+    }
+			form#controls  {
+				padding: 2em 1em;
+    		margin:0;
+    		background-color: #eee;
+    	}
+    	div#results {
+    		background-color: #eee;
+    	}
+    		dl.srcbox { 
+    			line-height:1;
+    			background-color:#779;
+    			margin:0;
+    		}
+    			dl.srcbox dt { 
+    				box-sizing:border-box;
+    				padding:1em;
+    				background-color:rgba(255,255,255,.4); 
+    				border:1px solid black;
+    				border-left-width:0;
+    			}
+    				dl.srcbox dt:first-child {
+    					border-left-width:1px;
+    				}
+    				dl.srcbox dt.current { 
+    					background-color:white; 
+    					border-bottom-width:0;
+    				}
+    			dl.srcbox dd { 
+    				box-sizing:border-box;
+    				padding:2em 1em;
+    				background-color:white;
+    				border:1px solid black;
+    				border-top-width:0;
+    				overflow:auto;
+    			}
+    		
+    
+footer {
+	position:relative;
+	font-family:'Helvetica','Helvetica Neue',sans-serif;
+	font-variant: small-caps;
+	padding:1em 1em;
+	min-height:3em;
+}
+	footer span {
+		position:absolute;
+		bottom:1em;
+	}
+	footer span a {
+		text-decoration:none;
+	}
+
+
+/* -------------
+	inline stuff
+--------------- */
+
+code {
+	font-size: 1.2em;
+	background-color: #eee;
+	padding: 0 .5em;
+}
+
+/* ----------------
+	responsive 
+---------------- */
+
+@media (min-width: 480px) {
+	header {	
+		padding: 1em 2em 0;
+		max-width:1024px;
+		margin:0 auto;
+	}
+	article {
+		padding:1em 0 4em;
+		background-color:white;
+	}
+		section {
+			padding: 1em 2em;
+			max-width:1024px;
+			margin:0 auto;
+		}
+			section#demo {
+				padding:1em 2em;
+			}
+				div#results {
+					padding: 0 1em 2em;
+				}
+	footer {
+		padding: 1em 2em;
+		max-width:1024px;
+		margin:0 auto;
+	}
+}
