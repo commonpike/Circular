@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<link rel="stylesheet" type="text/css" href="docs.css">
+		<title>circular js docs template</title>
+		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+		<script>
+			(function ( $ ) {
+ 
+				$.fn.tabbox = function() {
+					
+					// should probably use a nice plugin for these
+					
+					$this=$(this);
+					$this.css({
+						'position':'relative',
+						'width':'100%',
+						'padding-top':'3em'
+					});
+					var $tabs = $("dt",$this);
+					$tabs.each(function(idx) {
+						$(this).css({
+							'position':'absolute',
+							'top':0,'z-index':2,
+							'left':idx*(100/$tabs.size())+'%',
+							'width':100/$tabs.size()+'%',
+							'height':'3em',
+							'cursor':'pointer'
+						}).click(function() {
+							$(this).siblings('dt').removeClass('current');
+							$(this).siblings('dd').removeClass('current').hide();
+							$(this).addClass('current').next().addClass('current').show();
+						});
+					});
+					$("dd",$this).css({
+						'margin-left'	: 0
+					}).hide();
+					$("dt:first",$this).addClass('current');
+					$("dd:first",$this).addClass('current').show(); 
+						
+						
+					
+				}
+			 
+			}( jQuery ));
+			
+			$(document).ready(function() {
+				$('.srcbox').tabbox();
+			});
+		</script>
+	</head>
+	<body>
+	
+		<header>
+			<span id="branding">
+				<img src="circular.logo-white.svg" id="logo">
+				<span>circular js documentation</span>
+			</span>
+			<h1>circular js docs template</h1>
+		</header>
+		
+		<article>
+
+			<section id="intro">
+				This is the intro. <code>This is code</code>, isn't it.
+			</section>
+
+			<section id="demo">
+				
+				<form id="controls">
+					
+					<p>
+						Here are some controls
+					</p>
+					
+					<input type="radio"><label>a radiobutton</label>
+					<input type="checkbox"><label>a checkbox</label>
+					<select><option>A dropdown</option></select>
+					<input type="button" value="a button">
+				
+				</form>
+			
+				<div id="results">
+					<dl class="srcbox">	
+						<dt>output</dt>
+						<dd><div id="output">This is the output.</div></dd>
+						<dt>processed</dt>
+						<dd><div id="processed"><xmp>This is the processed.</xmp></div></dd>
+						<dt>input</dt>
+						<dd><div id="input"><xmp>This is the input.</xmp></div></dd>
+					</dl>
+				</div>
+			
+			</section>
+			
+		</article>
+
+
+		<footer>
+			<span>
+				&copy; <a href="http://circularjs.net">circularjs.net</a>
+			</span>
+		</footer>
+
+	</body>
+</html>

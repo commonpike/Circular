@@ -1,0 +1,51 @@
+<html>
+	<head>
+		<title>@log</title>
+				
+		
+		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+		<script src="../../../js/circular.min.js"></script>
+		<script src="../../../js/circular.srcbox.js"></script>
+		<link rel="stylesheet" href="../../assets/docs.css">
+			
+
+	</head>
+	<body cc-root>
+		<!--cc:include("../../assets/header.inc")-->
+		<article>
+
+			<section id="about">
+				The log module provide a few methods and one attribute that by default write stuff to your console.
+				You can use the methods in your own javascript (like in your own modules). <code>@log.debug</code>
+				will output nothing unless debugging is on, either by config or by calling <code>@log.tron()</code>.
+			</section>
+			
+			<section id="demo">
+			
+				<form id="controls" onsubmit="return false">
+					<button onclick="{{@log.tron()|p}}">@log.tron()</button>
+					<button onclick="{{@log.troff()|p}}">@log.troff()</button>
+					<button onclick="{{@log.debug('hello')|p}}">@log.debug('hello')</button><br>
+					
+					<button onclick="{{@log.info('hello')|p}}">@log.info('hello')</button>
+					<button onclick="{{@log.error('hello')|p}}">@log.error('hello')</button>
+					<button onclick="{{@log.fatal('hello')|p}}">@log.fatal('hello')</button><br>
+				</form>
+				
+				<div id="results">
+				
+<!-- ....... -->		
+<div cc-srcbox>
+<h1 cc-log="You found it :-)">Look in your console !</h1>
+</div>
+<!-- ....... -->		
+
+
+				</div>
+				
+			</section>
+		</article>
+		
+		<!--cc:include("../../assets/footer.inc")-->
+	</body>
+</html>

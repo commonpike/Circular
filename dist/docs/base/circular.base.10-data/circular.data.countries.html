@@ -1,0 +1,86 @@
+<html>
+	<head>
+		<title>cc-data</title>
+				
+		
+		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+		<script src="../../../js/circular.min.js"></script>
+		<script src="../../../js/circular.srcbox.js"></script>
+		<link rel="stylesheet" href="../../assets/docs.css">
+			
+		
+
+		<script>
+		
+			
+				
+			
+			Circular.init({
+				log : {
+					debug : false
+				},
+				engine : {
+					debug : false
+				},
+				registry : {
+					debug : false
+				},
+				watchdog : {
+					debug : false
+				}
+				
+			});
+
+				
+		</script>
+		<style type="text/css">
+			tr { border-bottom:1px solid #ccc; }
+			td { padding: 1em; }
+			tbody tr:nth-child(odd) {
+  			background-color: #ccc;
+			}
+			
+		</style>
+		
+	</head>
+	<body cc-root>
+		<!--cc:include("../../assets/header.inc")-->
+		<article>
+
+			<section id="about">
+				The <code>cc-data</code> attribute ...
+			</section>
+			
+			<section id="demo">
+				
+				<div id="results">
+				
+<!-- ....... -->		
+<div cc-srcbox>
+<table cc-data="http://services.groupkt.com/country/get/all">
+	<thead>
+		<tr>
+			<td>alpha2_code</td>
+			<td>alpha3_code</td>
+			<td>name</td>
+		</tr>
+	</thead>
+	<tbody cc-loop="{{#RestResponse.result}}">
+		<tr>
+			<td cc-content="{{#alpha2_code}}">loading..</td>
+			<td cc-content="{{#alpha3_code}}">loading..</td>
+			<td cc-content="{{#name}}">loading..</td>
+		</tr>
+	</tbody>
+</table>
+</div>
+<!-- ....... -->		
+
+				</div>
+				
+			</section>
+		</article>
+		
+		<!--cc:include("../../assets/footer.inc")-->
+	</body>
+</html>

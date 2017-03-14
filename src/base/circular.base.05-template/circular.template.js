@@ -127,7 +127,7 @@ new CircularModule('template',{
 	//------------------------
 
 	
-	createTranscludeBase($node) {
+	createTranscludeBase	: function($node) {
 		var tbasename = Circular.modules.prefix('cc-transclude-base');
 		var tbase 		= $node.attr(tbasename);
 		if (!tbase) {
@@ -145,6 +145,8 @@ new CircularModule('template',{
 			}
 		}
 	},
+	
+	
 	
 	getStack	: function() {
 		if (!this.$stack) {

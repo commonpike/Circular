@@ -1,0 +1,119 @@
+<html>
+	<head>
+		<title>cc-loop-each</title>
+				
+		
+		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+		<script src="../../../js/circular.min.js"></script>
+		<script src="../../../js/circular.srcbox.js"></script>
+		<link rel="stylesheet" href="../../assets/docs.css">
+			
+		<script>
+			var Model = {	
+				winners	: [{
+					firstname 	: 'Hank',
+					date	: '2015-03-02'
+				}, {
+					firstname 	: 'Jezebel',
+					nickname 	: 'The Rock',
+					date	: '2015-03-05'
+				}, {
+					firstname 	: 'John',
+					lastname		: 'Jagger',
+					date				: '2015-03-09'
+				}]
+			};
+						
+			Circular.init({
+				log : {
+					debug : true
+				}
+			});
+			
+		</script>
+		
+</head>
+<body cc-root cc-context="Model">
+		
+		<!--cc:include("../../assets/header.inc")-->
+		<article>
+
+			<section id="about">
+				<p>
+					<code>cc-template</code> allows you to define a template source
+					and repeat that in several places. This makes sense, for example, if the template
+					contains complex logic or formatting you don't want
+					to repeat manually, or if you want to be able to switch displays, like below.<br><br>
+					An empty <code>cc-template</code> or <code>cc-template-source</code> tag indicates
+					that the node *is* a template. A <code>cc-template</code> tag with a value
+					indicates you want to include that template inside the current node. It 
+					uses the value as a css selector to find the template to include.
+				</p>
+				
+			</section>
+			
+			<section id="demo">
+				<form id="controls" onsubmit="return false">
+					<label>Show me</label>
+					<select onchange="$('.winner').attr('cc-template',$(this).val())">
+						<option value="#oneliner1">Oneliner 1</option>
+						<option value="#oneliner2">Oneliner 2</option>
+						<option value="#oneliner3">Oneliner 3</option>
+					</select>
+					<button onclick="$('body').append('<span cc-template id=&quot;oneliner3&quot;><i>{{#firstname}}</i>, <b>{{#date}}</b></span>'); $(this).hide()">
+						Create Oneliner 3
+					</button>
+				</form>
+				<div id="results">
+
+<!-- ....... -->		
+<div cc-srcbox>
+
+<span cc-template id="oneliner1">
+	<i>{{#firstname}}</i><!--
+	--><i cc-if="{{#nickname}}"> "{{#nickname}}"</i><!--
+	--><i cc-if="{{#lastname}}"> {{#lastname}}</i><!--
+	-->, <b>{{#date}}</b>
+</span>
+
+<span cc-template-source id="oneliner2">
+	<b>{{#date}}</b>:
+	<span cc-if="{{#nickname}}">
+		"{{#nickname}}" ({{#firstname}}<span cc-if="{{#lastname}}"> {{#lastname}}</span>)
+	</span>
+	<span cc-else>
+		{{#firstname}} {{#lastname}}
+	</span>
+</span>
+
+<!-- the 3 top winners -->
+
+<h2>First prize</h2>
+<p class="winner" cc-template="#oneliner1" cc-context="{{#winners[0]}}"></p>
+
+<hr>
+
+<h3>Second prize</h3>
+<p class="winner" cc-template="#oneliner1" cc-context="{{#winners[1]}}"></p>
+
+<hr>
+
+<h4>Third prize</h4>
+<p class="winner" cc-template="#oneliner1" cc-context="{{#winners[2]}}"></p>
+
+</div>
+
+
+
+
+<!-- ....... -->		
+
+
+				</div>
+				
+			</section>
+		</article>
+		
+		<!--cc:include("../../assets/footer.inc")-->
+	</body>
+</html>

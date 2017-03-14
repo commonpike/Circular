@@ -1,0 +1,94 @@
+<html>
+	<head>
+		<title>cc:template</title>
+				
+		
+		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+		<script src="../../../js/circular.min.js"></script>
+		<script src="../../../js/circular.srcbox.js"></script>
+		<link rel="stylesheet" href="../../assets/docs.css">
+			
+		<script>
+			var Model = {	
+				winners	: [{
+					firstname 	: 'Hank',
+					date	: '2015-03-02'
+				}, {
+					firstname 	: 'Jezebel',
+					nickname 	: 'The Rock',
+					date	: '2015-03-05'
+				}, {
+					firstname 	: 'John',
+					lastname		: 'Jagger',
+					date				: '2015-03-09'
+				}]
+			};
+						
+			Circular.init({
+				log : {
+					debug : true
+				}
+			});
+			
+		</script>
+		
+</head>
+<body cc-root cc-context="Model">
+		
+		<!--cc:include("../../assets/header.inc")-->
+		<article>
+
+			<section id="about">
+				<p>
+					You can use a <code>&lt!--cc:include("http://url.com/foo")--></code> comment
+					to include templates, too. The upside is, you don't get all
+					that semanticly bad nested blurb. The downside is, your comments
+					aren't being watched, so you can't update stuff dynamically.
+				</p>
+				
+			</section>
+			
+			<section id="demo">
+				<div id="results">
+
+<!-- ....... -->		
+<div cc-srcbox>
+
+
+<!-- the 3 top winners -->
+
+<h2>First prize</h2>
+<p cc-context="{{#winners[0]}}">
+	<!--cc:include("circular.include.inc00.html")-->
+</p>
+
+<hr>
+
+<h3>Second prize</h3>
+<p cc-context="{{#winners[1]}}">
+	<!--cc:include("circular.include.inc00.html")-->
+</p>
+
+<hr>
+
+<h4>Third prize</h4>
+<p cc-context="{{#winners[2]}}">
+	<!--cc:include("circular.include.inc00.html")-->
+</p>
+
+</div>
+
+
+
+
+<!-- ....... -->		
+
+
+				</div>
+				
+			</section>
+		</article>
+		
+		<!--cc:include("../../assets/footer.inc")-->
+	</body>
+</html>

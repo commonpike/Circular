@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Hello | Goodbye</title>
+				
+		
+		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+		<script src="../../../js/circular.min.js"></script>
+		<script src="../../../js/circular.srcbox.js"></script>
+		<link rel="stylesheet" href="../../assets/docs.css">
+			
+		
+
+		<script>
+		
+			var Model = {
+				message	: 'hello'
+			}
+			
+			Circular.init({
+				log : {
+					debug : true
+				},
+				engine : {
+					debug : true
+				}
+			});
+
+				
+		</script>
+	</head>
+	<body cc-root cc-context="Model">
+		<!--cc:include("../../assets/header.inc")-->
+		<article>
+
+			<section id="about">
+				This is just a general testpage to see
+				if there are big compiletime typos in the src.
+			</section>
+			
+			<section id="demo">
+			
+				<form id="controls">
+						<input type="radio" name="test" onclick="{{#message='hello'|p}}" checked>#message='hello'</a> 
+						<input type="radio" name="test" onclick="{{#message='goodbye'|p}}">#message='goodbye'</a>
+				</form>
+				
+				<div id="results">
+				
+<!-- ....... -->		
+<div cc-srcbox>
+<h1 cc-content="{{#message}}"></h1>
+</div>
+<!-- ....... -->		
+
+
+				</div>
+				
+			</section>
+		</article>
+		
+		<!--cc:include("../../assets/footer.inc")-->
+	</body>
+</html>

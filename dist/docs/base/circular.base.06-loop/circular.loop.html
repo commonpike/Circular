@@ -1,0 +1,129 @@
+<html>
+	<head>
+		<title>cc-loop</title>
+				
+		
+		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+		<script src="../../../js/circular.min.js"></script>
+		<script src="../../../js/circular.srcbox.js"></script>
+		<link rel="stylesheet" href="../../assets/docs.css">
+			
+		
+
+		<script>
+		
+			var Model = {	
+				colors	: [
+					{
+							"key":"red",
+							"value":"#f00"
+					},
+					{
+							"key":"green",
+							"value":"#0f0"
+					},
+					{
+							"key":"blue",
+							"value":"#00f"
+					},
+					{
+							"key":"cyan",
+							"value":"#0ff"
+					},
+					{
+							"key":"magenta",
+							"value":"#f0f"
+					},
+					{
+							"key":"yellow",
+							"value":"#ff0"
+					},
+					{
+							"key":"black",
+							"value":"#000"
+					}
+				],
+				rates 	: [
+        		{ key :"AED",value:3.67365 },
+        		{ key :"AFN",value:48.3775 },
+        		{ key :"ALL",value:110.318335 },
+        		{ key :"AMD",value:409.144998 },
+        		{ key :"YER",value:215.043059 },
+        		{ key :"ZAR",value:8.428236 },
+        		{ key :"ZMK",value:4997.53 } ,
+        		{ key :"ZWL",value:322.355011 }
+    		],
+    		items	: []
+    
+			};
+			var Control = {
+				items : Model.colors
+			};
+			
+			Circular.init({
+				log : {
+					debug : true
+				},
+				engine : {
+					debug : false
+				},
+				registry : {
+					debug : false
+				},
+				watchdog : {
+					debug : false
+				}
+				
+			});
+
+				
+		</script>
+	</head>
+	<body cc-root>
+		<!--cc:include("../../assets/header.inc")-->
+		<article>
+
+			<section id="about">
+				<code>cc-loop</code> requires to have an <code>{{expression}}</code> as a value 
+				that resolves to an object or array. It repeat the children of the 
+				node for each element in the object or array, and set the context
+				of each generated child to, by default, the value of that element.<br><br>
+				So <code>&lt;div cc-loop="{{[1,2,3]}}">{{#this}}&lt;/div></code>
+				will simply print <code>123</code> for you, and 
+				<code>&lt;div cc-loop="{{{foo:1,bar:2,quz:3}}}">{{#this}}&lt;/div></code>
+				will print the same.
+				
+			</section>
+			
+			<section id="demo">
+				<form id="controls">
+					<label>Show me</label>
+					<select onchange="Control.items = Model[$(this).val()]">
+						<option value="colors">Colors</option>
+						<option value="rates">Rates</option>
+					</select>
+				</form>
+				<div id="results">
+				
+<!-- ....... -->		
+<div cc-srcbox>
+<table border="1" cc-context="Control">
+	<tbody cc-loop="{{#items}}">
+		<tr>
+			<td>{{#key}}</td>
+			<td>{{#value}}</td>
+		</tr>
+	</tbody>
+</table>
+</div>
+<!-- ....... -->		
+
+
+				</div>
+				
+			</section>
+		</article>
+		
+		<!--cc:include("../../assets/footer.inc")-->
+	</body>
+</html>

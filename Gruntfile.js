@@ -8,6 +8,12 @@ module.exports = function(grunt) {
 		'!*/*.src.html'
 	];
 	
+	var config = {
+		release				: 'current',
+		source				: 'src',
+		destination		: 'dist'
+	};
+	
 	var cwd = process.cwd();
   process.chdir('vendor');
 	grunt.loadNpmTasks('grunt-contrib-concat');
@@ -17,23 +23,24 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-processhtml');
 	process.chdir(cwd);
 	grunt.initConfig({
+		config	: config,
 		clean: {
 			before: {
-        src: ['dist/docs/**']
+        src: ['<%= config.destination %>/docs/**']
       },
       after: {
-        src: ['dist/docs/**'],
+        src: ['<%= config.destination %>/docs/**'],
         filter: function(fp) {
           return grunt.file.isDir(fp) && require('fs').readdirSync(fp).length === 0;
         }
       }
     },
 		concat: {
-			'dist/js/circular.js' : [
+			'<%= config.destination %>/js/circular.js' : [
 				'vendor/node_modules/esprima/dist/esprima.js',
 				'vendor/node_modules/observe-js/src/observe.js',
-				'src/core/*/*.js',
-				'src/base/*/*.js'
+				'<%= config.source %>/core/*/*.js',
+				'<%= config.source %>/base/*/*.js'
 			]
 		},
 		uglify: {
@@ -41,46 +48,46 @@ module.exports = function(grunt) {
 				//banner: '/*! Circular	'+(new Date())+'   */\n'
 			},
 			dist: {
-				src: 'dist/js/circular.js',
-				dest: 'dist/js/circular.min.js'
+				src: '<%= config.destination %>/js/circular.js',
+				dest: '<%= config.destination %>/js/circular.min.js'
 			}
 		},
 		copy: {
 			js : {
 				expand: true,
 				flatten: true,
-				src: ['src/contrib/*/circular.*.js'],
-				dest: 'dist/js/',
+				src: ['<%= config.source %>/contrib/*/circular.*.js'],
+				dest: '<%= config.destination %>/js/',
 				filter: 'isFile'
 			},
 			assets : {
 				expand: true,
-				cwd: 'src/assets',
+				cwd: '<%= config.source %>/assets',
 				src: ['**'],
-				dest: 'dist/docs/assets'
+				dest: '<%= config.destination %>/docs/assets'
 			},
 			coredocs : {
 				expand: true,
 				//flatten: true,
-				cwd: 'src/core',
+				cwd: '<%= config.source %>/core',
 				src: docpattern,
-				dest: 'dist/docs/core',
+				dest: '<%= config.destination %>/docs/core',
 				//filter: 'isDirectory'
 			},
 			basedocs : {
 				expand: true,
 				//flatten: true,
-				cwd: 'src/base',
+				cwd: '<%= config.source %>/base',
 				src: docpattern,
-				dest: 'dist/docs/base',
+				dest: '<%= config.destination %>/docs/base',
 				//filter: 'isDirectory'
 			},
 			contribdocs : {
 				expand: true,
 				//flatten: true,
-				cwd: 'src/contrib',
+				cwd: '<%= config.source %>/contrib',
 				src: docpattern,
-				dest: 'dist/docs/contrib',
+				dest: '<%= config.destination %>/docs/contrib',
 				//filter: 'isDirectory'
 			}
 		},
@@ -92,20 +99,24 @@ module.exports = function(grunt) {
       	},
       	files: [{
           expand: true,
-          cwd: 'dist',
+          cwd: '<%= config.destination %>',
           src: ['docs/*/*/*.html'],
-          dest: 'dist'
+          dest: '<%= config.destination %>'
       	}]
     	},
     	live: {
 				options: {
-          process	: true
+          process	: true,
+          stripUnparsed		: true,
+          data		: {
+          	release	: '<%= config.release %>'
+          }
       	},
       	files: [{
           expand: true,
-          cwd: 'dist',
+          cwd: '<%= config.destination %>',
           src: ['docs/*/*/*.html'],
-          dest: 'dist'
+          dest: '<%= config.destination %>'
       	}]
     	}
     }
@@ -113,10 +124,34 @@ module.exports = function(grunt) {
 	});
 	
 	// run 'grunt' to generate a working dist folder
-	grunt.registerTask('default', ["clean:before","concat","uglify","copy","processhtml:dist","clean:after"]);
+	
+	grunt.registerTask('default', [
+		"clean:before",
+		"concat",
+		"uglify",
+		"copy",
+		"processhtml:dist",
+		"clean:after"
+	]);
 
-	// run 'grunt release' to generate a new release ready to go online
-	// in due time we may add version numbers, git management, ftp and such
-	grunt.registerTask('release', ["clean:before","concat","uglify","copy","processhtml:live","clean:after"]);
+	// run 'grunt release:v2.1' to generate a new release 
+	// ready to go online in  'releases/v2.1'.
+	
+	grunt.registerTask('release', 'Create a new release', function(version) {
+		config.release 			= version;
+  	config.destination 	= 'releases/'+version;
+  	grunt.task.run('live');
+  });
+  
+  grunt.registerTask('live', [
+		"clean:before",
+		"concat",
+		"uglify",
+		"copy",
+		"processhtml:live",
+		"clean:after"
+	]);
+	
+  
 	
 }

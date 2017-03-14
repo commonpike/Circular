@@ -100,7 +100,7 @@ new CircularModule('include',{
 		} 
 	},
 	
-	createTranscludeBase($node) {
+	createTranscludeBase	: function($node) {
 		var tbasename = Circular.modules.prefix('cc-transclude-base');
 		var tbase 		= $node.attr(tbasename);
 		if (!tbase) {

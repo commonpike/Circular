@@ -1,0 +1,174 @@
+<html>
+	<head>
+		<title>cc-loop-offset,cc-loop-limit</title>
+				
+		
+		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+		<script src="../../../js/circular.min.js"></script>
+		<script src="../../../js/circular.srcbox.js"></script>
+		<link rel="stylesheet" href="../../assets/docs.css">
+			
+		
+
+		<script>
+		
+			var Model = {	
+				colors	: [
+					{
+							"colorName":"red",
+							"hexValue":"#f00"
+					},
+					{
+							"colorName":"green",
+							"hexValue":"#0f0"
+					},
+					{
+							"colorName":"blue",
+							"hexValue":"#00f"
+					},
+					{
+							"colorName":"cyan",
+							"hexValue":"#0ff"
+					},
+					{
+							"colorName":"magenta",
+							"hexValue":"#f0f"
+					},
+					{
+							"colorName":"yellow",
+							"hexValue":"#ff0"
+					},
+					{
+							"colorName":"black",
+							"hexValue":"#000"
+					}
+				],
+				rates 	: [
+        		{ "Currency" :"AED","Exchange rate":3.67365 },
+        		{ "Currency" :"AFN","Exchange rate":48.3775 },
+        		{ "Currency" :"ALL","Exchange rate":110.318335 },
+        		{ "Currency" :"AMD","Exchange rate":409.144998 },
+        		{ "Currency" :"YER","Exchange rate":215.043059 },
+        		{ "Currency" :"ZAR","Exchange rate":8.428236 },
+        		{ "Currency" :"ZMK","Exchange rate":4997.53 } ,
+        		{ "Currency" :"ZWL","Exchange rate":322.355011 }
+    		],
+    
+			};
+			
+			var Control	= {
+				items : Model.colors,
+				select	: function(list) {
+					this.items=Model[list];
+					this.offset=0;
+					this.limit=null;
+				},
+				offset	: 0,
+				limit		: null
+			};
+					
+			
+			Circular.init({
+				log : {
+					debug : true
+				},
+				engine : {
+					debug : false
+				},
+				registry : {
+					debug : false
+				},
+				watchdog : {
+					debug : false
+				}
+				
+			});
+
+				
+		</script>
+		<style type="text/css">
+			.cc-loop-odd { background-color:#eee; }
+			.cc-loop-even .cc-loop-odd { background-color:white; }
+			th { background-color:#779!important; color:white; }
+		</style>
+	</head>
+	<body cc-root cc-context="Control">
+		<!--cc:include("../../assets/header.inc")-->
+		<article>
+
+			<section id="about">
+				You can control the length of the loop using
+				<code>cc-loop-offset</code> and <code>cc-loop-limit</code>.
+				
+				By default, the offset is 0 and the limit is the length
+				of the loop minus the offset.
+				
+				If the offset or the limit are negative, they are taken to be
+				that many items from the end of the loop. So offset:-5,limit:-4
+				will return one item, the fifth from the end.<br><br>
+				
+				Below example uses a plain vanilla js controller to manage offset and limit.
+				
+			</section>
+			
+			<section id="demo">
+				<form id="controls">
+					<label>Show me</label>
+					<select onchange="Control.select($(this).val())">
+						<option value="colors">Colors</option>
+						<option value="rates">Rates</option>
+					</select>
+					
+					<label>Offset</label>
+					<select id='select-offset' onchange="Control.offset=$(this).val()">
+						<optgroup cc-loop="{{#items}}" cc-loop-each="index">
+							<option selected cc-loop-first value="">(none)</option>
+							<option cc-loop-first>0</option>
+							<option>{{#this+1}}</option>
+						</optgroup>
+						<optgroup cc-loop="{{#items}}" cc-offset="1" cc-loop-each="index">
+							<option>{{-#this-1}}</option>
+						</optgroup>
+					</select>
+					
+					<label>Limit</label>
+					<select id='select-limit'  onchange="Control.limit=$(this).val()">
+						<optgroup cc-loop="{{#items}}" cc-loop-each="index">
+							<option selected cc-loop-first value="">(none)</option>
+							<option cc-loop-first>0</option>
+							<option>{{#this+1}}</option>
+						</optgroup>
+						<optgroup cc-loop="{{#items}}" cc-loop-each="index">
+							<option>{{-#this-1}}</option>
+						</optgroup>
+					</select>
+					
+				</form>
+				<div id="results">
+				
+<!-- ....... -->		
+<div cc-srcbox>
+<table width="50%">
+	<thead cc-loop="{{#items}}" cc-loop-limit="1">
+		<tr cc-loop="{{#this}}" cc-loop-each="key">
+			<th>{{#this}}</th>
+		</tr>
+	</thead>
+	<tbody cc-loop="{{#items}}" cc-loop-offset="{{#offset}}" cc-loop-limit="{{#limit}}">
+		<tr cc-loop="{{#this}}">
+			<td>{{#this}}</td>
+		</tr>
+	</tbody>
+</table>
+</div>
+<!-- ....... -->		
+
+
+				</div>
+				
+			</section>
+		</article>
+		
+		<!--cc:include("../../assets/footer.inc")-->
+	</body>
+</html>

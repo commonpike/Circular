@@ -1,0 +1,178 @@
+<html>
+	<head>
+		<title>cc-input</title>
+				
+		
+		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+		<script src="../../../js/circular.min.js"></script>
+		<script src="../../../js/circular.srcbox.js"></script>
+		<link rel="stylesheet" href="../../assets/docs.css">
+			
+		
+
+		<script>
+		
+			var Control = { 
+				// dynamic stuff
+				load	: function(preset) {
+					for (var key in preset) {
+						this[key]=preset[key];
+					}
+				}
+			};
+			
+			var presets = [
+				{},
+				{
+					mytext 			: 'one too many',
+					mymultisel	: ['one','two'],
+					mytextarea	: 'feliz navidad'
+				},
+				{
+					mytext 			: 'one, two, tree',
+					mycheck 		: ['one'],
+					myradio 		: 'two',
+					mysinglesel	: 'one',
+					mymultisel	: ['one'],
+					mytextarea	: 'ducks in a pond'
+				}
+			];
+				
+			
+			Circular.init({
+				log : {
+					debug : true
+				},
+				engine : {
+					debug : false
+				},
+				registry : {
+					debug : false
+				},
+				watchdog : {
+					debug : false
+				}
+				
+			});
+
+				
+		</script>
+		<style type="text/css">
+			#form-input { float:left; width:40%; padding:0 1%; border-right:1px solid black; }
+			#form-output { float:left; width:40%; padding:0 1%;  }
+			.form-item {
+				height:3em; padding:.5em 0;
+				border-top:1px solid #ccc;
+			}
+			.form-item label {
+				display:inline-block;
+				min-width:10em;
+			}
+			select[multiple], textarea {
+				vertical-align:top;
+			}
+		</style>
+	</head>
+	<body cc-root>
+		<!--cc:include("../../assets/header.inc")-->
+		<article>
+
+			<section id="about">
+				The <code>cc-input</code> attribute turns an element into
+				a widget that sets a javascript value.
+				The below form shows the simplest way to manipulate values - by only using 
+				a <code>cc-input</code> attribute on input elements inside a form, 
+				or using <code>cc-input-value</code> on any element.
+			</section>
+			
+			<section id="demo">
+				<form id="controls">
+					<label>some preset values</label>
+					<select onchange="Control.load(presets[this.selectedIndex])">
+						<option selected>none</option>
+						<option>one</option>
+						<option>two</option>
+					</select>
+				</form>
+				<div id="results">
+				
+<!-- ....... -->		
+<div cc-srcbox>
+<div id="form-input" cc-context="Control">
+	<form onsubmit="return false">
+		<div class="form-item">
+			<label>text:</label>
+			<input type="text" name="mytext" cc-input>
+		</div>
+		<div class="form-item">
+			<label>checkboxes:</label>
+			<input type="checkbox" value="one" name="mycheck" cc-input>
+			<input type="checkbox" value="two" name="mycheck" cc-input>
+		</div>
+		<div class="form-item">
+			<label>radio buttons:</label>
+			<input type="radio" value="one" name="myradio" cc-input>
+			<input type="radio" value="two" name="myradio" cc-input>
+		</div>
+		<div class="form-item">
+			<label>single select:</label>
+			<select name="mysinglesel" cc-input>
+				<option>one</option>
+				<option>two</option>
+			</select>
+		</div>
+		<div class="form-item">
+			<label>multiple select:</label>
+			<select name="mymultisel" size="2" multiple cc-input>
+				<option>one</option>
+				<option>two</option>
+			</select>
+		</div>
+		<div class="form-item">
+			<label>anything:</label>
+			<a cc-input="Control.myanything" cc-input-value="one,two,many">click me</a>
+		</div>
+		<div class="form-item">
+			<label>textarea:</label>
+			<textarea name="mytextarea" rows="2"  cc-input></textarea>
+		</div>
+		
+	</form>
+</div>
+<div id="form-output" cc-context="Control">
+	<div class="form-item">
+		<label>text:</label> {{#mytext}}
+	</div>
+	<div class="form-item">
+		<label>checkboxes:</label> 
+		<span cc-if="{{#mycheck}}">[{{#mycheck.join(',')}}]</span>
+	</div>
+	<div class="form-item">
+		<label>radio buttons:</label> {{#myradio}}
+	</div>
+	<div class="form-item">
+		<label>single select:</label> {{#mysinglesel}}
+	</div>
+	<div class="form-item">
+		<label>multiple select:</label> 
+		<span cc-if="{{#mymultisel}}">[{{#mymultisel.join(',')}}]</span>
+	</div>
+	<div class="form-item">
+		<label>anything:</label> {{#myanything}}
+	</div>
+	<div class="form-item">
+		<label>textarea:</label> <pre>{{#mytextarea}}</pre>
+	</div>
+</div>
+</div>
+<!-- ....... -->		
+
+
+				</div>
+				
+			</section>
+		</article>
+		
+		<!--cc:include("../../assets/footer.inc")-->
+	</body>
+</html>

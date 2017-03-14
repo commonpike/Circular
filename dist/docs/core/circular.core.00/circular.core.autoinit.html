@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Circular.autoinit</title>
+				
+		
+		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+		<script src="../../../js/circular.min.js"></script>
+		<script src="../../../js/circular.srcbox.js"></script>
+		<link rel="stylesheet" href="../../assets/docs.css">
+			
+
+		<script>
+		
+			var Model = {
+				message	: 'hello'
+			}
+			
+			Circular.autoinit=false;
+			
+
+		</script>
+			
+			
+
+	</head>
+	<body cc-root cc-context="Model">
+		<!--cc:include("../../assets/header.inc")-->
+		<article>
+
+			<section id="about">
+				If you don't call <code>Circular.init()</code> yourself, it will automatically init with the default options
+				on <code>document.ready</code>.<br><br>
+				To avoid that behaviour, set <code>Circular.autoinit=false;</code> after loading the Circular javascript.
+				This is what has been done in this page, which is why the layout looks messed up at first. 
+				Click the button below to initialize Circular.
+			</section>
+			
+			<section id="demo">
+			
+				<form id="controls" onsubmit="return false">
+						<button onclick="Circular.init({log:{debug:true}})">Circular.init({log:{debug:true}})</button><br>
+				</form>
+				
+				<div id="results">
+				
+<!-- ....... -->		
+<div cc-srcbox>
+<h1 cc-content="{{#message}}">WE ARE WAITING FOR YOUR CLICK</h1>
+</div>
+<!-- ....... -->		
+
+
+				</div>
+				
+			</section>
+		</article>
+		
+		<!--cc:include("../../assets/footer.inc")-->
+	</body>
+</html>
+
+

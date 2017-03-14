@@ -1,0 +1,122 @@
+<html>
+	<head>
+		<title>cc-loop nested</title>
+				
+		
+		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+		<script src="../../../js/circular.min.js"></script>
+		<script src="../../../js/circular.srcbox.js"></script>
+		<link rel="stylesheet" href="../../assets/docs.css">
+			
+		
+
+		<script>
+		
+			var Model = {	
+				colors	: [
+					{
+							"colorName":"red",
+							"hexValue":"#f00"
+					},
+					{
+							"colorName":"green",
+							"hexValue":"#0f0"
+					},
+					{
+							"colorName":"blue",
+							"hexValue":"#00f"
+					},
+					{
+							"colorName":"cyan",
+							"hexValue":"#0ff"
+					},
+					{
+							"colorName":"magenta",
+							"hexValue":"#f0f"
+					},
+					{
+							"colorName":"yellow",
+							"hexValue":"#ff0"
+					},
+					{
+							"colorName":"black",
+							"hexValue":"#000"
+					}
+				],
+				rates 	: [
+        		{ curr :"AED",rate:3.67365 },
+        		{ curr :"AFN",rate:48.3775 },
+        		{ curr :"ALL",rate:110.318335 },
+        		{ curr :"AMD",rate:409.144998 },
+        		{ curr :"YER",rate:215.043059 },
+        		{ curr :"ZAR",rate:8.428236 },
+        		{ curr :"ZMK",rate:4997.53 } ,
+        		{ curr :"ZWL",rate:322.355011 }
+    		]    
+			};
+			
+			var Control = {
+				items : Model.colors
+			};
+			
+			Circular.init({
+				log : {
+					debug : true
+				},
+				engine : {
+					debug : false
+				},
+				registry : {
+					debug : false
+				},
+				watchdog : {
+					debug : false
+				}
+				
+			});
+
+				
+		</script>
+	</head>
+	<body cc-root>
+		<!--cc:include("../../assets/header.inc")-->
+		<article>
+
+			<section id="about">
+				This is just an example to show a node with a cc-loop attribute
+				can contain multiple childnodes (doh), which will turn into multiple
+				loop templates.
+			</section>
+			
+			<section id="demo">
+				<form id="controls">
+					<label>Show me</label>
+					<select onchange="Control.items = Model[$(this).val()]">
+						<option value="colors">Colors</option>
+						<option value="rates">Rates</option>
+					</select>
+				</form>
+				<div id="results">
+				
+<!-- ....... -->		
+<div cc-srcbox>
+<table width="50%" cc-context="Control">
+	<tbody cc-loop="{{#items}}">
+		<tr cc-loop="{{#this}}">
+			<td>{{#this}}</td>
+		</tr>
+		<tr><td colspan="2"><hr></td></tr>
+	</tbody>
+</table>
+</div>
+<!-- ....... -->		
+
+
+				</div>
+				
+			</section>
+		</article>
+		
+		<!--cc:include("../../assets/footer.inc")-->
+	</body>
+</html>

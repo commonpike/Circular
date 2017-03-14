@@ -1,0 +1,88 @@
+<html>
+	<head>
+		<title>cc-transclude</title>
+				
+		
+		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+		<script src="../../../js/circular.min.js"></script>
+		<script src="../../../js/circular.srcbox.js"></script>
+		<link rel="stylesheet" href="../../assets/docs.css">
+		
+
+		<script>
+		
+			Circular.init({
+				log : {
+					debug : true
+				}
+			});
+
+				
+		</script>
+	</head>
+	<body cc-root cc-context="Model">
+		<!--cc:include("../../assets/header.inc")-->
+		<article>
+
+			<section id="about">
+				The term <b>transclude</b> was shamelessly stolen from AngularJS. It does the same there.<br><br>
+				
+				<code>cc-transclude</code> allows you to include clones of parts of the dom
+				elsewhere in the document, specified by the value of the attribute and the 
+				value of the <code>cc-transclude-base</code> on a parent element.<br><br>
+				
+				You don't usually set <code>cc-transclude-base</code> yourself. Instead,
+				the attribute is added by module code for, for example, <code>cc-template</code> 
+				and <code>cc-include</code>
+				to refer to the <b>original</b> content, before the inclusion happened. The @transclude 
+				module then generates a <code>transclude-sel</code> attribute next to the 
+				<code>cc-transclude</code> attribute, which does the real work.<br><br>
+				
+				So you would only use <code>cc-transclude</code> inside a template or included file,
+				to refer to the original contents of the node before the inclusion took place, and the below 
+				example is just plain weird.
+			</section>
+			
+			<section id="demo">
+				<form id="controls">
+					<label>Select a room:</label>
+					<select onchange="$('#overview').attr('cc-transclude-base',$(this).val())">
+						<option value="#area1">Room 1</option>
+						<option value="#area2">Room 2</option>
+					</select>
+				</form>
+				<div id="results">
+				
+<!-- ....... -->		
+<div cc-srcbox>
+
+<ul id="area1" style="display:none">
+	<li class="lower"><span class="male">20 male</span>, <span class="female">20 female</span></li>
+	<li class="middle"><span class="male">40 male</span>, <span class="female">23 female</span></li>
+	<li class="higher"><span class="male">13 male</span>, <span class="female">4 female</span></li>
+</ul>
+<ul id="area2" style="display:none">
+	<li class="lower">24 total</li>
+	<li class="middle">34 total</li>
+	<li class="higher">4 total</li>
+</ul>
+
+<ul id="overview" cc-transclude-base="#area1">
+	<li>lower income: <span cc-transclude=".lower"></span></li><br>
+	<li>middle income: <span cc-transclude=".middle"></span></li><br>
+	<li>higher income: <span cc-transclude=".higher"></span></li><br>
+</ul>
+
+
+</div>
+<!-- ....... -->		
+
+
+				</div>
+				
+			</section>
+		</article>
+		
+		<!--cc:include("../../assets/footer.inc")-->
+	</body>
+</html>

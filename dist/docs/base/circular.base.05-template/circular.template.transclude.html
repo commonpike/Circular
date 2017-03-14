@@ -1,0 +1,113 @@
+<html>
+	<head>
+		<title>cc-template cc-tranclude</title>
+				
+		
+		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+		<script src="../../../js/circular.min.js"></script>
+		<script src="../../../js/circular.srcbox.js"></script>
+		<link rel="stylesheet" href="../../assets/docs.css">
+			
+		<script>			
+			Circular.init({
+				log : {
+					debug : true
+				}
+			});
+			
+		</script>
+		
+</head>
+<body cc-root>
+		
+		<!--cc:include("../../assets/header.inc")-->
+		<article>
+
+			<section id="about">
+				<p>
+					<code>cc-transclude</code>, when used within a template, includes
+					the content that was originally inside the node before the template
+					was inserted. This basicly allows you to hardcode content in a node,
+					and apply a template to format it later. Notice how this page
+					does not use a cc-context or a javascript Model at all - all the 
+					data is hardcoded inside the html, and formatted using cc-transclude.
+					There is virtually no javascript, except circular.js :-)
+				</p>
+				
+			</section>
+			
+			<section id="demo">
+				<form id="controls" onsubmit="return false">
+					<label>Show me</label>
+					<select onchange="$('.winner').attr('cc-template',$(this).val())">
+						<option value="#oneliner1">Oneliner 1</option>
+						<option value="#oneliner2">Oneliner 2</option>
+						<option value="#oneliner3">Oneliner 3</option>
+					</select>
+					<button onclick="$('body').append('<span cc-template id=&quot;oneliner3&quot;><i cc-transclude=&quot;.firstname&quot;></i>, <b cc-transclude=&quot;.date&quot;</b></span>'); $(this).hide()">
+						Create Oneliner 3
+					</button>
+				</form>
+				<div id="results">
+
+<!-- ....... -->		
+<div cc-srcbox>
+
+<span cc-template id="oneliner1">
+	<i cc-transclude=".firstname"></i><!--
+	--><span cc-transclude=".nickname" cc-transclude-pad></span><!--
+	--><i cc-transclude=".lastname" cc-transclude-pad></i><!--
+	-->, <b cc-transclude=".date"></b>
+</span>
+
+<span cc-template-source id="oneliner2">
+	<b cc-transclude=".date"></b>:
+	<span cc-transclude-if=".nickname">
+		"<span cc-transclude=".nickname"></span>"
+	</span>
+	<span cc-transclude=".firstname"></span>
+	<span cc-transclude=".lastname"></span>
+</span>
+
+<!-- the 3 top winners -->
+
+<h2>First prize</h2>
+<p class="winner" cc-template="#oneliner1">
+	<span class="firstname">Hank</span>
+	<span class="date">2015-03-02</span>
+</p>
+
+<hr>
+
+<h3>Second prize</h3>
+<p class="winner" cc-template="#oneliner1">
+	<span class="firstname">Jezebel</span>
+	<span class="nickname">The Rock</span>
+	<span class="date">2015-03-05</span>
+</p>
+
+<hr>
+
+<h4>Third prize</h4>
+<p class="winner" cc-template="#oneliner1">
+	<span class="firstname">John</span>
+	<span class="lastname">Jagger</span>
+	<span class="date">2015-03-09</span>
+</p>
+
+</div>
+
+
+
+
+<!-- ....... -->		
+
+
+				</div>
+				
+			</section>
+		</article>
+		
+		<!--cc:include("../../assets/footer.inc")-->
+	</body>
+</html>

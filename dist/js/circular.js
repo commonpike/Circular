@@ -8083,28 +8083,36 @@ var Circular = {
 	----------------------- */
 
 	init 		: function(config) {
-		if (!config) config={};
-		this.config	= config;
-		$(document).ready(function() {
-			Circular.modules.init(config);
-			if (Circular.log) {
-				if (Circular.queue) {
-					if (Circular.engine) {
-						Circular.queue.add(function() {
-							Circular.engine.start();	
-						});
+		if (!this.inited) {
+			if (!config) config={};
+			this.config	= config;
+			$(document).ready(function() {
+				Circular.modules.init(config);
+				if (Circular.log) {
+					if (Circular.queue) {
+						if (Circular.engine) {
+							Circular.queue.add(function() {
+								Circular.engine.start();	
+							});
+						} else {
+							Circular.log.fatal('@engine not found');
+						} 
 					} else {
-						Circular.log.fatal('@engine not found');
-					} 
+						Circular.log.fatal('@queue not found');
+					}
 				} else {
-					Circular.log.fatal('@queue not found');
+					alert('@log not found');
+					Circular.die();
 				}
+						
+			});
+		} else {
+			if (Circular.log) {
+				Circular.log.error('Circular already inited');
 			} else {
-				alert('@log not found');
-				Circular.die();
+				alert('Circular already inited, but @log not found');
 			}
-					
-		});
+		}
 		this.inited = true;
 	},
 	
@@ -8145,8 +8153,22 @@ function CircularModule(name,def) {
 		if (!def.settings)				def.settings 			= { name : name };		
 		if (!def.attributes)			def.attributes 		= { };
 		
-		// store this
+		// store name
 		def.settings.name = name;
+		
+		// store base
+		if (!def.settings.basedir) {
+			var path = '#undefined#';
+			stack=((new Error).stack).split("\n");
+    	if(stack[0]=="Error") { // Chromium
+      	var m; if(m=stack[2].match(/([^( ]*):[0-9]+:[0-9]+/)) {
+      		path = m[1]; 
+      	}
+      } else { // FF,OO - untested
+      	path = stack[1].split("@")[1].split(":").slice(0,-1).join(":"); 
+    	}
+    	def.settings.basedir = path.split('/').slice(0,-1).join('/');
+		}
 		
 		if (def.settings.name=='modules') {
 			def.add(def);
@@ -8170,18 +8192,7 @@ new CircularModule('modules', {
 		debug					: false,
 	},
 	
-	settings 			: {
-	
-	},
 
-	attributes		: {
-	
-	},
-	
-	comments			: {
-	
-	},
-	
 	init	: function(config) {
 
 		this.debug('Circular.modules.init');
@@ -8230,31 +8241,57 @@ new CircularModule('modules', {
 		}
 		
 		// loop all modules, process includes and config
-		var css = '';
 		this.modnames.forEach(function(modname) {
 		
-			if (Circular[modname].settings.insertcss) {
-				Circular[modname].settings.insertcss.forEach(function(str) {
-					css += str;
-				})
-			}
-			
 			// extend config from init call and attach it globally, too
 			if (Circular[modname].config) {
 				if (config[modname]) $.extend(true,Circular[modname].config,config[modname]);
 				Circular.config[modname] = Circular[modname].config;
 			}
 			
-		});
-		
-		if (css) {
-			var styleElement = document.createElement("style");
-			styleElement.type = "text/css";
-			document.head.appendChild(styleElement);
+			if (Circular[modname].settings.insertcss) {
+				Circular[modname].settings.insertcss.forEach(function(str) {
+					var uri = Circular.parser.parseURI(str,Circular[modname].settings.basedir)
+					if (uri) {
+						var styleElement = document.createElement("link");
+						styleElement.setAttribute("rel","stylesheet");
+						styleElement.setAttribute("type","text/css");
+						styleElement.setAttribute("href",uri);
+						document.head.appendChild(styleElement);
+					} else {
+						var styleElement = document.createElement("style");
+						styleElement.setAttribute("type","text/css");
+						document.head.appendChild(styleElement);
+						styleElement.appendChild(document.createTextNode(str));
+					}
+				})
+			}
 			
-			// ruff stuff. probs in ie<9
-			styleElement.appendChild(document.createTextNode(css));
-		}
+			if (Circular[modname].settings.insertjs) {
+				Circular[modname].settings.loading=0;
+				Circular[modname].settings.insertjs.forEach(function(str) {
+					var uri = Circular.parser.parseURI(str,Circular[modname].settings.basedir)
+					if (uri) {
+						Circular[modname].settings.loading++;
+						var scriptElement = document.createElement("script");
+						scriptElement.setAttribute("type","text/javascript");
+						scriptElement.onload = function() {
+							Circular[modname].settings.loading--;
+						};
+						scriptElement.setAttribute("src",uri);
+						document.head.appendChild(scriptElement);
+					} else {
+						var scriptElement = document.createElement("script");
+						scriptElement.setAttribute("type","text/javascript");
+						document.head.appendChild(scriptElement);
+						scriptElement.appendChild(document.createTextNode(str));
+					}
+				})
+			}
+			
+
+		});	
+		
 		
 		for(var mc=0; mc<this.modnames.length; mc++) {
 			var modname = this.modnames[mc];
@@ -8277,6 +8314,7 @@ new CircularModule('modules', {
 	attr2mod		: {
 		// map attribute names to modules
 	},
+	commnames		: [],
 	comm2mod		: {
 		// map comment names to modules
 	},
@@ -8350,6 +8388,7 @@ new CircularModule('modules', {
 
 				// store the comment handlers
 				for (var c in mod.comments) {
+					this.commnames.push(c);
 					this.comm2mod[c]=mod.settings.name
 				}
 				
@@ -8388,15 +8427,7 @@ new CircularModule('log',{
 	attributes		: {
 		'cc-log' : {
 			in	: function(ccattr,ccnode,node) {
-				this.write('@log',node);
-				ccattr.properties.debugging = this.debugging;
-				if (Circular.parser) this.toggleDebug(Circular.parser.boolish(ccattr.content.value));
-				else this.toggleDebug(!ccattr.content.original || ccattr.content.result); // simpleparse
-			},
-			
-			out	: function(ccattr,ccnode,node) {
-				this.toggleDebug(ccattr.properties.debugging);
-				delete ccattr.properties.debugging;
+				this.write('@log',ccattr.content.value);
 			}
 		}
 	},
@@ -8528,6 +8559,7 @@ new CircularModule('parser', {
 		// exprregex		: /{[{\[]([\s\S]*?(?=[}\]]}))[}\]]+}/g,
 		exprregex				: /{{([\s\S]*?(?=}}))}}/g,
 		flagregex				: /\|[pew]+$/,
+		uriregex				: /(?:^[a-z][a-z0-9+.-]*:|\/\/)/i,
 		evalfail				: undefined,
 		rootscope				: 'window', // bad idea
 		debug						: false
@@ -8735,7 +8767,7 @@ new CircularModule('parser', {
 		var matches = expr.match(this.config.flagregex);
 		if (matches) {
 			return {
-				expression: expr,
+				expression: expr.substring(0,expr.length-matches[0].length),
 				parse			: (matches[0].indexOf('p')!=-1),
 				evaluate	: (matches[0].indexOf('e')!=-1),
 				watch			: (matches[0].indexOf('w')!=-1)
@@ -8812,6 +8844,72 @@ new CircularModule('parser', {
 		return value;
 	},
 	
+	parseval	: function(original,ctx) {
+		this.debug('@parser.parseval',original);
+		
+		// parses *and* evaluates the original into a result:
+		
+		// checks if the original is an {{expression}}
+		// if parse, parses original into expression
+		// else puts original (minus brackets and flags) in expression
+		// if flags evaulate, evaluates the expression
+		// returns the result. does NOT watch paths.
+		
+		var result = original;
+		var expression = '';
+		var exprmatches = this.match(original);
+		if (exprmatches) {
+			if (exprmatches[0]===original) {
+			
+			
+				// this is a single full expression "{{#foo|we}}"
+
+				var inner 		= original.substring(2,original.length-2);
+				var flagged 	= this.getFlags(inner);
+				
+				if (flagged.parse) {
+					expression = this.parse(flagged.expression,ctx);
+				} else {
+					expression = flagged.expression;
+				}
+								
+			} else {
+			
+				// this is a stringlike thing, "foo {{#bar|pew}} quz"
+				// all expressions must always be evaluated
+				// any watched paths in any expression will watch that path
+				// for the whole attribute.
+
+				expression = this.replace(original,function(match,inner) {
+					var flagged = Circular.parser.getFlags(inner);					
+					var parsed = '';
+					if (flagged.parse) {
+						parsed = Circular.parser.parse(flagged.expression,ctx);
+					} else {
+						parsed = inner;
+					}
+					
+					return '"+('+parsed+')+"';
+				});
+				// tell eval that this is a stringthing
+				expression = '"'+expression+'"';
+
+
+			}			
+			
+			result = this.eval(expression);
+			
+			this.debug("@parser.parseval",original,expression,result);
+			
+			
+		} else {
+			this.debug('@parser.parseval','no match');
+			result = this.eval(original);
+		}
+		
+		return result;
+	},
+	
 	boolish	: function(str) {
 		if (str) {
 			if (str==='no') 		return false;
@@ -8823,6 +8921,13 @@ new CircularModule('parser', {
 			if (str==='') return true;
 			return false;
 		}
+	},
+	
+	parseURI	: function(str,base) {
+		if (this.config.uriregex.test(str)) return uri;
+		if (str.indexOf('/')==0) return document.location.origin+str;
+		if (str.indexOf('./')==0) return document.location.origin+base+str.substring(1);
+		return false;
 	},
 	
 	debug	: function() {
@@ -8928,7 +9033,7 @@ new CircularModule('context',{
 new CircularModule('content',{
 
 	config				: {
-	
+		addclass	: false
 	},
 	
 	settings 			: {
@@ -8939,15 +9044,28 @@ new CircularModule('content',{
 	attributes		: {
 		'cc-content' : {
 			in		: function(ccattr,ccnode,node) {
-				val = ccattr.content.value;
-				Circular.log.debug('cc-content.in','setting content',val);
+				if (ccattr.content.expression) {
+					val = ccattr.content.result;
+				} else {
+					val = ccattr.content.value;
+				}
+				Circular.log.debug('@content','cc-content','setting content',val);
 				node.textContent=val;
-				$(node).addClass('cc-content-generated');
+				if (Circular.content.config.addclass) {
+					$(node).addClass('cc-content-generated');
+				}
 			},
-			sanitize	: function(value) {
-				if (value.length>16) return value.substring(0,16)+'(...)';
-				return value;
-			}
+			set	: function(ccattr,ccnode,node) {
+				Circular.log.debug('@content','attributes.cccontent.set','ignore');
+				/*var value = ccattr.content.value;	
+				if (value.length>16) value = value.substring(0,16)+'(...)';
+				if (node.getAttribute(ccattr.properties.name)!=value) {
+					if (Circular.watchdog  && ccnode.flags.watched ) { // watched was commented ?
+						Circular.watchdog.pass(node,'attrdomchanged',ccattr.properties.name);
+					}
+					node.setAttribute(ccattr.properties.name,value);
+				}*/
+			}			
 		}
 	}
 	
@@ -9024,6 +9142,9 @@ new CircularModule('eject',{
 	// this is where we store comment references
 	ejected	: { },
 	
+	// this is where we store ejected nodes
+	$ejected	: null,
+	
 	flag		: function(node,ccnode,flag) {
 		ccnode.flags.ejectors[flag]=true;
 	},
@@ -9036,8 +9157,7 @@ new CircularModule('eject',{
 	apply		: function(node,ccnode,flag) {
 		if (!ccnode.flags.ejected) {
 		
-			$ejected = $('#cc-ejected');
-			if (!$ejected.size()) $ejected = $('<div id="cc-ejected">').appendTo('body');
+			if (!this.$ejected) this.$ejected = Circular.engine.stack($('<div id="cc-ejected">'));
 			var nodeid=Circular.engine.nodeid(node);
 			
 			// create a comment just before the node
@@ -9046,7 +9166,7 @@ new CircularModule('eject',{
 			this.ejected[nodeid]=comment;
 			
 			// move the node to #cc-ejected
-			$(node).appendTo($ejected);
+			Circular.engine.stack(node,this.$ejected);
 			ccnode.flags.ejected=true;
 			Circular.log.debug('@eject.apply','ejected #'+nodeid,flag);
 			
@@ -9174,21 +9294,25 @@ new CircularModule('registry', {
 	
 	unlock	: function(node) {
 		ccnode = $(node).data('cc-node');
-		ccnode.flags['locked']=false;
-		// unset the flags youve set before recycle
-		ccnode.flags['processing'] 			= false;
-		ccnode.flags['attrsetchanged'] 	= false;
-		ccnode.flags['contentchanged'] 	= false;
-		ccnode.flags['ocontextchanged'] = false;
-		ccnode.flags['icontextchanged'] = false;
-		ccnode.flags['attrdomchanged'] 	= false;
-		ccnode.flags['attrdatachanged'] = false;
-		for (var ac=0; ac<ccnode.index.length; ac++) {
-			ccnode.index[ac].flags['attrdomchanged'] = false;
-			ccnode.index[ac].flags['attrdatachanged'] = false;
-			//alert(ccnode.index[ac].properties.name+' eq '+(ccnode.index[ac]===ccnode.attributes[ccnode.index[ac].properties.name]));
+		if (ccnode) {
+			ccnode.flags['locked']=false;
+			// unset the flags youve set before recycle
+			ccnode.flags['processing'] 			= false;
+			ccnode.flags['attrsetchanged'] 	= false;
+			ccnode.flags['contentchanged'] 	= false;
+			ccnode.flags['ocontextchanged'] = false;
+			ccnode.flags['icontextchanged'] = false;
+			ccnode.flags['attrdomchanged'] 	= false;
+			ccnode.flags['attrdatachanged'] = false;
+			for (var ac=0; ac<ccnode.index.length; ac++) {
+				ccnode.index[ac].flags['attrdomchanged'] = false;
+				ccnode.index[ac].flags['attrdatachanged'] = false;
+				//alert(ccnode.index[ac].properties.name+' eq '+(ccnode.index[ac]===ccnode.attributes[ccnode.index[ac].properties.name]));
+			}
+			$(node).data('cc-node',ccnode);
+		} else {
+			Circular.log.debug('@registry','unlock','no cc-node');
 		}
-		$(node).data('cc-node',ccnode);
 		
 	},
 	
@@ -9245,22 +9369,28 @@ new CircularModule('engine', {
 	},
 	
 	settings 			: {
-		requiremods		: ['context','log','registry'],
-		rxcomment			: /^@([^[]+)(\[(.*)\])?$/
+		insertcss			: ['#cc-engine-stack { display:none }'],
+		rxcomment			: /^cc:([^(]+)(\((.*)\))?$/
 	},
 	
 	init					: function() { 
-		
+		this.$stack = $('<div id="cc-engine-stack" cc-engine-skip>').appendTo('body');
 	},
 	
 	// -------------
 	
-	
 	counter			: 0,
 	genid				: 0,
+	$stack			: null,
+	
 	nodeid			: function(node) {
+		if (node instanceof jQuery) node = node.get(0);
 		if (!node.hasAttribute('id')) node.setAttribute('id','cc-engine-'+(this.genid++));
 		return node.getAttribute('id');
+	},
+	
+	stack				: function(node,parent) {
+		return $(node).appendTo(parent?$(parent):this.$stack);
 	},
 	
 	start				: function() {
@@ -9271,6 +9401,7 @@ new CircularModule('engine', {
 		if (!$root.size()) $root = $('html');
 		this.recycle($root,true);
 	},
+	
 	
 	recycle	: function(nodes,now) {
 		this.debug('@engine.recycle ');
@@ -9298,12 +9429,20 @@ new CircularModule('engine', {
 		});
 		
 		nodes.forEach(function(node) {
-			var ccnode = Circular.registry.get(node,true);
-			if (ccnode.flags.locked) {
-				this.debug('@engine.recycle ','Recycling',node);
-				this.process(node);
+			if ((document.contains && document.contains(node)) || 
+				(document.body.contains(node) || document.head.contains(node))) {
+			//	console.log('get',node);
+				var ccnode = Circular.registry.get(node,true);
+				if (ccnode.flags.locked) {
+					this.debug('@engine.recycle ','Recycling',node);
+					this.process(node);
+				} else {
+					this.debug('@engine.recycle ','Node was already recycled',node,ccnode);
+				}
 			} else {
-				this.debug('@engine.recycle ','Node was already recycled',node,ccnode);
+				// is this leaking ?
+				this.debug('@engine.recycle ','Node was removed',node,ccnode);
+				Circular.registry.unlock(node);
 			}
 		},this);
 
@@ -9345,7 +9484,125 @@ new CircularModule('engine', {
 		return sorted;
 		
 	},
+
 	
+	
+/*	
+	recycle	: function(nodes,now) {
+	
+		this.debug('@engine.recycle ');
+		if (nodes instanceof jQuery) {
+			nodes = nodes.toArray();
+		} else if (!Array.isArray(nodes)) {
+			nodes = [nodes];
+		}
+		
+		if (!nodes) return this.start();
+		
+		if (!now) {
+			Circular.queue.add(function() {
+				Circular.engine.recycle(nodes,true);
+			});
+			return true;
+		}
+		//alert('recycle');
+
+		nodes.forEach(function(node) {
+			// lock nodes
+			Circular.registry.lock(node);
+		});
+		
+		var trees = this.treeify(nodes);
+		
+		trees.forEach(function(tree) {
+			this.recycleTree(tree);
+		},this);
+
+		
+		return true;
+	},
+	
+	recycleTree	: function(tree) {
+		this.debug('recycleTree',tree);
+		if ((document.contains && document.contains(tree.node)) || 
+			(document.body.contains(tree.node) || document.head.contains(tree.node))) {
+		//	console.log('get',node);
+			var ccnode = Circular.registry.get(tree.node,true);
+			if (ccnode.flags.locked) {
+				this.debug('@engine.recycle ','Recycling',tree.node);
+				this.process(tree.node);
+			} else {
+				this.debug('@engine.recycle ','Node was already recycled',tree.node,ccnode);
+			}
+		} else {
+			// is this leaking ?
+			this.debug('@engine.recycle ','Node was removed',tree.node,ccnode);
+			Circular.registry.unlock(tree.node);
+		}
+		tree.children.forEach(function(tree) {
+			this.recycle(tree);
+		},this);
+	},
+	
+	treeify	: function(nodes) {
+			
+		//console.log(nodes);
+		
+		var trees = [];
+		nodes.forEach(function(node,index) {
+		
+			var newtree = {
+				index		: index,
+				node		: node,
+				children: [],
+				parent 	: -1
+			}
+			trees[index] = newtree;
+			
+			trees.forEach(function(looptree) {
+				
+				if (looptree.index!=index) {
+					var parent,child;
+					if (newtree.node.contains(looptree.node)) {
+						parent = newtree; 
+						child = looptree;
+					} else if (looptree.node.contains(newtree.node)) {
+						parent = looptree; 
+						child = newtree;
+					}
+					if (parent) {
+						if (child.parent==-1) {
+							// ill be your first parent
+							child.parent=parent.index;
+						} else if (!parent.node.contains(trees[child.parent].node)) {
+							// I am a closer parent 
+							child.parent=parent.index;
+						} else {
+							// I'm your grandparent, ok
+						}
+					}
+				}
+			});			
+		});				
+		
+		// lets assemble the tree
+		
+		trees.forEach(function(tree) {
+			if(tree.parent !== -1) {
+				trees[tree.parent].children.push(tree);
+			}
+		});
+						
+		// and cut off dupe branches
+		
+		var roots = trees.filter(function(tree) { 
+			return (tree.parent == -1); 
+		});
+						
+		return roots;
+	},
+	
+*/
 	getContext	: function(node) {
 		this.debug('@engine.getContext',node.nodeName);
 		// you rarely need this. while cycling the document,
@@ -9456,6 +9713,9 @@ new CircularModule('engine', {
 	
 		this.debug('@engine.processElementNode',node.nodeName);
 		
+		if (node.nodeName=='XMP' || node.nodeName=='CODE' || node.hasAttribute('cc-engine-skip')) {
+			return false;
+		}
 		if (ccnode.flags.pristine) {
 		
 			this.debug('@engine.processElementNode','ccnode.flags.pristine');
@@ -9468,7 +9728,7 @@ new CircularModule('engine', {
 				Circular.registry.set(node,ccnode,true);
 				if (ccnode.flags.recurse) {
 					this.processChildren(node,ccnode.properties.innercontext);
-				} else this.debug('@engine.processElementNode','flags.recurse=false');
+				} else this.debug('@engine.processElementNode','pristine','flags.recurse=false');
 				this.processAttributesOut(node,ccnode);
 				Circular.eject.postprocess(node,ccnode);
 				Circular.registry.set(node,ccnode,true);
@@ -9496,7 +9756,7 @@ new CircularModule('engine', {
 					if (ccnode.flags.icontextchanged || ccnode.flags.contentchanged) {
 						this.processChildren(node,ccnode.properties.innercontext);
 					} else this.debug('@engine.processElementNode','no need to recurse');
-				}  else this.debug('@engine.processElementNode','flags.recurse=false');
+				}  else this.debug('@engine.processElementNode','attrsetchanged','flags.recurse=false');
 				this.processAttributesOut(node,ccnode);
 				Circular.eject.postprocess(node,ccnode);
 				Circular.registry.set(node,ccnode,true);
@@ -9520,7 +9780,7 @@ new CircularModule('engine', {
 					if (ccnode.flags.icontextchanged || ccnode.flags.contentchanged) { 
 						this.processChildren(node,ccnode.properties.innercontext);
 					} else this.debug('@engine.processElementNode','no need to recurse');
-				}  else this.debug('@engine.processElementNode','flags.recurse=false');
+				}  else this.debug('@engine.processElementNode','attrdomchanged','flags.recurse=false');
 				this.processAttributesOut(node,ccnode);
 				Circular.eject.postprocess(node,ccnode);
 				Circular.registry.set(node,ccnode,true);
@@ -9541,7 +9801,7 @@ new CircularModule('engine', {
 					if (ccnode.flags.icontextchanged || ccnode.flags.contentchanged) { 
 						this.processChildren(node,ccnode.properties.innercontext);
 					} else this.debug('@engine.processElementNode','no need to recurse');
-				}  else this.debug('@engine.processElementNode','flags.recurse=false');
+				}  else this.debug('@engine.processElementNode','attrdatachanged','flags.recurse=false');
 				this.processAttributesOut(node,ccnode);
 				Circular.eject.postprocess(node,ccnode);
 				Circular.registry.set(node,ccnode,true);
@@ -9561,7 +9821,7 @@ new CircularModule('engine', {
 				if (ccnode.flags.recurse) {
 					if (ccnode.flags.icontextchanged || ccnode.flags.contentchanged) {
 						this.processChildren(node,ccnode.properties.innercontext);
-					} else this.debug('@engine.processElementNode','no need to recurse');
+					} else this.debug('@engine.processElementNode','ocontextchanged','no need to recurse');
 				}  else this.debug('@engine.processElementNode','flags.recurse=false');
 				this.processAttributesOut(node,ccnode);
 				Circular.eject.postprocess(node,ccnode);
@@ -9582,7 +9842,7 @@ new CircularModule('engine', {
 			if (ccnode.index.length) {
 				if (ccnode.flags.recurse) {
 					this.processChildren(node,ccnode.properties.innercontext);
-				}  else this.debug('@engine.processElementNode','flags.recurse=false');
+				}  else this.debug('@engine.processElementNode','contentchanged','flags.recurse=false');
 			} else {
 				this.processChildren(node,ccnode.properties.innercontext);
 			}
@@ -9590,150 +9850,7 @@ new CircularModule('engine', {
 		
 	},
 
-	/*
-		oldProcessElementNode				: function(node,ccnode) {
-		this.debug('@engine.processElementNode');
-
-		var newcontext = false;
-
-		if (ccnode.flags.ocontextchanged || ccnode.flags.attrsetchanged || ccnode.flags.attrdomchanged || ccnode.flags.attrdatachanged) {
-		
-			if (ccnode.flags.attrdomchanged || ccnode.flags.attrsetchanged ) {
-				this.indexAttributes(node,ccnode);
-			}
-			
-			if (ccnode.index.length) {
-			
-				this.debug('@engine.processElementNode','processing attrs in ..',node);
-				
-				// evaluate and fill out attrs, execute modules
-				// this will return false if one of the modules
-				// return false to interrupt the cycle
-				
-				var recurse = this.processAttributesIn(node,ccnode);
-				
-				this.debug('@engine.processElementNode','processed attrs in',node);
-
-
-				//var innercontext = Circular.context.get();
-				//if (ccnode.properties.innercontext!=innercontext) {
-				//	newcontext = ccnode.properties.innercontext = innercontext;
-				//}
-				
-				// register changes now, so the watchdog can
-				// observe changes made by children
-				Circular.registry.set(node,ccnode,true);
-				
-				if ( ccnode.flags.recurse && ( ccnode.flags.icontextchanged || ccnode.flags.contentchanged ) ) {
-					this.processChildren(node,newcontext);
-				} else {
-					Circular.log.info('@engine.processElementNode','not recursing',ccnode,ccnode.flags.recurse ,ccnode.flags.icontextchanged,ccnode.flags.contentchanged);
-				}
-				
-				this.debug('@engine.processElementNode','processing attrs out ..',node);
-				this.processAttributesOut(node,ccnode);
-				this.debug('@engine.processElementNode','processed attrs out',node);
-				
-				// register the final version
-				Circular.registry.set(node,ccnode,true);
-				
-				return true;
-				
-			} else {
-				
-				// after looking at the attributes,
-				// there was nothing particular, but
-				
-				//var innercontext = Circular.context.get();
-				//if (ccnode.properties.innercontext!=innercontext) {
-				//	newcontext = ccnode.properties.innercontext = innercontext;
-				//}
-				
-				if (ccnode.flags.icontextchanged || ccnode.flags.contentchanged) {
-					
-					
-					
-					// if this was already registered and it changed here,
-					// remember that. otherwise, nothing much to remember
-					
-					if (ccnode.flags.registered) {
-						Circular.registry.set(node,ccnode,true);
-					} 
-					
-					this.debug('@engine.processElementNode','processing content',node);
-					
-					this.processChildren(node,newcontext);
-					
-					
-					this.debug('@engine.processElementNode','processed content',node);
-					
-					// and the final version
-					
-					if (ccnode.flags.registered) {
-						
-						Circular.registry.set(node,ccnode,true);
-						return true;
-					} else {
-						return false;
-					}
-					
-					
-				} else {
-					// no important attr, 
-					// no new content, 
-					// inner context didnt change
-					
-					// stop
-					return false;
-				}
-					
-			}
-			
-		} else {
-		
-
-			// we can ignore the attributes. but
-			
-			var innercontext = Circular.context.get();
-			if (ccnode.properties.innercontext!=innercontext) {
-				newcontext = ccnode.properties.innercontext = innercontext;
-			}
-			
-			if (newcontext || ccnode.flags.contentchanged) {
-			
-				// if this was already registered and it changed here,
-				// remember that. otherwise, nothing much to remember
-				
-				if (ccnode.flags.registered) {
-					Circular.registry.set(node,ccnode,true);
-				} 
-				
-				this.debug('@engine.processElementNode','processing content',node);
-				
-				this.processChildren(node,newcontext);
-				
-				this.debug('@engine.processElementNode','processed content',node);
-				
-				// and the final version
-				if (ccnode.flags.registered) {
-					Circular.registry.set(node,ccnode,true);
-					return true;
-				} else {
-					return false;
-				}
-				
-			} else {
-				// no attributes
-				// no new content
-				// inner context didnt change
-				// stop
-				return false;
-			}
-			
-		}
-		
-	},
-	*/
+	
 	
 	indexAttributes	: function(node,ccnode) {
 		this.debug('@engine.indexAttributes');
@@ -9780,8 +9897,11 @@ new CircularModule('engine', {
 			}
 			// unsparse
 			ccnode.index = modattrs.filter(function(val){return val});
-			ccnode.index.concat(plainattrs);
-				
+			ccnode.index = ccnode.index.concat(plainattrs);
+			
+			//console.log(ccnode.attributes);
+			//console.log(ccnode.index);
+			
 		} else if (ccnode.flags.attrsetchanged) {
 			
 			// index all attributes, but keep the old ones
@@ -9833,7 +9953,7 @@ new CircularModule('engine', {
 			}
 			// unsparse
 			ccnode.index = modattrs.filter(function(val){return val});
-			ccnode.index.concat(plainattrs);
+			ccnode.index = ccnode.index.concat(plainattrs);
 			
 			// remove old attributes
 			for (var attrname in ccnode.attributes) {
@@ -9851,11 +9971,11 @@ new CircularModule('engine', {
 				var attrname = ccnode.index[attridx].properties.name;
 				if (ccnode.attributes[attrname].flags.attrdomchanged) {
 					this.debug('@engine.indexAttributes','attrdomchanged','resetting attr',attrname);
-					var ccattr 				= Circular.registry.newCCattribute(attrname);
+					var ccattr 									= Circular.registry.newCCattribute(attrname);
 					ccattr.properties.module		= Circular.modules.attr2mod[attrname];
 					ccattr.content.original 		= node.getAttribute(attrname);
 					ccnode.attributes[attrname] = ccattr;
-					ccnode.index[attridx] = ccattr;
+					ccnode.index[attridx] 			= ccattr;
 				}
 			}
 			
@@ -9866,188 +9986,7 @@ new CircularModule('engine', {
 		
 	}, 
 	
-	/*
-		indexAttributes	: function(node,ccnode) {
-			this.debug('@engine.indexAttributes');
-			
-			// loop all the nodes attributes
-			// see if they contain expression or 
-			// if they are modules. other attributes
-			// are ignored.
-	
-			// the order is important here. 
-			// modules should go first, so there are
-			// executed before normal attributes. also,
-			// the mods need to be sorted in the
-			// order they were created ..
-			
-			// if the node was registered in a previous
-			// cycle, use the original values from there
-			
-	
-			var regattrs = ccnode.index;
-			var attributes = [], plain = [], mods = [];
-			
-			for(var ac=0; ac<node.attributes.length;ac++) {
-				var ccattr = null;
-				var attrname = node.attributes[ac].name;
-				
-				//ccattr = ccnode.attributes[attrname];
-				
-				// see if it was registered
-				for (var ri=0;ri<regattrs.length;ri++) {
-					if (regattrs[ri].name==attrname) {
-						ccattr=regattrs[ri];
-						break;
-					}
-				}
-				
-				// else, create a new property from this attribute
-				if (!ccattr) ccattr = Circular.registry.newCCattribute(attrname);
-				
-				var modidx = Circular.modules.attr2idx[attrname];
-				if (modidx!==undefined) {
-					var modname = Circular.modules.stack[modidx].name;
-					if (this.indexModuleAttribute(node,ccattr,modname)) {
-						mods[modidx]=ccattr;
-						mods[modidx].watches = Circular.modules.stack[modidx].watches;
-					}
-				} else {
-					if (this.indexAttribute(node,ccattr)) {
-						plain.push(ccattr);
-					}
-				}
-			}
-			
-			// stack these up in the right order:
-			for (var idx in mods) {
-				attributes.push(mods[idx]);
-			}
-			ccnode.index = attributes.concat(plain);
-			
-			// now put the watches in place
-			this.debug('@engine.indexAttributes','attributes pre',ccnode.index);
-			for (var pc=0; pc < ccnode.index.length; pc++) {
-				if (ccnode.index[pc].watches) {
-					for (var wc=0; wc<ccnode.index[pc].watches.length;wc++) {
-						this.debug('@engine.indexAttributes','moving watch',ccnode.index[pc].watches[wc]);
-						for (var pc2=0; pc2 < ccnode.index.length; pc2++) {
-							if (ccnode.index[pc2].name==ccnode.index[pc].watches[wc]) {
-								this.debug('@engine.indexAttributes','found watch',ccnode.index[pc].watches[wc]);
-								// move ccnode.index[pc2] before ccnode.index[pc]
-								ccnode.index.splice(pc,0,ccnode.index.splice(pc2,1)[0]);
-								if (pc2>pc) pc++;
-								break;
-							}
-						}
-					}
-				}
-			}
-			this.debug('@engine.indexAttributes','attributes post',ccnode.index);
-			
-			// map them by name - youll need it
-			for (var idx in ccnode.index) {
-				ccnode.attributes[ccnode.index[idx].properties.name] = ccnode.index[idx];
-			}
-		},
-		
-	
-		indexModuleAttribute			: function(node,ccattr,modname) {
-			this.debug('@engine.indexModuleAttribute',modname);
-			
-			
-			if (this.indexAttribute(node,ccattr)) {
-				// returns true if it is an expression
-				
-				ccattr.properties.module=modname;
-				return true;
-				
-			} else {
-			
-				// even if its not an expression, a module
-				// is always registered for just being one. 
-				
-				if (!ccattr.flags.registered) {
-					//ccattr.properties.name		= Circular.modules.prefix(ccattr.properties.name);
-					ccattr.properties.module 	= modname;
-				}
-				var original 	= node.getAttribute(ccattr.properties.name);
-				ccattr.content.original = original;
-				ccattr.content.value		= original;
-				//ccattr.content.result		= original;
-					
-				return true;
-				
-			}
-			
-		},
-		
-		indexAttribute			: function(node,ccattr) {
-			this.debug('@engine.indexAttribute',ccattr.properties.name);
-			
-			// check if the attribute is an expression
-			// update the properties of ccattr, but
-			// dont evaluate it yet - this will happen in
-			// processAttributesIn, in the right order
-			
-			// return true if it should be registered
-			// false if it shouldnt
-			
-			if (ccattr.flags.attrdomchanged) {
-	
-				this.debug('@engine.indexAttribute','attrdomchanged',node,ccattr);
-				
-				var expression = '', original = '';
-				
-				//if (ccattr.properties.name.indexOf('-debug')==-1) { // hm
-				
-					// the dom changed, so ignore what was registered:
-					ccattr.content.original = node.getAttribute(ccattr.properties.name);
-					expression	= ccattr.content.expression;
-					
-					// parse returns an expression without {{}},
-					// or an empty string if there is no expression	
-					
-					if (Circular.parser.parseAttribute(ccattr,Circular.context.get())) {
-	
-						//if (Circular.debug.enabled && ccattr.properties.name!='cc-debug') {
-						//	if (ccattr.properties.name.indexOf('cc-')==0) node.setAttribute('cc-'+ccattr.properties.name.substring(3)+'-debug',ccattr.content.original);
-						//	else node.setAttribute('cc-'+ccattr.properties.name+'-debug',ccattr.content.original);
-						//}
-				
-						return true;
-						
-					} else {
-					
-						// so its not an expression (anymore)
-						// ignore it or forget it
-						//alert('forget '+node.nodeName+'.'+ccattr.properties.name);
-						
-						
-						//if (Circular.debug.enabled) {
-						//	if (ccattr.properties.name.indexOf('cc-')==0) node.removeAttribute('cc-'+ccattr.properties.name.substring(3)+'-debug');
-						//	else node.removeAttribute('cc-'+ccattr.properties.name+'-debug');
-						//}
-						return false;
-	
-					}
-				//} else {
-					// dont register debug attributes
-				//	return false;
-				//}
-			} else {
-			
-				
-				
-				// nothing changed, so do nothing,
-				// but if it was registered, remember it
-				return ccattr.flags.registered;
-				
-			}
-			
-		},
-		
-	*/
+
 	
 	
 	processAttributesIn	: function(node,ccnode) {
@@ -10077,53 +10016,14 @@ new CircularModule('engine', {
 				this.evalAttribute(node,ccnode,ccattr);
 				
 			}
-			
-			/*
-				if (ccattr.flags.attrdomchanged || ccattr.flags.attrdatachanged) {
-					
-					
-					// (re-)eval this attribute, be it a full match
-					// or  a string containing matches 
-					
-					if (ccattr.content.expression) {
-						var result = Circular.parser.eval.call(node,ccattr.content.expression);
-	
-						
-						if (result!=ccattr.content.result) {
-						
-							ccattr.content.result = result;
-							this.debug('@engine.processAttributesIn','changed',ccattr.properties.name,ccattr.content.expression,ccattr.content.result);
-							try {
-								if (result===undefined) ccattr.content.value = ''; 
-								else if (typeof ccattr.content.result == 'object') ccattr.content.value = ccattr.content.original;
-								else ccattr.content.value = ccattr.content.result.toString();
-							} catch (x) {
-								ccattr.content.value = '';
-								Circular.log.warn(x);
-							}
-							if (Circular.watchdog  && ccnode.flags.watched ) { // watched was commented ?
-								Circular.watchdog.pass(node,'attrdomchanged',ccattr.properties.name);
-							}
-							node.setAttribute(ccattr.properties.name,ccattr.content.value);
-							//alert(ccattr.content.value);
-							
-						} 
-					} else {
-						ccattr.content.result = undefined;
-						ccattr.content.value = ccattr.content.original;
-					}
-					
-						
-				
-				}
-			*/
-			
+
 			// even if it didnt change, you need to execute it
 			// because it could change things for other attributes
 			if (ccattr.properties.module) {
 				this.debug('@engine.processAttributesIn','executing',ccattr.properties.module);
 				var mod = Circular[ccattr.properties.module];
-				var func = mod.attributes[ccattr.properties.name].in;
+				var uname = Circular.modules.unprefix(ccattr.properties.name);
+				var func = mod.attributes[uname].in;
 				if (func) {
 					var ok = func.call(mod,ccattr,ccnode,node);
 					if (ok===false) {
@@ -10136,14 +10036,16 @@ new CircularModule('engine', {
 					}
 				}
 			} 
-			
-			// see if the context changed
+				
+		}
+		
+		if (ccnode.flags.recurse) {
+			// set the inner context
 			var context = Circular.context.get();
 			if (context!=ccnode.properties.innercontext) {
 				ccnode.properties.innercontext=context;
 				ccnode.flags.icontextchanged=true;
 			}
-				
 		}
 		
 		// return true if none (or only the last one)
@@ -10169,7 +10071,8 @@ new CircularModule('engine', {
 			if (ccattr.properties.module) {
 				this.debug('@engine.processAttributesOut','executing',ccattr.properties.module);
 				var mod = Circular[ccattr.properties.module];
-				var func = mod.attributes[ccattr.properties.name].out;
+				var uname = Circular.modules.unprefix(ccattr.properties.name);
+				var func = mod.attributes[uname].out;
 				if (func) {
 					func.call(mod,ccattr,ccnode,node);
 				}
@@ -10281,8 +10184,13 @@ new CircularModule('engine', {
 
 		
 		if (ccattr.content.expression) {
-			var result = Circular.parser.eval.call(node,ccattr.content.expression);
-
+		
+			var result = null;	
+			if (ccattr.flags.evaluate) {
+				result = Circular.parser.eval.call(node,ccattr.content.expression);
+			} else {
+				result = ccattr.content.expression;
+			}
 			if (result!=ccattr.content.result) {
 			
 				ccattr.content.result = result;
@@ -10305,18 +10213,25 @@ new CircularModule('engine', {
 			ccattr.content.value = ccattr.content.original;
 		}
 		
-		var sane = '';
-		var sanitize = Circular[ccattr.properties.module]['attributes'][ccattr.properties.name]['sanitize'];
-		if (sanitize) sane=sanitize(ccattr.content.value);
-		else sane = ccattr.content.value;
-		
-		if (node.getAttribute(ccattr.properties.name)!=sane) {
+		var setter = null;
+		if (ccattr.properties.module) {
+			var uname = Circular.modules.unprefix(ccattr.properties.name);
+			var setter = Circular[ccattr.properties.module]['attributes'][uname]['set'];
+		}
+		if (!setter) setter = this.setAttribute;
+		setter(ccattr,ccnode,node);
+
+	},
+	
+	setAttribute		: function(ccattr,ccnode,node)  {
+		Circular.engine.debug('@engine.setAttribute');
+		var value = ccattr.content.value;		
+		if (node.getAttribute(ccattr.properties.name)!=value) {
 			if (Circular.watchdog  && ccnode.flags.watched ) { // watched was commented ?
 				Circular.watchdog.pass(node,'attrdomchanged',ccattr.properties.name);
 			}
-			node.setAttribute(ccattr.properties.name,sane);
+			node.setAttribute(ccattr.properties.name,value);
 		}
-		
 	},
 	
 	processChildren	: function(node,context) {
@@ -10382,8 +10297,8 @@ new CircularModule('engine', {
 				
 						this.debug('@engine.processTextNode','replacing content with single span');
 						var span = document.createElement('span');
-						span.setAttribute('id','cc-engine-'+this.genid++);
-
+						var spanid = this.nodeid(span);
+						
 						span.setAttribute('cc-content',val);
 						if (Circular.watchdog) {
 							Circular.watchdog.pass(parent,'contentchanged');
@@ -10404,7 +10319,7 @@ new CircularModule('engine', {
 							if (vals[vc].expression) {
 								this.debug('@engine.processTextNode','inserting span '+vals[vc].expression);
 								var span = document.createElement('span');
-								span.setAttribute('id','cc-engine-'+this.genid++);
+								var spanid = this.nodeid(span);
 								span.setAttribute('cc-content',vals[vc].expression);
 								nodes.push(span);
 							} else {
@@ -10441,12 +10356,22 @@ new CircularModule('engine', {
 		if (!matches) return false;
 		var comm = matches[1], sarg=matches[3];
 		if (!comm) return false;
-		var arg = undefined;
-		if (sarg) arg = Circular.parser.eval(sarg);
 		var mod = Circular.modules.comm2mod[comm];
-		Circular[mod].comments[comm](node,arg);
-		return true;
+		if (mod) {
+			var arg = undefined;
+			if (sarg) arg = Circular.parser.parseval(sarg,Circular.context.get());
+			Circular[mod].comments[comm](node,arg);
+			return true;
+		} else {
+			Circular.log.debug('@engine.processCommentNode','command module not found',comm);
+		}
+		return false;
 	},
+	
+	
+	
+	
+	
 	
 	debug	: function() {
 		if (this.config.debug) {
@@ -10470,7 +10395,8 @@ new CircularModule('watchdog', {
 	},
 	
 	settings 			: {
-		requiremods	: ['log','registry','engine']
+		requiremods	: ['log','registry','engine'],
+		emulated		: false
 	},
 
 	attributes		: {},
@@ -10525,6 +10451,7 @@ new CircularModule('watchdog', {
 		this.domobserver = new MutationObserver(Circular.watchdog.ondomchange);
 		if (!Object.observe) {
 			Circular.log.warn('@watchdog.init','emulating object.observe');
+			this.settings.emulated=true;
 			setInterval(function() {
 				Platform.performMicrotaskCheckpoint();
 			},this.config.muinterval);
@@ -10593,7 +10520,11 @@ new CircularModule('watchdog', {
 				case 'attributes':
 					if (record.oldValue===null || record.target.getAttribute(record.attributeName)===null) {
 						Circular.watchdog.catch(record.target,'event','attrsetchanged');
+						//console.log(record);
+						//alert('attrsetchanged');
 					} else {
+						//console.log(record);
+						//alert('attrdomchanged');
 						Circular.watchdog.catch(record.target,'event','attrdomchanged',record.attributeName);
 					}
 					break;
@@ -11034,33 +10965,45 @@ new CircularModule('watchdog', {
 	hide
 ----------------------- */
 
-new CircularModule({
+new CircularModule('hide',{
 
-	name				: 'hide',
-	attributes	: ['cc-hide','cc-show'],
-	requires		: ['debug','engine'],
-	css					: '.cc-hide { display:none!important; }',
-
-	in	: function(ccattr,ccnode,node) {
-		Circular.log.debug('@hide.in',node);
-		if (Circular.parser.boolish(ccattr.content.value)) {
-			if (Circular.modules.unprefix(ccattr.properties.name)=='cc-show') {
-				this.show(node);
-				return true;
-			} else {
-				this.hide(node);
-				return false;
+	settings		: {
+		insertcss : ['.cc-hide { display:none!important; }']
+	},
+	
+	attributes	: {
+	
+		'cc-hide' : {
+			in	: function(ccattr,ccnode,node) {
+				if (Circular.parser.boolish(ccattr.content.value)) {
+					Circular.log.debug('@hide','cc-hide','hide',node);
+					this.hide(node);
+					return false;
+				} else {
+					Circular.log.debug('@hide','cc-hide','show',node);
+					this.show(node);
+					return true;
+				}
 			}
-		} else {
-			if (Circular.modules.unprefix(ccattr.properties.name)=='cc-show') {
-				this.hide(node);
-				return false;
-			} else {
-				this.show(node);
-				return true;
+		},
+		
+		'cc-show': {
+			out	: function(ccattr,ccnode,node) {
+				if (Circular.parser.boolish(ccattr.content.value)) {
+					Circular.log.debug('@hide','cc-show','show',node);
+					this.show(node);
+					return true;
+				} else {
+					Circular.log.debug('@hide','cc-show','hide',node);
+					this.hide(node);
+					return false;
+				}
 			}
 		}
 	},
+
+	// -----
+	
 	hide	: function(node) {
 		$(node).addClass('cc-hide');
 	},
@@ -11076,50 +11019,198 @@ new CircularModule({
 
 
 /* ----------------------
-	template
+	@if
 ----------------------- */
 
-new CircularModule({
+new CircularModule('if',{
 
-	name				: 'template',
-	requires		: ['debug','engine'],
-	attributes	: ['cc-template'],
-	css					: '.cc-template, [cc-template=""]{ display:none; }',
-
-	orgattr			: 'cc-template-origin',
 	
-	in	: function(ccattr,ccnode,node) {
-		Circular.log.debug('@template.in',node);
-		var tplsel = ccattr.content.value;
-		var $node = $(node);
-		if (tplsel) {
-			// include the template if it isnt already
-			if (!$node.children('['+this.orgattr+'="'+tplsel+'"]').size()==1) {
-				var $tpl = $(tplsel);
-				if ($tpl.size()) {
-					Circular.watchdog.pass(node,'contentchanged');
-					$node.empty().addClass('cc-template-included');
-					$tpl.clone().appendTo($node)
-						.removeattr('id')
-						.removeattr('cc-template')
-						.attr(this.orgattr,tplsel)
-						.removeClass('cc-template')
-						.addClass('cc-template-clone');
-				} else {
-					Circular.log.error('@template.in','no such template',tplsel);
+	
+	attributes	: {
+	
+		'cc-if' : {
+			in	: function(ccattr,ccnode,node) {
+				
+				// see if there is an else
+				if (ccnode.flags.pristine) {
+					var $else = $(node).siblings('[cc-else]').eq(0);
+					if ($else.size()) {
+						var enid=Circular.engine.nodeid($else);
+						Circular.log.debug('@if','cc-if','found else',enid);
+						ccattr.properties.elseref='#'+enid;
+					}
 				}
-			} else {
-				Circular.log.debug('@template.in','already included');
-			}
-			
-		} else {
-			// this is a template, ignore
-			Circular.log.debug('@template.in','is a template');
-			$node.addClass('cc-template');
-			return false;
+				
+				// update else if needed
+				if (ccattr.flags.attrdomchanged && ccattr.properties.elseref) {
+					Circular.log.debug('@if','cc-if','updating else');
+					$(ccattr.properties.elseref).attr(Circular.modules.prefix('cc-else'),ccattr.content.original);
+				}
+				
+				// manage if
+				if (ccattr.content.value!=='' && Circular.parser.boolish(ccattr.content.value)) {
+					Circular.log.debug('@if','cc-if','eject.unflag',node);
+					Circular.eject.unflag(node,ccnode,'cc-if');
+					return true;
+				} else {
+					Circular.log.debug('@if','cc-if','eject.flag',node);
+					Circular.eject.flag(node,ccnode,'cc-if');
+					return false;
+				}
+			},
+			set	: function(ccattr,ccnode,node) {
+				Circular.log.debug('@content','attributes.cc-if.set');
+				var value = (!!ccattr.content.value).toString();	
+				if (node.getAttribute(ccattr.properties.name)!=value) {
+					if (Circular.watchdog  && ccnode.flags.watched ) { // watched was commented ?
+						Circular.watchdog.pass(node,'attrdomchanged',ccattr.properties.name);
+					}
+					node.setAttribute(ccattr.properties.name,value);
+				}
+			}	
+		},
+		
+		'cc-else': {
+			in	: function(ccattr,ccnode,node) {
+				
+				// manage else
+				if (ccattr.content.value==='' || !Circular.parser.boolish(ccattr.content.value)) {
+					Circular.log.debug('@if','cc-else','eject.unflag',node);
+					Circular.eject.unflag(node,ccnode,'cc-else');
+					return true;
+				} else {
+					Circular.log.debug('@if','cc-else','eject.flag',node);
+					Circular.eject.flag(node,ccnode,'cc-else');
+					return false;
+				}
+				
+			},
+			set	: function(ccattr,ccnode,node) {
+				Circular.log.debug('@content','attributes.cc-else.set');
+				var value = (!!ccattr.content.value).toString();	
+				if (node.getAttribute(ccattr.properties.name)!=value) {
+					if (Circular.watchdog  && ccnode.flags.watched ) { // watched was commented ?
+						Circular.watchdog.pass(node,'attrdomchanged',ccattr.properties.name);
+					}
+					node.setAttribute(ccattr.properties.name,value);
+				}
+			}	
 		}
 	}
+	
+	
+		
+});
 
+
+
+
+
+/* ----------------------
+	@transclude
+----------------------- */
+
+new CircularModule('transclude',{
+
+	attributes	: {
+	
+		
+		
+		'cc-transclude-base': { 
+			in	: function(ccattr,ccnode,node) {
+				//alert('cc-transclude-base');
+				if (ccattr.flags.attrdomchanged || ccattr.flags.attrdatachanged) {	
+					var $node = $(node);
+					var transattr = Circular.modules.prefix('cc-transclude');
+					var baseattr = Circular.modules.prefix('cc-transclude-base');
+					var selattr = Circular.modules.prefix('cc-transclude-sel');
+					var $transnodes = $node.find('['+transattr+']');
+					$transnodes.each(function() {
+						var $transnode = $(this);
+						$transnode.attr(selattr,$node.attr(baseattr)+' '+$transnode.attr(transattr));
+					});
+				}
+			}
+		},
+		
+		'cc-transclude-if' : { 
+			
+			in	: function(ccattr,ccnode,node) {
+				//alert('cc-transclude');
+				var $node = $(node);
+				var baseattr = Circular.modules.prefix('cc-transclude-base');
+				var $basenode = $node.parents('['+baseattr+']').eq(0);
+				if ($basenode.length) {
+					var selval = $basenode.attr(baseattr)+' '+ccattr.content.value;
+					if (!$(selval).length) {
+						Circular.log.debug('@transclude','cc-transclude-if','false',selval);
+						Circular.eject.flag(node,ccnode,'cc-transclude-if');
+						return false;
+					} else {
+						Circular.eject.unflag(node,ccnode,'cc-transclude-if');
+						Circular.log.debug('@transclude','cc-transclude-if','true',selval);
+					}
+				}	else {
+					Circular.log.warn('@transclude','cc-transclude','no basenode');
+				}
+			}
+		
+		},
+		
+		'cc-transclude-sel' : {
+			in	: function(ccattr,ccnode,node) {
+				//alert('cc-transclude-sel');
+				var $node = $(node);
+				var $transnode = $(ccattr.content.value);
+				var padattr = Circular.modules.prefix('cc-transclude-pad');
+				var pad = '';
+				if (ccnode.attributes[padattr]) {
+					pad = ccnode.attributes[padattr].content.value;
+					if (!pad) pad=" ";
+				}
+				if ($transnode.length) {
+					Circular.log.debug('@transclude','cc-transclude-sel','inserting',ccattr.content.value);
+					$node.empty().append(pad).append($transnode.contents().clone()).append(pad);
+				}	else {
+					Circular.log.debug('@transclude','cc-transclude-sel','no source',ccattr.content.value);
+				}
+			}
+		},
+		
+		'cc-transclude' : { 
+			
+			in	: function(ccattr,ccnode,node) {
+				//alert('cc-transclude');
+				var $node = $(node);
+				var baseattr = Circular.modules.prefix('cc-transclude-base');
+				var selattr = Circular.modules.prefix('cc-transclude-sel');
+				var $basenode = $node.parents('['+baseattr+']').eq(0);
+				if ($basenode.length) {
+					var selval = $basenode.attr(baseattr)+' '+ccattr.content.value;
+					Circular.log.debug('@transclude','cc-transclude','setting',selattr,selval);
+					
+					var orgval = $node.attr(selattr);
+					if (!orgval) {
+						// this node may not be watched, causing .. confusion
+						Circular.queue.add(function() {$node.attr(selattr,selval)});
+					} else if (orgval!=selval) {
+						$node.attr(selattr,selval);
+					}
+				}	else {
+					Circular.log.warn('@transclude','cc-transclude','no basenode');
+				}
+			}
+		
+		},
+		
+		'cc-transclude-pad' : {
+			// ignore
+		}
+		
+	}
+	
+	
+	
 	
 		
 });
@@ -11132,194 +11223,1052 @@ new CircularModule({
 	template
 ----------------------- */
 
-new CircularModule({
+new CircularModule('include',{
 
-	name				: 'loop',
-	requires		: ['debug','context'],
-	attributes	: ['cc-loop'],
-	watches			: ['cc-loop-offset', 'cc-loop-limit' ],
-	css					: '' +
-		'.cc-loop-template, .cc-loop-hide, .cc-loop-cached { display:none; } ' +
-		'.cc-loop-item, .cc-loop-first, .cc-loop-last {} ',
-
-	genid		: 0,
-	offset	: 0,
-	limit		: 0,
-	index		: 1,	// start at one !
-	key			: undefined,
-	first		: false,
-	last		: false,
-	greedy	: true, // eat whitespace when creating template
-	
-	in	: function(ccattr,ccnode,node) {
-
-		Circular.log.debug('@loop.in',node);
-		
-		var $node = $(node);
-		
-		// make sure it has an id
-		var nodeid = $node.attr('id');
-		if (!nodeid) {
-			nodeid = 'cc-loop-'+this.genid++;
-			$node.attr('id',nodeid);
-		}
-		
-		// set the parent context for all children
-		Circular.context.set(attr.expression);
-		if ($node.attr('cc-context') != attr.expression) {
-			$node.attr('cc-context',attr.expression);
-		}
-		
-		// find a template or make one
-		var $template = $node.children('.cc-loop-template');
-		if (!$template.size()) {
-			Circular.log.debug('@loop.in','creating template');
-			Circular.watchdog.pass(node,'contentchanged');
-			if ($node.children().size()==1 && ($node.contents().size()==1 || this.greedy)) {
-				$template = $node.children().addClass('cc-loop-template');
-			} else {
-				Circular.log.debug('@loop.in','adding template wrapper');
-				$node.contents().wrapAll('<div  class="cc-loop-template"></div>');
-				$template = $node.children('.cc-loop-template');
-			}
-		}
-		
-		// mark all other children cached
-		$node.children(':not(.cc-loop-template)').addClass('cc-loop-cached');
-
-		// check for offset and limit
-		this.offset = $node.attr('cc-loop-offset')*1;
-		if (!this.offset) this.offset =0;
-		this.limit = $node.attr('cc-loop-limit')*1;
-		if (!this.limit) this.limit=0;
-		
-		// see what we have to loop
-		var keys = [];
-		if (!this.limit) {
-			keys = Object.keys(ccattr.content.result).slice(this.offset);
-		} else {
-			keys = Object.keys(ccattr.content.result).slice(this.offset,this.offset+this.limit);
-		}
-		
-		Circular.log.debug('@loop.in',ccattr.content.result,keys,'offset '+this.offset+', limit '+this.limit);
-		
-		this.index 	= 1;
-		this.first 	= true;		
-		var $curr = null;
-		for (var kc=0; kc<keys.length; kc++) {
-			Circular.log.debug('@loop.in','index '+this.index,keys[kc]);
-			this.key = keys[kc];
-			this.last = (kc==keys.length-1);
-
-			//var context = '{{#'+keys[kc]+'}}';
-			var context = "{{#this['"+keys[kc]+"']}}";
-			
-			var itemid = nodeid+'-item-'+(kc+this.offset);
-			
-			$item = $node.children('#'+itemid+'.cc-loop-item');
-			if (!$item.size()) {
-				// clone the template 
-				Circular.log.debug('@loop.in','creating new item '+itemid);
-				$item = $template.clone()
-					.removeClass('cc-loop-template')
-					.addClass('cc-loop-item')
-					.addClass('cc-loop-index-'+this.index)
-					.attr('id',itemid)
-					.attr('cc-context',context);
-				if (!$curr) $item.prependTo($node);
-				else $item.insertAfter($curr);
-				
-			} else {
-			
-				//	we already have it. just move it in place 
-				Circular.log.debug('@loop.in','moving old item '+itemid);
-				$item.removeClass('cc-loop-cached');
-				if (!$curr) $item.appendTo($node);
-				else $item.insertAfter($curr)
-				
-			}
-			if (this.first) $item.addClass('cc-loop-first');
-			else $item.removeClass('cc-loop-first');
-			if (this.last) $item.addClass('cc-loop-last');
-			else $item.removeClass('cc-loop-last');
-			this.process($item);	
-			$curr = $item;
-				
-			this.first = false;
-			this.index++;
-		}
-		
-		// clean up cached items
-		$node.children('.cc-loop-cached').each(function() {
-			this.className = this.className.replace(/cc-loop-index-\d+/,'');
-			$(this).removeClass('cc-loop-first cc-loop-last cc-loop-hide').
-				attr('cc-loop-index','').
-				attr('cc-loop-key','').
-				attr('cc-loop-first','').
-				attr('cc-loop-last','');
-		});
-		
-		Circular.log.debug('@loop.in done');
+	settings		: {
+		insertcss: [
+			'.cc-include-pending { visibility:hidden; }',
+		]
 	},
 	
-	process	: function($item) {
-		Circular.log.debug('@loop.process',$item);
-		var loop = this;
-		
-		$item.filter('[cc-loop-first]').add($('[cc-loop-first]',$item)).each(function() {
-			if (loop.first) {
-				$(this).attr('cc-loop-first','true').addClass('cc-loop-first');
-			} else {
-				$(this).attr('cc-loop-first','false').removeClass('cc-loop-first');
+	attributes	: {
+		'cc-include' : {
+			in	: function(ccattr,ccnode,node) {
+				if (ccattr.content.result) {
+					Circular.include.insert(node,ccattr.content.result);
+				} else {
+					Circular.include.insert(node,ccattr.content.value);
+				}
 			}
+		},
+		'cc-include-transclude' : {
+			// ignore
+		}
+		
+	},
+	
+	comments	: {
+		'include'	: function(comment,arg) {
+			Circular.include.replace(comment,arg);
+		}
+	},
+	
+	// -------------
+	
+	$stack	: null,
+	
+	insert	: function(parent,arg) {
+		if (arg) {
+			$(parent).addClass('cc-include-pending');
+	
+			$.ajax(arg).done(function(data) {
+				Circular.log.debug('@include','insert',arg,'success');
+				var $nodes = $(data);
+				Circular.include.prefix($nodes);
+				var $parent = $(parent);
+				Circular.include.createTranscludeBase($parent);
+				$parent.empty().append($nodes);
+				$(parent).removeClass('cc-include-pending');
+				
+			}).fail(function(data) {
+				Circular.log.debug('@include','insert','fail',data);
+				var node = document.createComment('ERROR: @include.insert '+JSON.stringify(data));
+				$(parent).prepend(node);
+				$(parent).removeClass('cc-include-pending');
+			});
+		} else {
+			Circular.log.error('@include','insert','no argument');
+		}
+	},
+	
+	replace	: function(orgnode,arg) {
+		if (arg) {
+			Circular.log.debug('@include','replace',arg);
+			$.ajax(arg).done(function(data) {
+				Circular.log.debug('@include','replace',arg,'success');
+				var $nodes = $(data);
+				Circular.include.prefix($nodes);
+				$nodes.get().reverse().forEach(function(node) {
+					orgnode.parentNode.insertBefore(node,orgnode);
+				});
+				orgnode.parentNode.removeChild(orgnode);
+			}).fail(function(data) {
+				Circular.log.debug('@include','replace','fail',data);
+				var node = document.createComment('ERROR: @include.replace '+JSON.stringify(data));
+				orgnode.parentNode.insertBefore(node,orgnode);
+				orgnode.parentNode.removeChild(orgnode);
+			});
+			
+		} else {
+			Circular.log.error('@include','insert','no argument');
+		}		
+	},
+	
+	// ----------------
+	
+	prefix	: function($nodes) {
+		if (Circular.modules.attrprefix!='cc-' && data.indexOf('cc-')!=-1) {
+			Circular.log.debug('@include','prefix');
+			$nodes.find('*').each(function(idx1, child) {
+				$.each(child.attributes, function( idx2, attr ) {
+						if(attr.name.indexOf('cc-')===0) {
+							 child.setAttribute(Circular.modules.prefix(attr.name),child.getAttribute(attr.name));
+							 child.removeAttribute(attr.name);
+						}
+				});
+			});
+		} 
+	},
+	
+	createTranscludeBase	: function($node) {
+		var tbasename = Circular.modules.prefix('cc-transclude-base');
+		var tbase 		= $node.attr(tbasename);
+		if (!tbase) {
+			if ($node.children().length) {
+				Circular.log.debug('@include','createTranscludeBase');
+				if (!this.$stack) {
+					Circular.log.debug('@include','createTranscludeBase','creating stack');
+					Circular.engine.stack('<div id="cc-include-stack">');
+					this.$stack = $('#cc-include-stack');
+				}
+				var $trans = $('<div cc-include-transclude>');
+				var transid = Circular.engine.nodeid($trans);
+				Circular.engine.stack($trans,this.$stack);
+				Circular.log.debug('@include','createTranscludeBase','appending children',transid);
+				$node.children().appendTo($trans);
+				$node.attr(tbasename,'#'+transid);
+			} else {
+				$node.attr(tbasename,'#none#');
+			}
+		}
+	}
+		
+});
+
+
+
+
+
+/* ----------------------
+	template
+----------------------- */
+
+new CircularModule('template',{
+
+	settings		: {
+		insertcss : ['[cc-template-source],[cc-template=""]{ display:none; }']
+	},
+	
+	attributes	: {
+	
+		'cc-template' : {
+			in : function(ccattr,ccnode,node) {
+				Circular.log.debug('@template','cc-template.in',node);
+				
+				if (ccattr.content.value=='') {
+					// this is a template source
+					Circular.log.debug('@template','cc-template:in','moving empty attr to cc-template-source');
+					var tplname = Circular.modules.prefix('cc-template');
+					var srcname = Circular.modules.prefix('cc-template-source');
+					$(node).removeAttr(tplname).attr(srcname,'');
+					return Circular.template.attributes['cc-template-source'].in(ccattr,ccnode,node);
+				} else {
+					// this asks for a template
+					return Circular.template.insert(node,ccattr.content.value);
+				}				
+				
+			}
+		},
+		'cc-template-source'	: {
+			in	: function(ccattr,ccnode,node) {
+				var $source = $(node);
+				var tplname 	= Circular.modules.prefix('cc-template');
+				var pendname 	= Circular.modules.prefix('cc-template-pending');
+				$('['+pendname+']').each(function() {
+					if ($source.is($(this).attr(tplname))) {
+						// you found your template
+						Circular.log.debug('@template','cc-template-source:in','found pending template');
+						Circular.engine.process(this);
+						$(this).removeAttr(pendname);
+					}
+				});
+				// dont process this node
+				return false;	
+			}
+		},
+		'cc-template-origin'	: {
+			// ignore this attribute
+		},
+		'cc-template-transclude'	: {
+			// ignore this attribute
+		},
+		'cc-template-pending'	: {
+			// ignore this attribute
+		}
+		
+	},
+	
+	comments : {
+		'template'	: function(comment,arg) {
+			Circular.log.debug('@template','cc:template',arg);
+			Circular.template.replace(comment,arg);
+		}
+	},
+	
+	//------------------------
+	
+	create	: function(node) {
+		// not used internally
+		var $stack = this.getStack();
+		var $node = $(node);
+		Circular.engine.nodeid(node);
+		$node.attr('cc-template-source','');
+		Circular.engine.stack($wrap,$stack);
+		return $wrap;
+	},
+	
+	insert	: function(node,sel) {
+		// include the template if it isnt already
+		var $node = $(node);
+		if (!$node.children('[cc-template-origin="'+sel+'"]').length) {
+			var $tpl = $(sel);
+			if ($tpl.length) {
+				this.createTranscludeBase($node);
+				$node.empty();
+				$tpl.clone().appendTo($node)
+					.removeAttr('id')
+					.removeAttr('cc-template')
+					.removeAttr('cc-template-source')
+					.attr('cc-template-origin',sel);
+				$node.removeAttr('cc-template-pending');
+			} else {
+				Circular.log.warn('@template','processCCTemplate','no such template',sel);
+				if (!$node.is('[cc-template-pending]')) {
+					$node.attr('cc-template-pending','');
+				}
+			}
+		} else {
+			Circular.log.debug('@template','processCCTemplate','already included');
+		}
+	},
+	
+	
+	replace	: function(node,sel) {
+		var $tpl = $(sel);
+		if ($tpl.length) {
+			$tpl.each(function() {
+				var $clone = $(this).clone()
+					.removeAttr('id')
+					.removeAttr('cc-template')
+					.removeAttr('cc-template-source');
+				$clone.attr('cc-template-origin',sel);
+				var clone = $clone.get(0);
+				node.parentNode.insertBefore(clone,node);
+				// process it right away - works without, too
+				Circular.engine.process(clone);
+			});		
+			node.parentNode.removeChild(node);
+		} else {
+			Circular.log.error('@template','cc:template','no such template',sel);
+		}
+	},
+	
+	
+	//------------------------
+
+	
+	createTranscludeBase	: function($node) {
+		var tbasename = Circular.modules.prefix('cc-transclude-base');
+		var tbase 		= $node.attr(tbasename);
+		if (!tbase) {
+			if ($node.children().length) {
+				Circular.log.debug('@template','createTranscludeBase');
+				var $stack = this.getStack();
+				var $trans = $('<div cc-template-transclude>');
+				var transid = Circular.engine.nodeid($trans);
+				Circular.engine.stack($trans,$stack);
+				Circular.log.debug('@template','createTranscludeBase','appending children',transid);
+				$node.children().appendTo($trans);
+				$node.attr(tbasename,'#'+transid);
+			} else {
+				$node.attr(tbasename,'#none#');
+			}
+		}
+	},
+	
+	
+	
+	getStack	: function() {
+		if (!this.$stack) {
+			Circular.log.debug('@template','getStack','creating stack');
+			Circular.engine.stack('<div id="cc-template-stack">');
+			this.$stack = $('#cc-template-stack');
+		}
+		return this.$stack;
+	}
+		
+});
+
+
+
+
+
+/* ----------------------
+	loop
+----------------------- */
+
+new CircularModule('loop',{
+
+	config			: {
+		greedy			: true, // eat whitespace when creating template
+		maxnesting	: 500		// avoid eternal loops
+	},
+	
+	attributes	: {
+		'cc-loop' : {
+			in	: function(ccattr,ccnode,node) {
+				this.processCCLoop(ccattr,ccnode,node);
+			}
+		},
+		'cc-loop-each'			: {},
+		'cc-loop-as'				: {},
+		'cc-loop-offset' 		: {},
+		'cc-loop-limit' 		: {},
+		'cc-loop-template' 	: {},
+		'cc-loop-item' 			: {},
+		'cc-loop-tplsource' : {},	// the actual template
+		'cc-loop-tplorigin' : {},	// a ref to the source
+		'cc-loop-first' 		: {},
+		'cc-loop-last' 			: {},
+		'cc-loop-index' 		: {},
+		'cc-loop-odd' 			: {},
+		'cc-loop-even' 			: {},
+		'cc-loop-sort' 			: {},
+		'cc-loop-sortas' 		: {},
+		'cc-loop-sortby' 		: {}
+	},
+		
+	// ---------------------------
+	
+	$stack			: null,
+	processCCLoop	: function(ccattr,ccnode,node) {
+		
+		var $node				= $(node);		
+		if ($node.parents('[cc-loop]').length<this.config.maxnesting) {
+			var $templates 	= this.getTemplates($node);
+			var $olditems		= this.getOldItems($node);
+			var newitems		= [];
+			
+			var keys 			= this.getKeys(ccnode);
+			var each			= 'value';
+			var loopas		= '';
+			var ctx				= ccattr.content.expression;
+			
+			if (ccnode.attributes['cc-loop-each']) {
+				each = ccnode.attributes['cc-loop-each'].content.value;
+			}
+			if (ccnode.attributes['cc-loop-as']) {
+				loopas = ccnode.attributes['cc-loop-as'].content.value;
+			}
+			
+			//console.log(keys);
+			for (var idx=0; idx<keys.length; idx++) {
+				var itemctx = this.getItemContext(each,ctx,keys[idx],idx,loopas);
+				var items 	= this.getNewItems($olditems,$templates,itemctx,keys,idx);
+				//console.log(itemctx,items);
+				newitems = newitems.concat(items);
+			}
+			this.appendNewItems($node,newitems);
+			this.removeOldItems($olditems);
+		} else {
+			Circular.log.error('@loop','processCCLoop','max nesting '+this.config.maxnesting+' reached - something wrong ?');
+		}
+	},
+	
+	getTemplates		: function($node) {
+		var tplsel = $node.attr('cc-loop-template');
+		if (!tplsel) return this.createTemplates($node);
+		else return $(tplsel);
+	},
+	
+	createTemplates	: function($node) {
+
+		Circular.log.debug('@loop','createTemplates',$node);
+		
+		if (!this.$stack) {
+			this.$stack = Circular.engine.stack($('<div id="cc-loop-stack">'));
+		}
+		
+		// check all loops beneath this loop, not nested,
+		// and create templates for them first
+		this.getSubloops($node).each(function() {
+			Circular.loop.createTemplates($(this));
 		});
 		
-		$item.filter('[cc-loop-last]').add($('[cc-loop-last]',$item)).each(function() {
-			if (loop.last) {
-				$(this).attr('cc-loop-last','true').addClass('cc-loop-last');
+		var $templates = $node.children();
+		if ($templates.length && this.config.greedy) {
+			$templates.attr('cc-loop-tplsource','');
+		} else {
+			var $contents = $node.contents();
+			if ($contents.length==1 && $contents.get(0).nodeType==Node.ELEMENT_NODE) {
+				$templates = $contents.eq(0);
+				$templates.attr('cc-loop-tplsource','');
 			} else {
-				$(this).attr('cc-loop-last','false').removeClass('cc-loop-last');
+				$node.wrapInner('<div cc-loop-tplsource>');
+				$templates = $node.children('[cc-loop-tplsource]');
+			}
+		}
+		
+		var selectors = [];
+		$templates.each(function() {
+			var tid = Circular.engine.nodeid(this);
+			// todo: check if such template exists?
+			Circular.engine.stack($(this),Circular.loop.$stack);
+			selectors.push('#'+tid);
+		});
+		$node.attr('cc-loop-template',selectors.join(','));
+		
+		return $templates;
+		
+	},
+	
+	getSubloops		: function($node) {
+		// return the closest child loops only
+		// http://stackoverflow.com/questions/13448113/match-first-matching-hierarchical-descendant-with-jquery-selectors
+		return $node.children(':not([cc-loop])').andSelf().find('[cc-loop]:eq(0)');
+	},
+	
+	getOldItems		: function($node) {
+		var $olditems = $node.children('[cc-loop-item]');
+		$olditems.data('cc-loop-old',true);
+		Circular.log.debug('@loop','getOldItems',$olditems);
+		return $olditems;
+	},
+	
+	getKeys				: function(ccnode) {
+		var keys = [];
+		var arr = ccnode.attributes['cc-loop'].content.result;
+		//console.log(ccnode,arr);
+		if (arr) {
+		
+		
+			var allkeys = Object.keys(arr);
+			
+			// sort, sortas, sortby
+			var sort 		= '';		// ascending, descending
+			var sortas 	= 'string';	// number,string,stringnc
+			var sortby 	= false;
+			
+			// sort, sortby, sortas			
+			if (ccnode.attributes['cc-loop-sort']) {
+				sort = ccnode.attributes['cc-loop-sort'].content.value;
+				if (!Circular.parser.boolish(sort)) sort = false;
+				if (sort==='') sort = 'ascending';
+			}
+			if (ccnode.attributes['cc-loop-sortas']) {
+				sortas = ccnode.attributes['cc-loop-sortas'].content.value;
+				if (!sortas) sortas = 'string';
+			}
+			if (ccnode.attributes['cc-loop-sortby']) {
+				sortby = ccnode.attributes['cc-loop-sortby'].content.value;
+				if (!sortby) sortby = false;
+			}
+			if (sort) {
+				allkeys = allkeys.sort(this.compareFunction(sort,sortas,sortby,arr)); 
+			}
+							
+					
+			// offset, limit
+			var offset 	= 0;
+			var limit 	= false;
+			if (ccnode.attributes['cc-loop-offset']) {
+				offset = parseInt(ccnode.attributes['cc-loop-offset'].content.value);
+			}
+			if (ccnode.attributes['cc-loop-limit']) {
+				limit = parseInt(ccnode.attributes['cc-loop-limit'].content.value);
+			}
+			if (!offset) offset=0;
+			if (offset<0) offset=allkeys.length+offset;
+			if (!limit && limit!==0) limit=allkeys.length-offset;
+			if (limit<0) limit=allkeys.length-offset+limit;
+
+			var keys = allkeys.slice(offset,offset+limit);
+			
+		} else {
+			Circular.log.error('@loop','getKeys','no result',ccnode);
+		}
+		return keys;
+	},
+	
+	getItemContext	: function(each,ctx,key,index,loopas) {
+		var itemctx = '';
+		switch(each) {
+			
+			case 'key': 
+				var ekey = key.replace(/'/g, '\\\'');
+				itemctx = '\''+ekey+'\'';
+				break;
+			case 'index': 
+				itemctx = index;
+				break;
+			case 'item' :
+				var ekey = key.replace(/'/g, '\\\'');
+				itemctx = '({\'index\':'+index+',\'key\':\''+ekey+'\',\'value\':'+ctx+'[\''+ekey+'\']'+'})';
+				break;
+			default: 
+				var ekey = key.replace(/'/g, '\\\'');
+				itemctx = ctx+'[\''+ekey+'\']';
+				break;
+		}
+		if (loopas) itemctx = '({\''+loopas+'\':'+itemctx+'})';
+		//console.log(itemctx);
+		return itemctx;
+	},
+	
+	getNewItems			: function($olditems,$templates,itemctx,keys,idx) {
+		// gets the new parsed templates for 1 element of the loop
+		var newitems = [];
+		$templates.each(function() {
+			
+			var tplsel = '#'+$(this).attr('id');
+			var $newitem = $('[cc-loop-item][cc-context="'+itemctx+'"][cc-loop-tplorigin="'+tplsel+'"]',$olditems);
+			if (!$newitem.length || $newitem.data('cc-loop-modified')) {
+				$newitem = $(this).clone();
+				$newitem.removeAttr('cc-loop-tplsource').removeAttr('id')
+					.attr('cc-loop-item','').attr('cc-loop-tplorigin',tplsel)
+					.attr('cc-context',itemctx);
+			} else {
+				$newitem.data('cc-loop-old',false);
+			}
+			
+			// .. first,last..
+			if (idx==0) {
+				$newitem.addClass('cc-loop-first');
+				var search = '[cc-loop-first="false"]';
+				if ($newitem.is(search)) {
+					$newitem.remove();
+					return true;
+				} else {
+					var $remove = $(search,$newitem);
+					if ($remove.length) {
+						$newitem.data('cc-loop-modified',true);
+						$newitem = $newitem.not($remove);
+					}
+				}
+			} else {
+				$newitem.removeClass('cc-loop-first');
+				var search = '[cc-loop-first][cc-loop-first!="false"]';
+				if ($newitem.is(search)) {
+					$newitem.remove();
+					return true;
+				} else {
+					var $remove = $(search,$newitem);
+					if ($remove.length) {
+						$newitem.data('cc-loop-modified',true);
+						$newitem = $newitem.not($remove);
+					}
+				}
+			}
+			if (idx==keys.length-1) {
+				$newitem.addClass('cc-loop-last');
+				var search = '[cc-loop-last="false"]';
+				if ($newitem.is(search)) {
+					$newitem.remove();
+					return true;
+				} else {
+					var $remove = $(search,$newitem);
+					if ($remove.length) {
+						$newitem.data('cc-loop-modified',true);
+						$newitem = $newitem.not($remove);
+					}
+				}
+			} else {
+				$newitem.removeClass('cc-loop-last');
+				var search = '[cc-loop-last][cc-loop-last!="false"]';
+				if ($newitem.is(search)) {
+					$newitem.remove();
+					return true;
+				} else {
+					var $remove = $(search,$newitem);
+					if ($remove.length) {
+						$newitem.data('cc-loop-modified',true);
+						$newitem = $newitem.not($remove);
+					}
+				}
+			}
+			
+			
+			// index ..
+			var search = '[cc-loop-index][cc-loop-index!='+idx+']'
+			if ($newitem.is(search)) {
+				$newitem.remove();
+				return true;
+			}else {
+				var $remove = $(search,$newitem);
+				if ($remove.length) {
+					$newitem.data('cc-loop-modified',true);
+					$newitem = $newitem.not($remove);
+				}
+			}
+			
+			// odd,even ..
+			if (idx%2) {
+				$newitem.removeClass('cc-loop-odd').addClass('cc-loop-even');
+				var search = '[cc-loop-odd]';
+				if ($newitem.is(search)) {
+					$newitem.remove();
+					return true;
+				} else {
+					var $remove = $(search,$newitem);
+					if ($remove.length) {
+						$newitem.data('cc-loop-modified',true);
+						$newitem = $newitem.not($remove);
+					}
+				}
+			} else {
+				$newitem.addClass('cc-loop-odd').removeClass('cc-loop-even');
+				var search = '[cc-loop-even]';
+				if ($newitem.is(search)) {
+					$newitem.remove();
+					return true;
+				} else {
+					var $remove = $(search,$newitem).addBack(search);
+					if ($remove.length) {
+						$newitem.data('cc-loop-modified',true);
+						$newitem = $newitem.not($remove);
+					}
+				}
+			}
+			newitems.push($newitem);
+		});
+		return newitems;
+	},
+	
+	appendNewItems	: function($node,newitems) {
+		Circular.log.debug('@loop','appendNewItems',newitems);
+		$node.append(newitems);
+	},
+	
+	removeOldItems	: function($olditems) {
+		Circular.log.debug('@loop','removeOldItems',$olditems);
+		$olditems.each(function() {
+			var $this = $(this);
+			if ($this.data('cc-loop-old')) {
+				$this.remove();
 			}
 		});
-		
-		$item.filter('[cc-loop-index]').add($('[cc-loop-index]',$item)).each(function() {
-			this.className = this.className.replace(/cc-loop-index-\d+/,'');
-			$(this).attr('cc-loop-index',loop.index).addClass('cc-loop-index-'+loop.index);
-		});
-		
-		$item.filter('[cc-loop-key]').add($('[cc-loop-key]',$item)).each(function() {
-			$(this).attr('cc-loop-key',loop.key);
-			// cant trust the key to be a valid classname
-		});
-		
-		$item.filter('[cc-loop-show],[cc-loop-hide]').add($('[cc-loop-show],[cc-loop-hide]',$item)).each(function() {
-			var res = false, action="show";
-			var cond = $(this).attr('cc-loop-show');
-			if (!cond) {
-				cond = $(this).attr('cc-loop-hide');
-				action="hide";
-			}
-			if (cond.substring(0,1)==':') {
-				res = (loop.key == cond.substring(1));
-			} else if (cond=='first') {
-				res = loop.first;
-			} else if (cond=='last') {
-				res = loop.last;
-			} else {
-				res = (loop.index == cond);
-			}
-			if (action=="show") {
-				if (res) $(this).removeClass('cc-loop-hide');
-				else $(this).addClass('cc-loop-hide');			
-			} else {
-				if (res) $(this).addClass('cc-loop-hide');
-				else $(this).removeClass('cc-loop-hide');			
-			}
-		});	
-		
+	},
+
+	compareFunction	: function(sort,sortas,sortby,arr) {
+		switch(sortas) {
+			case 'number' :
+				if (sort=='descending') {
+					if (sortby) return function(a, b) { return parseFloat(arr[b][sortby])-parseFloat(arr[a][sortby]); }
+					else return function(a, b) { return parseFloat(b)-parseFloat(a); }
+				} else {
+					if (sortby) return function(a, b) { return parseFloat(arr[a][sortby])-parseFloat(arr[b][sortby]); }
+					else return function(a, b) { return parseFloat(a)-parseFloat(b); }
+				}
+				break;
+			case 'string' :
+				if (sort=='descending') {
+					if (sortby) return function(a, b) { return arr[b][sortby].toString().localeCompare(arr[a][sortby].toString()); }
+					else return function(a, b) { return b.toString().localeCompare(a.toString()); }
+				} else {
+					if (sortby) return function(a, b) { return arr[a][sortby].toString().localeCompare(arr[b][sortby].toString()); }
+					else return function(a, b) { return a.toString().localeCompare(b.toString()); }
+				}
+				break;
+			case 'stringnc' :
+				if (sort=='descending') {
+					if (sortby) return function(a, b) { 
+						return arr[b][sortby].toString().toUpperCase().localeCompare(arr[a][sortby].toString().toUpperCase()); 
+					}
+					return function(a, b) { 
+						return b.toString().toUpperCase().localeCompare(a.toString().toUpperCase()); 
+					}
+				} else {
+					if (sortby) return function(a, b) { 
+						return arr[b][sortby].toString().toUpperCase().localeCompare(arr[a][sortby].toString().toUpperCase()); 
+					}
+					return function(a, b) { 
+						return a.toString().toUpperCase().localeCompare(b.toString().toUpperCase()); 
+					}
+				}
+				break;
+			default :
+				return function(a, b) { return 0; }
+		}
 	}
 	
+		
+});
+
+
+
+
+
+/* ----------------------
+	input
+----------------------- */
+
+new CircularModule('input',{
+
+	config	: {
+		events : []
 	
+	},
+	
+	attributes	: {
+	
+		'cc-input' : {
+			in : function(ccattr,ccnode,node) {
+				Circular.log.debug('@input','cc-input.in',node);
+				Circular.input.processCCInput(ccattr,ccnode,node);		
+				
+			},
+			set	: function(ccattr,ccnode,node) {
+				Circular.log.debug('@input','attributes.cc-input.set','ignore');
+				
+			}	
+		},
+		'cc-input-event'	: {
+			// watch but ignore
+		},
+		'cc-input-value'	: {
+			// watch but ignore
+		},
+		'cc-input-target'	: {
+			// just for checkboxes; ignore
+		}
+		
+	},
+	
+	init	: function() {
+		this.config.events.forEach(function(event) {
+			this.events.unshift(event);
+		});	
+	},
+	
+	// ----------
+	
+	events : [
+		{ match : 'input[type=radio]', 		event : 'click' },
+		{ match : 'input[type=checkbox]', event : 'click' },
+		{ match : 'input[type=button]', 	event : 'click' },
+		{ match : 'input,textarea', 			event : 'keyup:500' },
+		{ match : 'button', 							event : 'click' },
+		{ match : 'select', 							event : 'change' },
+		{ match : '*',										event : 'click' }
+	],
+	
+	
+	
+	processCCInput	: function(ccattr,ccnode,node) {
+		var $node = $(node);
+		var evdata 	= this.getEventData(ccattr,ccnode,node);
+		var inpval	= this.getInputValue(ccattr,ccnode);
+		var target	= this.getTarget(ccattr,ccnode,node);
+		if (target!==false) {
+			if (inpval || $node.is(':input')) {
+			
+				// set the current value
+				this.read($node,target);
+				
+				// set the event
+				$node.off('.ccinput');
+				var evtimer = null;
+				$node.on(evdata.event, function(ev) {
+					clearTimeout(evtimer);
+					evtimer = setTimeout(function() {
+						Circular.input.write(target,$node,inpval);
+					},evdata.timeout);
+				});
+				
+			} else {
+				Circular.log.error('@input','processCCInput','node is not a form element, and no cc-input-value set',node);
+			}
+		} else {
+			Circular.log.error('@input','processCCInput','target is not defined by cc-input, name or id',node);
+		}
+	},
+	
+	getEventData	: function(cattr,ccnode,node) {
+		
+		var evdata = [];
+		if (ccnode.attributes['cc-input-event']) {
+			var edarr = ccnode.attributes['cc-input-event'].content.value.split(':');
+			evdata = { 
+				event: edarr[0]+'.ccinput', 
+				timeout : edarr[1] || 0 
+			};
+		} else {
+			var $node = $(node);
+			for (var mc=0; mc < this.events.length; mc++ ) {
+				if ($node.is(this.events[mc].match)) {
+					var edarr = this.events[mc].event.split(':');
+					evdata = { 
+						event: edarr[0]+'.ccinput', 
+						timeout : edarr[1] || 0 
+					};
+					break;
+				}
+			}
+		}
+		Circular.log.debug('@input','getEventData',node,evdata);
+		return evdata;
+	},
+	
+	getInputValue	: function(cattr,ccnode) {
+		var inpval;
+		if (ccnode.attributes['cc-input-value']) {
+			inpval = ccnode.attributes['cc-input-value'].content.value;
+		} 
+		// may be undefined;
+		return inpval;
+	},
+	
+	getTarget	: function(ccattr,ccnode,node) {
+		var target=false;
+		if (ccattr.content.expression) {
+			target = ccattr.content.expression;
+			Circular.log.debug('@input','getTarget','expression',target);
+		} else if (ccattr.content.value) {
+			target = ccattr.content.value;
+			Circular.log.debug('@input','getTarget','value',target);
+		} else {
+			var $node = $(node);
+			part = $node.attr('name');
+			if (!part) part = $node.attr('id');
+			if (part) {
+				//target = Circular.context.get()+'["'+part+'"]';
+				target = Circular.context.get()+'.'+part;
+				Circular.log.debug('@input','getTarget','induced',target);
+				Circular.queue.add(function() {
+					$node.attr('cc-input','{{'+target+'}}');
+				});
+			}
+		}
+		if ($(node).is('input[type=checkbox]')) {
+			// save this so we can find those later
+			$(node).attr('cc-input-target',target);
+		}
+		// may be undefined;
+		return target;
+	},
+	
+	read	: function($node,target) {
+	
+		var value = Circular.parser.eval(target);
+		Circular.log.debug('@input','read',$node,target,value);
+		
+		if ($node.is(':input')) {
+			if ($node.is('input[type=checkbox]')) {
+				if (Array.isArray(value)) {
+					if (target.indexOf($node.val())!=-1) {
+						$node.attr('checked','');
+					}
+				} else {
+					if (value) {
+						Circular.log.warn('@input','read','checkbox does not refer to an array');
+					}
+				}
+			} else if ($node.is('input[type=radio]')) {
+				if ($node.val()==target) {
+					$node.attr('checked','');
+				}
+			} else if ($node.is('select[multiple]')) {
+				if (Array.isArray(value)) {
+					$node.val(value);
+				} else {
+					if (value) {
+						Circular.log.warn('@input','read','multiple select does not refer to an array');
+					}
+				}
+			} else {
+				
+				$node.val(value);
+			}
+		} else {
+			Circular.log.debug('@input','read','not an input, not reading');
+		}
+	},
+	
+	write	: function(target,$node,value) {
+		Circular.log.debug('@input','write',target,$node,value);
+		var valexp = '""';
+		if (value!==undefined) {
+			valexp = '"'+value.replace('"','\\"').replace(/\n/g, "\\n")+'"';
+		} else {
+			if ($node.is(':input')) {
+				
+				if ($node.is('[type=checkbox]')) {
+					var name = $node.attr('name');
+					var $all = $('input[type="checkbox"][cc-input-target="'+target+'"]',$node.get(0).form);
+					var elems = [];
+					$all.each(function() {
+						if (this.checked) {
+							elems.push($(this).val().replace('"','\\"'));
+						}
+					});
+					valexp = '["'+elems.join('","')+'"]';
+					
+				} else if ($node.is('input[type=radio]')) {
+					if ($node.is(':checked')) {
+						valexp = '"'+$node.val().replace('"','\\"')+'"';
+					}
+
+				} else if ($node.is('select[multiple]')) {
+					var elems = [];
+					var arr = $node.val();
+					if (arr) {
+						arr.forEach(function(elm) {
+							elems.push(elm.replace('"','\\"'));
+						});
+						valexp = '["'+elems.join('","')+'"]';
+					} else {
+						valexp = '[]';
+					}
+				}  else {
+					valexp = '"'+$node.val().replace('"','\\"').replace(/\n/g, "\\n")+'"';
+				}
+				Circular.log.debug('@input','write',target,valexp);
+				
+			} else {
+				Circular.log.debug('@input','write','no value, no input, not writing');
+				return false;
+			}
+		} 
+		
+		Circular.parser.eval(target+'='+valexp);
+		return true;
+		
+	}
+		
+});
+
+
+
+
+
+/* ----------------------
+	data
+----------------------- */
+
+new CircularModule('data',{
+
+	config	: {
+	
+	},
+	
+	attributes	: {
+	
+		'cc-data' : {
+			in : function(ccattr,ccnode,node) {
+				Circular.log.debug('@data','cc-data.in',node);
+				if (ccnode.flags.pristine || ccattr.flags.attrdomchanged || ccattr.flags.attrdatachanged) {
+					// load data and wait
+					Circular.data.processCCData(ccattr,ccnode,node);	
+				} 
+				if (!ccattr.flags.loading) {
+						var target = this.getTarget(ccattr,ccnode,node);
+						Circular.context.set(target);
+						return true;
+				}
+				return false;
+			}
+		},
+		'cc-data-target'	: {
+			// ignore
+		}
+		
+	},
+	
+	init	: function() {
+		
+	},
+	
+	// ----------
+	
+	
+	stack	: [],
+	
+	processCCData	: function(ccattr,ccnode,node) {
+		var source = this.getSource(ccattr,ccnode,node);
+		var target = this.getTarget(ccattr,ccnode,node);
+		// dont set this until you loaded and recycled
+		//Circular.context.set(target);
+		if (source && target) {
+			ccattr.flags.loading=true;
+			this.load(source,target).then(function() {
+				ccattr.flags.loading=false;
+			});
+		} else {
+			Circular.log.error('@data','processCCData','missing source or target');
+		}
+	},
+	
+	getSource	: function(ccattr,ccnode,node) {
+		var source = false;
+		if (ccattr.content.expression) {
+			source = ccattr.content.result;
+			Circular.log.debug('@input','getSource','expression');
+		} else source = ccattr.content.value; 
+		return source;
+	},
+	
+	getTarget	: function(ccattr,ccnode,node) {
+		var target=false;
+		var targetname = Circular.modules.prefix('cc-data-target');
+		if (ccnode.attributes[targetname]) {
+			if (ccnode.attributes[targetname].content.expression) {
+				target = ccnode.attributes[targetname].content.expression;
+				Circular.log.debug('@input','getTarget','expression',target);
+			} else if (ccnode.attributes[targetname].content.value) {
+				target = ccnode.attributes[targetname].content.value;
+				Circular.log.debug('@input','getTarget','value',target);
+				// the load is async. you should really watch it ..
+			}
+		}
+		if (!target) {
+			target = 'Circular.data.stack['+Circular.data.stack.length+']';
+			Circular.log.debug('@input','getTarget','implied',target);
+			// we queue this because the attr is not indexed 
+			// and watched if it is added in this cycle.
+			Circular.queue.add(function() {
+				$(node).attr(targetname,'{{'+target+'|w}}');
+			});
+		}
+		
+		targetval = Circular.parser.eval(target);
+		if (targetval===undefined) {
+			Circular.log.debug('@data','getTarget','assigning empty object');
+			Circular.parser.eval(target+'={}');
+		}
+		return target;
+	},
+	
+	load	: function(arg,target) {
+		return $.ajax(arg).done(function(data) {
+			Circular.log.debug('@data','load',arg,'success');
+			// convert to json
+			if (typeof data!='object') {
+				try {
+					var object = JSON.parse(data);
+					// assign
+					Circular.data.cache=object;
+				} catch(e) {
+					Circular.log.error('@data','load','return value does not seem json object');
+				}
+			} else {
+				Circular.data.cache=data;
+			}
+			Circular.parser.eval(target+'=jQuery.extend(true, {}, Circular.data.cache);');
+		}).fail(function(data) {
+			Circular.log.debug('@data','load','fail',data);
+			
+		});
+	}
 		
 });
 

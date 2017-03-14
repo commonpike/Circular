@@ -1,0 +1,72 @@
+<html>
+	<head>
+		<title>@context</title>
+				
+		
+		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+		<script src="../../../js/circular.min.js"></script>
+		<script src="../../../js/circular.srcbox.js"></script>
+		<link rel="stylesheet" href="../../assets/docs.css">
+			
+
+		<script>
+			var Data = {
+				page : {
+					message : 'Welcome aboard',
+					user 		: 'Data.user.current'
+				},
+				user : {
+					current : {
+						title : 'passenger'
+					}
+				}
+			}			
+		</script>
+		
+	</head>
+	<body cc-root>
+		<!--cc:include("../../assets/header.inc")-->
+		<article>
+
+			<section id="about">
+				If you use an expression inside a <code>cc-context</code> attribute,
+				and that expression evaluates to a string, that string is used as a 
+				context. This way, you can create references within your data.<br><br>
+				The below snippet uses this as a model:
+<xmp>
+var Data = {
+	page : {
+		message : 'Welcome aboard',
+		user 	: 'Data.user.current'
+	},
+	user : {
+		current : {
+			title : 'passenger'
+		}
+	}
+}
+</xmp>
+			</section>
+			
+			<section id="demo">
+
+				<div id="results">
+				
+<!-- ....... -->		
+<div cc-srcbox>
+<p cc-context="Data.page">
+	<span>{{#message}}</span>, 
+	<span cc-context="{{#user}}">{{#title}}</span>
+</p> 
+</div>
+<!-- ....... -->		
+
+
+				</div>
+				
+			</section>
+		</article>
+		
+		<!--cc:include("../../assets/footer.inc")-->
+	</body>
+</html>
