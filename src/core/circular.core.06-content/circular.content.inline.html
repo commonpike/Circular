@@ -1,52 +1,123 @@
 <html>
 	<head>
-		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
-		<script>
+		<title>@content</title>
 		
-			
-			if (document.location.href.indexOf('circular/src/core')!=-1) {
-
-				document.write('\
-					<script src="../../../vendor/node_modules/jquery/dist/jquery.min.js"><'+'/script>\
-					<script src="../../../vendor/node_modules/esprima/esprima.js"><'+'/script>\
-					<script src="../../../vendor/node_modules/observe-js/src/observe.js"><'+'/script>\
-					<script src="../../core/circular.core.00/circular.core.js"><'+'/script>\
-					<script src="../../core/circular.core.01-log/circular.log.js"><'+'/script>\
-					<script src="../../core/circular.core.02-debug/circular.debug.js"><'+'/script>\
-					<script src="../../core/circular.core.03-queue/circular.queue.js"><'+'/script>\
-					<script src="../../core/circular.core.04-context/circular.context.js"><'+'/script>\
-					<script src="../../core/circular.core.05-root/circular.root.js"><'+'/script>\
-					<script src="../../core/circular.core.06-content/circular.content.js"><'+'/script>\
-					<script src="../../core/circular.core.07-parser/circular.parser.js"><'+'/script>\
-					<script src="../../core/circular.core.08-registry/circular.registry.js"><'+'/script>\
-					<script src="../../core/circular.core.09-engine/circular.engine.js"><'+'/script>\
-					<script src="../../core/circular.core.10-watchdog/circular.watchdog.js"><'+'/script>\
-				')
-
-			} else if (document.location.href.indexOf('circular/dist/docs/core')!=-1) {
-			
-				document.write('<script src="../../../js/circular.min.js"><'+'/script>');
-				
-			} else {
-			
-				document.write('<script src="http://circularjs.net/current/js/circular.min.js"><'+'/script>');
-				
-			}
-			
-		</script>
-		<script>
+		<!-- build:remove -->
+		<script src="../../../vendor/node_modules/jquery/dist/jquery.min.js"></script>
+		<script src="../../../vendor/node_modules/esprima/dist/esprima.js"></script>
+		<script src="../../../vendor/node_modules/observe-js/src/observe.js"></script>
+		<script src="../../core/circular.core.00/circular.core.js"></script>
+		<script src="../../core/circular.core.01-modules/circular.modules.js"></script>
+		<script src="../../core/circular.core.02-log/circular.log.js"></script>
+		<script src="../../core/circular.core.03-queue/circular.queue.js"></script>
+		<script src="../../core/circular.core.04-parser/circular.parser.js"></script>
+		<script src="../../core/circular.core.05-context/circular.context.js"></script>
+		<script src="../../core/circular.core.06-content/circular.content.js"></script>
+		<script src="../../core/circular.core.07-eject/circular.eject.js"></script>
+		<script src="../../core/circular.core.08-registry/circular.registry.js"></script>
+		<script src="../../core/circular.core.09-engine/circular.engine.js"></script>
+		<script src="../../core/circular.core.10-watchdog/circular.watchdog.js"></script>
 		
+		<script src="../../base/circular.base.04-include/circular.include.js"></script>
+		<script src="../../contrib/circular.srcbox/circular.srcbox.js"></script>
+		
+		<link rel="stylesheet" href="../../assets/docs.css">	
+		
+		<!-- /build -->
+		
+		
+		<!-- build:template
+			<% if (environment === 'dist') { %>
+				<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+				<script src="../../../js/circular.min.js"></script>
+				<script src="../../../js/circular.srcbox.js"></script>
+				<link rel="stylesheet" href="../../assets/docs.css">	
+			<% } else { %>
+				<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+				<script src="http://circularjs.net/<%= release %>/js/circular.min.js"></script>
+				<script src="http://circularjs.net/<%= release %>/js/circular.srcbox.js"></script>
+				<link rel="stylesheet" href="http://circularjs.net/<%= release %>/docs/assets/docs.css">	
+			<% } %>
+		/build -->
+			
+
+		<script>
 			var Model = {
-				currentpage	:  {
-					title : 'Hello World'
-				}
+				thing	: 'heart'
 			}
-			
-			Circular.init();
-			
 		</script>
+		
 	</head>
-	<body cc-context="{{Model.currentpage}}">
-		<h1>{{#title}}</h1>
+	<body cc-root>
+		<!--cc:include("../../assets/header.inc")-->
+		<article>
+
+			<section id="about">
+				You can use <code>{{expressions}}</code> in text content.
+				They are usually replaced
+				by <code>&lt;span></code> elements with a cc-content attribute,
+				so they can be watched and updated when things change.<br><br>
+				
+				If an expression is the only thing nested inside an element,
+				no <code>&lt;span></code> element is created, but the cc-content
+				attribute is set on that parent element itself. <br>
+				
+				If however there is whitespace surrounding the expression,
+				a <code>&lt;span></code> element would be created to honor
+				the whitespace.
+				To have Circular eat whitespace around inline expressions,
+				set <code>Circular.engine.greedy</code> to true, like this:
+<xmp>
+Circular.init({
+	engine	: {
+		greedy : true
+	}
+});
+</xmp>
+				
+			</section>
+			
+			<section id="demo">
+			
+				<form id="controls">
+					Tell wild thing what's singing: <br>
+					<select onchange="Model.thing=$(this).val()">
+						<option>heart</option>
+						<option>mouth</option>
+						<option>ears</option>
+					</select>
+				</form>
+
+				<div id="results">
+				
+<!-- ....... -->		
+<div cc-srcbox>
+<div cc-context="Model">
+
+	<b>floating, creating a span:</b>
+	<p>Wild thing</p>
+	<p>You make my {{#thing}} sing</p>
+	
+	<hr>
+	<b>wrapped, setting cc-content on the parent:</b>
+	<p>Wild thing</p>
+	<p>You make my <i>{{#thing}}</i> sing</p>
+	
+	<hr>
+	<b>wrapped, but honoring whitespace:</b>
+	<p>Wild thing</p>
+	<p>You make my <i> {{#thing}} </i> sing</p>
+	
+</div>
+</div>
+<!-- ....... -->		
+
+
+				</div>
+				
+			</section>
+		</article>
+		
+		<!--cc:include("../../assets/footer.inc")-->
 	</body>
 </html>
