@@ -1,0 +1,162 @@
+<html>
+	<head>
+		<title>@engine:sparsetrees</title>
+		
+		<!-- build:remove -->
+		<script src="../../../vendor/node_modules/jquery/dist/jquery.min.js"></script>
+		<script src="../../../vendor/node_modules/esprima/dist/esprima.js"></script>
+		<script src="../../../vendor/node_modules/observe-js/src/observe.js"></script>
+		<script src="../../core/circular.core.00/circular.core.js"></script>
+		<script src="../../core/circular.core.01-modules/circular.modules.js"></script>
+		<script src="../../core/circular.core.02-log/circular.log.js"></script>
+		<script src="../../core/circular.core.03-queue/circular.queue.js"></script>
+		<script src="../../core/circular.core.04-parser/circular.parser.js"></script>
+		<script src="../../core/circular.core.05-context/circular.context.js"></script>
+		<script src="../../core/circular.core.06-content/circular.content.js"></script>
+		<script src="../../core/circular.core.07-eject/circular.eject.js"></script>
+		<script src="../../core/circular.core.08-registry/circular.registry.js"></script>
+		<script src="../../core/circular.core.09-engine/circular.engine.js"></script>
+		<script src="../../core/circular.core.10-watchdog/circular.watchdog.js"></script>
+		
+		<script src="../../base/circular.base.04-include/circular.include.js"></script>
+		<script src="../../base/circular.base.06-loop/circular.loop.js"></script>
+		<script src="../../contrib/circular.srcbox/circular.srcbox.js"></script>
+		
+		<link rel="stylesheet" href="../../assets/docs.css">	
+		
+		<!-- /build -->
+		
+		
+		<!-- build:template
+			<% if (environment === 'dist') { %>
+				<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+				<script src="../../../js/circular.min.js"></script>
+				<script src="../../../js/circular.srcbox.js"></script>
+				<link rel="stylesheet" href="../../assets/docs.css">	
+			<% } else { %>
+				<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+				<script src="http://circularjs.net/<%= release %>/js/circular.min.js"></script>
+				<script src="http://circularjs.net/<%= release %>/js/circular.srcbox.js"></script>
+				<link rel="stylesheet" href="http://circularjs.net/<%= release %>/docs/assets/docs.css">	
+			<% } %>
+		/build -->
+			
+
+		<script>
+			var Data = {
+				countries : [{
+					name : 'Swaziland',
+					cities : [{
+						name : 'Swazitown',
+						addresses : [
+							"Swazistreet 10",
+							"Dirt road 24a"
+						]
+					}, {
+						name : 'Tinselbrook',
+						addresses : [
+							"Tinselstreet 12",
+							"Tinselstreet 45"
+						]
+					}]
+				},{
+					name : 'Switzerland',
+					cities : [{
+						name : 'Switzertown',
+						addresses : [
+							"Switzerstreet 10",
+							"Goltenes allee 10"
+						]
+					},{
+						name : 'Riesentall',
+						addresses : [
+							"Riesebstrasse 15",
+							"Riesebstrasse 45"
+						]
+					}]
+				}]
+								
+			};
+			
+			var updidx = 0;
+			function update(str) {
+				return '['+(updidx++)+'] '+str.replace(/^\[\d+\] /,'');
+			}
+			
+			function random() {
+				Data.countries.forEach(function(country) {
+					if (Math.random()<.25) country.name=update(country.name);
+					country.cities.forEach(function(city) {
+						if (Math.random()<.25) city.name=update(city.name);
+						for (var idx=0; idx<city.addresses.length; idx++) {
+							if (Math.random()<.25) city.addresses[idx]=update(city.addresses[idx]);
+						}
+					});
+				});
+			};
+			
+			Circular.init({
+				log : {
+					debug : false
+				},
+				watchdog	: {
+					timeout : 500
+				}
+			});
+		</script>
+		
+	</head>
+	<body cc-root>
+		<!--cc:include("../../assets/header.inc")-->
+		<article>
+
+			<section id="about">
+				If anything changes in the document or associated data,
+				the engine does not recycle the whole document tree, but
+				only visits the changed nodes and recurses those down only
+				if needed.<br>
+				Allthough the watchdog delivers changes in small bulks,
+				the engine reassembles them into sparse trees arranged in
+				document order. So if multiple things change at virtually
+				the same time, you can still be sure that the *outer* things
+				get processed sooner than the *inner* things.<br><br>
+				
+			</section>
+			
+			<section id="demo">
+				<form id="controls">
+					Click the 'random()' button and check your console
+					to see how updates are performed.<br>
+					<button type="button" onclick="Circular.log.write('---'); random(); random(); ">random()</button>
+				</form>
+				<div id="results">
+				
+<!-- ....... -->		
+<div cc-srcbox>
+<ul cc-context="Data" cc-loop="{{#countries}}">
+	<li>
+		<span cc-log="updating country {{#name}}">{{#name}}</span>
+		<ul cc-loop="{{#cities}}">
+			<li>
+				<span cc-log="updating city {{#name}}">{{#name}}</span>
+				<ul cc-loop="{{#addresses}}">
+					<li>
+						<span cc-log="updating street {{#this}}">{{#this}}</span>
+					</li>
+				</ul>
+			</li>
+		</ul>
+	</li>
+</ul>
+</div>
+<!-- ....... -->		
+
+
+				</div>
+				
+			</section>
+		</article>
+		
+		<!--cc:include("../../assets/footer.inc")-->
+	</body>
+</html>
