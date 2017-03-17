@@ -45,7 +45,8 @@ new CircularModule('engine', {
 		this.recycle($root,true);
 	},
 	
-	
+/*
+
 	recycle	: function(nodes,now) {
 		this.debug('@engine.recycle ');
 		if (nodes instanceof jQuery) {
@@ -129,8 +130,8 @@ new CircularModule('engine', {
 	},
 
 	
-	
-/*	
+*/	
+
 	recycle	: function(nodes,now) {
 	
 		this.debug('@engine.recycle ');
@@ -155,9 +156,9 @@ new CircularModule('engine', {
 			Circular.registry.lock(node);
 		});
 		
-		var trees = this.treeify(nodes);
+		var forest = this.makeSparseTrees(nodes);
 		
-		trees.forEach(function(tree) {
+		forest.forEach(function(tree) {
 			this.recycleTree(tree);
 		},this);
 
@@ -183,11 +184,11 @@ new CircularModule('engine', {
 			Circular.registry.unlock(tree.node);
 		}
 		tree.children.forEach(function(tree) {
-			this.recycle(tree);
+			this.recycleTree(tree);
 		},this);
 	},
 	
-	treeify	: function(nodes) {
+	makeSparseTrees	: function(nodes) {
 			
 		//console.log(nodes);
 		
@@ -245,7 +246,7 @@ new CircularModule('engine', {
 		return roots;
 	},
 	
-*/
+
 	getContext	: function(node) {
 		this.debug('@engine.getContext',node.nodeName);
 		// you rarely need this. while cycling the document,
