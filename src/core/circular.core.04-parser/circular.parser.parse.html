@@ -1,7 +1,6 @@
-<!DOCTYPE html>
 <html>
 	<head>
-		<title>@config.modules.attrprefix</title>
+		<title>@parser.parse</title>
 		
 		<!-- build:remove -->
 		<script src="../../../vendor/node_modules/jquery/dist/jquery.min.js"></script>
@@ -40,55 +39,89 @@
 				<link rel="stylesheet" href="http://circularjs.net/<%= release %>/docs/assets/docs.css">	
 			<% } %>
 		/build -->
-		
-		
+			
 		<script>
-		
-			var Model = {
-				message	: 'hello'
-			}
+			var Model	= {
+				result 		: {
+					processed : '',
+					flags 		: {}
+				}
+			};
+			var Control = {
+				exec	: function(form) {
+					var expr 	= form.elements.expression.value;
+					var ctx 	= form.elements.context.value;
+					var checkflags = form.elements.checkflags.checked;
+					if (checkflags) {
+						Model.result = Circular.parser.parse(expr,ctx,true);
+					} else {
+						Model.result = {
+							processed : Circular.parser.parse(expr,ctx),
+							flags	: {
+								parse			: '',
+								evaluate	: '',
+								watch			: '',
+								insert		: ''
+							}
+						}
+					}
+				}
+			};
 			
 			Circular.init({
-				modules : {
-					attrprefix	: 'square-'
-				}, 
-				log 	: {
+				log : {
 					debug : true
 				}
 			});
-
-				
+			
 		</script>
+		
 	</head>
-	<body square-root square-context="Model">
+	<body cc-root>
 		<!--cc:include("../../assets/header.inc")-->
 		<article>
 
 			<section id="about">
-				You can change the default 'cc-' prefix of all custom attributes to something
-				else (like the html5 compliant 'data-cc-'). Below example uses
-<pre>
-Circular.init({
-	modules : { attrprefix	: 'square-' }
-})
-</pre>
-			If you do this, <b>all</b> attribute names in your html that originally started
-			with <code>cc-</code> need to start with <code>square-</code> instead.
+			
+				<code>@parser.parse</code> parses an <code>{{expression}}</code>
+				in a context.
+				This is just text manipulation - it doesn't check if 
+				it's valid code, and it doesn't evaluate anything either.
+				
 
 			</section>
 			
 			<section id="demo">
 			
 				<form id="controls">
-						<input type="radio" name="test" onclick="{{#message='hello'|pi}}" checked>#message='hello'</a> 
-						<input type="radio" name="test" onclick="{{#message='goodbye'|pi}}">#message='goodbye'</a>
+				
+					<label>expression</label>
+					{{<input type="text" name="expression" value="@sing(#this,#song)|wip">}}
+					
+					<label>context</label>
+					<input type="text" name="context" value="Happy">
+					
+					<input type="checkbox"  checked name="checkflags">checkflags
+					
+					<button type="button" onclick="Control.exec(this.form)">
+						Circular.parser.parse()
+					</button>
+					
 				</form>
 				
 				<div id="results">
 				
 <!-- ....... -->		
-<div square-srcbox>
-<h1 square-content="{{#message}}"></h1>
+<div cc-srcbox cc-context="Model">
+<p>
+	<b>processed:</b><br>
+	{{#result.processed}}<br><br>
+	<b>flags:</b><br>
+	parse: {{#result.flags.parse}}<br>
+	evaluate: {{#result.flags.evaluate}}<br>
+	watch: {{#result.flags.watch}}<br>
+	insert: {{#result.flags.insert}}<br>
+</p>
 </div>
 <!-- ....... -->		
 

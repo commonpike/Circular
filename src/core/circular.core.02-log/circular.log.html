@@ -55,13 +55,13 @@
 			<section id="demo">
 			
 				<form id="controls" onsubmit="return false">
-					<button onclick="{{@log.tron()|p}}">@log.tron()</button>
-					<button onclick="{{@log.troff()|p}}">@log.troff()</button>
-					<button onclick="{{@log.debug('hello')|p}}">@log.debug('hello')</button><br>
+					<button onclick="{{@log.tron()|pi}}">@log.tron()</button>
+					<button onclick="{{@log.troff()|pi}}">@log.troff()</button>
+					<button onclick="{{@log.debug('hello')|pi}}">@log.debug('hello')</button><br>
 					
-					<button onclick="{{@log.info('hello')|p}}">@log.info('hello')</button>
-					<button onclick="{{@log.error('hello')|p}}">@log.error('hello')</button>
-					<button onclick="{{@log.fatal('hello')|p}}">@log.fatal('hello')</button><br>
+					<button onclick="{{@log.info('hello')|pi}}">@log.info('hello')</button>
+					<button onclick="{{@log.error('hello')|pi}}">@log.error('hello')</button>
+					<button onclick="{{@log.fatal('hello')|pi}}">@log.fatal('hello')</button><br>
 				</form>
 				
 				<div id="results">

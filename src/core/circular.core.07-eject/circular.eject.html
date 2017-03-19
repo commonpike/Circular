@@ -1,6 +1,6 @@
 <html>
 	<head>
-		<title>Circular.eject</title>
+		<title>@eject</title>
 		
 		<!-- build:remove -->
 		<script src="../../../vendor/node_modules/jquery/dist/jquery.min.js"></script>
@@ -17,50 +17,81 @@
 		<script src="../../core/circular.core.08-registry/circular.registry.js"></script>
 		<script src="../../core/circular.core.09-engine/circular.engine.js"></script>
 		<script src="../../core/circular.core.10-watchdog/circular.watchdog.js"></script>
+		
+		<script src="../../base/circular.base.04-include/circular.include.js"></script>
+		<script src="../../contrib/circular.srcbox/circular.srcbox.js"></script>
+		
+		<link rel="stylesheet" href="../../assets/docs.css">	
+		
 		<!-- /build -->
 		
 		
-		<!-- build:template:dist
-			<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
-			<script src="../../../js/circular.min.js"></script>
+		<!-- build:template
+			<% if (environment === 'dist') { %>
+				<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+				<script src="../../../js/circular.min.js"></script>
+				<script src="../../../js/circular.srcbox.js"></script>
+				<link rel="stylesheet" href="../../assets/docs.css">	
+			<% } else { %>
+				<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+				<script src="http://circularjs.net/<%= release %>/js/circular.min.js"></script>
+				<script src="http://circularjs.net/<%= release %>/js/circular.srcbox.js"></script>
+				<link rel="stylesheet" href="http://circularjs.net/<%= release %>/docs/assets/docs.css">	
+			<% } %>
 		/build -->
+			
 		
-		<!-- build:template:live
-			<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
-			<script src="http://circularjs.net/current/js/circular.min.js"></script>
-		/build -->
-			
-			
-		<style type="text/css">body { font-family: sans-serif; }</style>
-		<script>
-			Circular.init({
-				log : {
-					debug : true
-				},
-				engine : {
-					debug :true
-				}
-			});
-		</script>
 	</head>
 	<body cc-root>
-	
-	
-		<form id="controls">
-			<input type="checkbox" checked onclick="$('#output-heart').attr('cc-eject',!this.checked)">Heart
-			<input type="checkbox" checked onclick="$('#output-groovy').attr('cc-eject',!this.checked)">Groovy
-		</form>
+		<!--cc:include("../../assets/header.inc")-->
+		<article>
+
+			<section id="about">
+			
+				The <code>eject</code> module is a built in mech to move nodes out of the 
+				visible document tree. Other modules, like <code>@if</code>, use this.
+				You can call 'eject' from your own module using 
+				<code>Circular.eject.flag()</code> and <code>Circular.eject.unflag()</code>.<br><br>
+				When ejected, the node is moved to <code>#cc-ejected</code>, and is replaced by 
+				a <code>&lt;!--cc-eject</code> comment which makes sure the original content 
+				is still parsed as Circular cycles through the document tree - anytime something changes.
+				So the attribute that 'flagged' the node for ejection can 'unflag' it again
+				when appropriate.<br><br>
+				The module has one attribute, <code>cc-eject</code>, which is basicaly the 
+				same as cc-if (but without the cc-else).
+
+			</section>
+			
+			<section id="demo">
+			
+				<form id="controls">
+					<input type="checkbox" checked onclick="$('#output-wild').attr('cc-eject',!this.checked)">Heart
+					<input type="checkbox" checked onclick="$('#output-heart').attr('cc-eject',!this.checked)">Heart
+					<input type="checkbox" checked onclick="$('#output-groovy').attr('cc-eject',!this.checked)">Groovy
+				</form>
+				
+				<div id="results">
+				
+<!-- ....... -->		
+<div cc-srcbox>
+<p id="output-wild" cc-eject="false">
+	Wild thing
+</p>
+<p id="output-heart" cc-eject="false">
+	You make my heart sing
+</p>
+<p id="output-groovy" cc-eject="false">
+	You make everything groovy
+</p>
+</div>
+<!-- ....... -->		
+
+
+				</div>
+				
+			</section>
+		</article>
 		
-		
-		<div id="output">
-			<p>Wild thing</p>
-			<p id="output-heart" cc-eject="false">
-				You make my heart sing
-			</p>
-			<p id="output-groovy" cc-eject="false">
-				You make everything groovy
-			</p>
-		</div>
-		
+		<!--cc:include("../../assets/footer.inc")-->
 	</body>
 </html>

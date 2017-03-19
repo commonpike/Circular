@@ -28,8 +28,8 @@ new CircularModule('content',{
 					$(node).addClass('cc-content-generated');
 				}
 			},
-			set	: function(ccattr,ccnode,node) {
-				Circular.log.debug('@content','attributes.cccontent.set','ignore');
+			insert	: function(ccattr,ccnode,node) {
+				Circular.log.debug('@content','attributes.cccontent.insert','ignore');
 				/*var value = ccattr.content.value;	
 				if (value.length>16) value = value.substring(0,16)+'(...)';
 				if (node.getAttribute(ccattr.properties.name)!=value) {

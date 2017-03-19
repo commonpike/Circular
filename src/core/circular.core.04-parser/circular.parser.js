@@ -12,10 +12,16 @@ new CircularModule('parser', {
 		// exprregex 		: /{({|\[)(.*?(?=[}\]]}))(}|\])}/g,
 		// exprregex		: /{[{\[]([\s\S]*?(?=[}\]]}))[}\]]+}/g,
 		exprregex				: /{{([\s\S]*?(?=}}))}}/g,
-		flagregex				: /\|[pew]+$/,
+		flagregex				: /\|[pewi]+$/,
 		uriregex				: /(?:^[a-z][a-z0-9+.-]*:|\/\/)/i,
 		evalfail				: undefined,
 		rootscope				: 'window', // bad idea
+		defflags				: {
+			parse			: true,
+			evaluate	: true,
+			watch			: true,
+			insert		: true
+		},
 		debug						: false
 	},
 	
@@ -215,25 +221,7 @@ new CircularModule('parser', {
 		return expr.replace(this.config.exprregex,func);
 	},
 	
-	getFlags	: function(expr) {
-		
-		var parse = true, eval=true, watch=true;
-		var matches = expr.match(this.config.flagregex);
-		if (matches) {
-			return {
-				expression: expr.substring(0,expr.length-matches[0].length),
-				parse			: (matches[0].indexOf('p')!=-1),
-				evaluate	: (matches[0].indexOf('e')!=-1),
-				watch			: (matches[0].indexOf('w')!=-1)
-			}
-		}
-		return {
-			expression: expr,
-			parse			: true,
-			evaluate	: true,
-			watch			: true,
-		}
-	},
+	
 	
 	// split a text into an array
 	// of plain text string and {{expressions}}
@@ -257,30 +245,73 @@ new CircularModule('parser', {
 	
 	// if you want the result in the context of a node,
 	// call it like @parser.result.call(node,expr,ctx)	
-	result	: function(expr,ctx) {
+	result	: function(expr,ctx,checkflags,stripbrackets) {
 		// parse a single expression
-		var parsed = Circular.parser.parse(expr,ctx);
+		var parsed = Circular.parser.parse(expr,ctx,checkflags,stripbrackets);
+		if (checkflags) parsed = parsed.processed;
 		return Circular.parser.eval.call(this,parsed);
 	},
 	
 	
 	
-	parse	: function(expr,ctx) {
-		// parse a single expression
-		parsed = expr.replace(/\$this/g,'$(this)');
-		parsed = parsed.replace(/#this/g,ctx);
-		parsed = parsed.replace(/#/g,ctx+'.');
-		parsed = parsed.replace(/@/g,'Circular.');
-		return parsed;
+	parse	: function(expr,ctx,checkflags,stripbrackets) {
+		// parse a single expression. if checkflags is 
+		// passed ,this return an object
+		if (stripbrackets) {
+			expr=expr.substring(2,expr.length-2);
+		}
+		if (checkflags) {
+			var result 	= this.checkFlags(expr);
+			if (result.flags.parse) {
+				result.processed = result.processed.replace(/\$this/g,'$(this)');
+				result.processed = result.processed.replace(/#this/g,ctx);
+				result.processed = result.processed.replace(/#/g,ctx+'.');
+				result.processed = result.processed.replace(/@/g,'Circular.');
+			} 
+			return result;
+		} else {
+			var processed = expr.replace(/\$this/g,'$(this)');
+			processed = processed.replace(/#this/g,ctx);
+			processed = processed.replace(/#/g,ctx+'.');
+			processed = processed.replace(/@/g,'Circular.');
+			return processed;
+		}
 	},
 	
-	// evaluates a qualified expression.
-	// this does nothing special, but try,catch.
-	// if you want to eval this in the context of a node,
-	// call it like parser.eval.call(node,expr)
+	checkFlags	: function(expr) {
+		
+		var matches = expr.match(this.config.flagregex);
+		if (matches) {
+			return {
+				processed: expr.substring(0,expr.length-matches[0].length),
+				flags: {
+					parse			: (matches[0].indexOf('p')!=-1),
+					evaluate	: (matches[0].indexOf('e')!=-1),
+					watch			: (matches[0].indexOf('w')!=-1),
+					insert		: (matches[0].indexOf('i')!=-1)
+				}
+			}
+		}
+		return {
+			processed	: expr,
+			flags	: {
+				parse			: this.config.defflags.parse,
+				evaluate	: this.config.defflags.evaluate,
+				watch			: this.config.defflags.watch,
+				insert		: this.config.defflags.insert
+			}
+		}
+	},
+	
+	
 	
 	eval	: function(expr) {
 		Circular.parser.debug('@parser.eval');
+		// evaluates a qualified expression.
+		// this does nothing special, but try,catch.
+		// if you want to eval this in the context of a node,
+		// call it like parser.eval.call(node,expr)
+
 		var value = Circular.parser.config.evalfail;
 		try {
 				value = eval(expr);
@@ -303,29 +334,25 @@ new CircularModule('parser', {
 		
 		// parses *and* evaluates the original into a result:
 		
-		// checks if the original is an {{expression}}
-		// if parse, parses original into expression
-		// else puts original (minus brackets and flags) in expression
-		// if flags evaulate, evaluates the expression
-		// returns the result. does NOT watch paths.
+		// checks if the original is an {{expression|pewi}}
+		// if flags parse, parses original 
+		// if flags evaluate, evaluates the expression
+		// if not an expressions, evaluates too
+		// does NOT watch any paths.
 		
-		var result = original;
+		var evaluate	= true;
+		var result 		= original;
 		var expression = '';
-		var exprmatches = this.match(original);
-		if (exprmatches) {
-			if (exprmatches[0]===original) {
-			
-			
-				// this is a single full expression "{{#foo|we}}"
+		var matches = this.match(original);
+		if (matches) {
+			if (matches[0]===original) {
 
-				var inner 		= original.substring(2,original.length-2);
-				var flagged 	= this.getFlags(inner);
+				// this is a single full expression "{{#foo|we}}"
+			
+				var parsed = this.parse(original,ctx,true,true);
+				expression 	= parsed.processed;
+				evaluate		= parsed.flags.evaluate;
 				
-				if (flagged.parse) {
-					expression = this.parse(flagged.expression,ctx);
-				} else {
-					expression = flagged.expression;
-				}
 								
 			} else {
 			
@@ -335,29 +362,25 @@ new CircularModule('parser', {
 				// for the whole attribute.
 
 				expression = this.replace(original,function(match,inner) {
-					var flagged = Circular.parser.getFlags(inner);					
-					var parsed = '';
-					if (flagged.parse) {
-						parsed = Circular.parser.parse(flagged.expression,ctx);
-					} else {
-						parsed = inner;
-					}
+				
+					var parsed = this.parse(original,ctx,true);
+					return '"+('+parsed.processed+')+"';
 					
-					return '"+('+parsed+')+"';
 				});
 				// tell eval that this is a stringthing
 				expression = '"'+expression+'"';
-
+				evaluate = true;
 
 			}			
 			
-			result = this.eval(expression);
+			if (evaluate) result = this.eval(expression);
+			else result = expression;
 			
 			this.debug("@parser.parseval",original,expression,result);
 			
 			
 		} else {
-			this.debug('@parser.parseval','no match');
+			this.debug('@parser.parseval','not an expression');
 			result = this.eval(original);
 		}
 		

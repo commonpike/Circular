@@ -18,8 +18,8 @@ new CircularModule('input',{
 				Circular.input.processCCInput(ccattr,ccnode,node);		
 				
 			},
-			set	: function(ccattr,ccnode,node) {
-				Circular.log.debug('@input','attributes.cc-input.set','ignore');
+			insert	: function(ccattr,ccnode,node) {
+				Circular.log.debug('@input','attributes.cc-input.insert','ignore');
 				
 			}	
 		},

@@ -1,0 +1,170 @@
+<html>
+	<head>
+		<title>@parser.parse</title>
+		
+		<!-- build:remove -->
+		<script src="../../../vendor/node_modules/jquery/dist/jquery.min.js"></script>
+		<script src="../../../vendor/node_modules/esprima/dist/esprima.js"></script>
+		<script src="../../../vendor/node_modules/observe-js/src/observe.js"></script>
+		<script src="../../core/circular.core.00/circular.core.js"></script>
+		<script src="../../core/circular.core.01-modules/circular.modules.js"></script>
+		<script src="../../core/circular.core.02-log/circular.log.js"></script>
+		<script src="../../core/circular.core.03-queue/circular.queue.js"></script>
+		<script src="../../core/circular.core.04-parser/circular.parser.js"></script>
+		<script src="../../core/circular.core.05-context/circular.context.js"></script>
+		<script src="../../core/circular.core.06-content/circular.content.js"></script>
+		<script src="../../core/circular.core.07-eject/circular.eject.js"></script>
+		<script src="../../core/circular.core.08-registry/circular.registry.js"></script>
+		<script src="../../core/circular.core.09-engine/circular.engine.js"></script>
+		<script src="../../core/circular.core.10-watchdog/circular.watchdog.js"></script>
+		
+		<script src="../../base/circular.base.04-include/circular.include.js"></script>
+		<script src="../../contrib/circular.srcbox/circular.srcbox.js"></script>
+		
+		<link rel="stylesheet" href="../../assets/docs.css">	
+		
+		<!-- /build -->
+		
+		
+		<!-- build:template
+			<% if (environment === 'dist') { %>
+				<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+				<script src="../../../js/circular.min.js"></script>
+				<script src="../../../js/circular.srcbox.js"></script>
+				<link rel="stylesheet" href="../../assets/docs.css">	
+			<% } else { %>
+				<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+				<script src="http://circularjs.net/<%= release %>/js/circular.min.js"></script>
+				<script src="http://circularjs.net/<%= release %>/js/circular.srcbox.js"></script>
+				<link rel="stylesheet" href="http://circularjs.net/<%= release %>/docs/assets/docs.css">	
+			<% } %>
+		/build -->
+			
+		<script>
+			var Model	= {
+				poetry 		: "The light of the ashes"
+			};
+			
+			function showresults() {
+				setTimeout(function() {
+					$('[data-message]').each(function() {
+						var res = Circular.registry.get(this,true).attributes['data-message'].content.value;
+						$(this).html('<code>'+res+'</code>');
+					});
+				},500);
+			}
+			
+			Circular.init({
+				log : {
+					debug : true
+				}
+			});
+			
+			$(document).ready(function() {	
+				showresults();
+			});
+			
+		</script>
+		
+	</head>
+	<body cc-root>
+		<!--cc:include("../../assets/header.inc")-->
+		<article>
+
+			<section id="about">
+			
+				When <code>{{expressions}}</code> are processed several steps are taken, 
+				which can be controlled by adding flags after a pipe, like this: 
+				<code>&lt;div class="{{color:@brush.foreground|pi}}"></code>.<br>
+				These are the flags available:
+				<ul>
+					<li>
+						<b>p:parse</b><br>
+						Perform string operations on the expression to resolve all references to 
+						<code>#this</code>,<code>$this</code>,<code>#</code> and <code>@</code>.
+					</li>
+					<li>
+						<b>e:evaluate</b><br>
+						Evaluate the resulting expression - much like javascripts <code>eval</code>.
+					</li>
+					<li>
+						<b>i:insert</b><br>
+						Re-insert the result of the previous operations back into
+						the dom attribute where it came from. 
+					</li>
+					<li>					
+						<b>w:watch</b><br>
+						Watch all variables used in the expression for changes
+					</li>
+				</ul>
+				The order of the flags is irrelevant. 
+				When no flags are passed, all flags are assumed on, 
+				so <code>{{flush()}}</code> equals <code>{{flush()|wipe}}</code>.
+				<br><br>
+				
+				This may be useful, for example, if you don't want the expression to
+				be evaluated when parsed, like in event handlers: <br>
+				<code>&lt;a onclick="{{alert('#name')|wip}}">what's my name&lt;/a></code><br>
+				If we would add the flag 'e' in that code, circular would alert #name (or its value)
+				while parsing the expression, not when clicking on the link.
+				<br><br>
+				
+				Even if the 'i' flag is not used,
+				effectively leaving the original expression in the attribute, the parsed, evaluated 
+				and watched result of the expression is still available in the @registry,
+				as 'attribute metadata'.
+				
+
+			</section>
+			
+			<section id="demo">
+			
+				<form id="controls">
+				
+					<p>
+						watch the 'processed' tab to see attribute content. 
+						change the message to see updated values.
+					</p>
+					<label>message</label>
+					<input type="text" value="The light of the ashes" onchange="Model.poetry=this.value">
+					
+					<button type="button" onclick="showresults()">
+						show result value metadata
+					</button>
+					
+				</form>
+				
+				<div id="results">
+				
+<!-- ....... -->		
+<div cc-srcbox cc-context="Model">
+<p>
+	<b>parse:</b>
+	<i data-message="{{#poetry|p}}"></i><br>
+	<b>parse,insert:</b>
+	<i data-message="{{#poetry|pi}}"></i><br>
+	<b>parse,insert,watch:</b>
+	<i data-message="{{#poetry|piw}}"></i><br>
+	<br>
+	<b>parse,evaluate:</b>
+	<i data-message="{{#poetry|pe}}"></i><br>
+	<b>parse,evaluate,watch:</b>
+	<i data-message="{{#poetry|pew}}"></i><br>
+	<br>
+	<b>parse,evaluate,insert:</b>
+	<i data-message="{{#poetry|pei}}"></i><br>
+	<b>parse,evaluate,insert,watch:</b>
+	<i data-message="{{#poetry}}"></i><br>
+</p>
+</div>
+<!-- ....... -->		
+
+
+				</div>
+				
+			</section>
+		</article>
+		
+		<!--cc:include("../../assets/footer.inc")-->
+	</body>
+</html>

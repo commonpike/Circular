@@ -177,7 +177,7 @@ new CircularModule('watchdog', {
 						if (ccattr.content.oldpaths.length) {
 							ccattr.content.oldpaths.forEach(function(oldpath) {
 								if (this.pathobservers[oldpath]) {
-									if (ccattr.content.paths.indexOf(oldpath)==-1) {
+									if (ccattr.content.paths && ccattr.content.paths.indexOf(oldpath)==-1) {
 										this.debug('@watchdog.watchdata','removing  path',oldpath);
 										var object=null,subpath='';
 										var split = oldpath.indexOf('.');
@@ -417,7 +417,7 @@ new CircularModule('watchdog', {
 							// see if there were any watchers on 'this'
 							// and notify them of these changes for the next cycle
 							ccnode.index.forEach(function(ccattr) {
-								if (ccattr.content.paths.indexOf('this')!=-1 && record.target!=ccattr.properties.name) {
+								if (ccattr.content.paths && ccattr.content.paths.indexOf('this')!=-1 && record.target!=ccattr.properties.name) {
 									this.debug('triggering catchall for path "this"',node);
 									Circular.watchdog.catch(node,'event','attrdatachanged',ccattr.properties.name);
 								}

@@ -651,13 +651,14 @@ new CircularModule('engine', {
 			
 			if (ccattr.flags.attrdomchanged) {
 				this.debug('@engine.processAttributesIn','changed, parsing original',ccattr.content.original);
-				this.parseAttribute(ccattr,Circular.context.get());
+				this.execParse(ccattr,Circular.context.get());
 			}
 		
 			if (ccattr.flags.attrdomchanged || ccattr.flags.attrdatachanged) {
 				//alert('adc '+ccattr.properties.name);
 				this.debug('@engine.processAttributesIn','processing',ccattr.properties.name);
-				this.evalAttribute(node,ccnode,ccattr);
+				this.execEvaluate(node,ccnode,ccattr);
+				this.execInsert(node,ccnode,ccattr);
 				
 			}
 
@@ -725,8 +726,8 @@ new CircularModule('engine', {
 		
 	},
 	
-	parseAttribute	: function(ccattr,ctx) {
-		this.debug('@engine.parseAttribute',ccattr.content.original);
+	execParse	: function(ccattr,ctx) {
+		this.debug('@engine.execParse',ccattr.content.original);
 		
 		// assumes only the original is correct
 		
@@ -737,26 +738,22 @@ new CircularModule('engine', {
 		// if watch, gets the paths to watch
 		// does NOT yet evaluate
 		
-		var exprmatches = Circular.parser.match(ccattr.content.original);
-		if (exprmatches) {
-			if (exprmatches[0]===ccattr.content.original) {
+		var matches = Circular.parser.match(ccattr.content.original);
+		if (matches) {
+			if (matches[0]===ccattr.content.original) {
 			
 			
 				// this is a single full expression "{{#foo|we}}"
 
-				var inner 		= ccattr.content.original.substring(2,ccattr.content.original.length-2);
-				var flagged 	= Circular.parser.getFlags(inner);
-				ccattr.flags.parse		= flagged.parse;
-				ccattr.flags.evaluate	= flagged.evaluate;
-				ccattr.flags.watch		= flagged.watch;
+				var parsed 	= Circular.parser.parse(ccattr.content.original,ctx,true,true);
+				ccattr.flags.parse		= parsed.flags.parse; 	
+				ccattr.flags.evaluate	= parsed.flags.evaluate;		
+				ccattr.flags.watch		= parsed.flags.watch;		
+				ccattr.flags.insert		= parsed.flags.insert;		
+				ccattr.content.expression = parsed.processed;
 				
-				if (ccattr.flags.parse) {
-					ccattr.content.expression = Circular.parser.parse(flagged.expression,ctx);
-				} else {
-					ccattr.content.expression = flagged.expression;
-				}
 				if (ccattr.flags.watch) {
-					if (ccattr.content.paths) ccattr.content.oldpaths = ccattr.content.paths.slice(0);
+					if (ccattr.content.paths) ccattr.content.oldpaths = ccattr.content.paths.slice(0); // copy
 					ccattr.content.paths 	= Circular.parser.getPaths(ccattr.content.expression);
 				}	
 				
@@ -768,23 +765,16 @@ new CircularModule('engine', {
 				// any watched paths in any expression will watch that path
 				// for the whole attribute.
 				
-				ccattr.flags.parse		= false; 	// parsing happens here
-				ccattr.flags.evaluate	= true;		// must evaluate
-				ccattr.flags.watch		= true;		// watch any paths
+				ccattr.flags.parse		= false; 	// parsing happens on inner
+				ccattr.flags.evaluate	= true;		// must evaluate all
+				ccattr.flags.watch		= true;		// watch any paths marked |w
+				ccattr.flags.insert		= true;		// insert everything
 				
 				var watches = [];
 				ccattr.content.expression = Circular.parser.replace(ccattr.content.original,function(match,inner) {
-					var flagged = Circular.parser.getFlags(inner);					
-					var parsed = '';
-					if (flagged.parse) {
-						parsed = Circular.parser.parse(flagged.expression,ctx);
-					} else {
-						parsed = inner;
-					}
-					if (flagged.watch) {
-						watches.push(parsed);
-					}	
-					return '"+('+parsed+')+"';
+					var parsed = Circular.parser.parse(inner,ctx,true);
+					if (parsed.watch) watches.push(parsed.expression);
+					return '"+('+parsed.processed+')+"';
 				});
 				// tell eval that this is a stringthing
 				ccattr.content.expression = '"'+ccattr.content.expression+'"';
@@ -797,15 +787,16 @@ new CircularModule('engine', {
 				
 			}			
 			
-			this.debug("@engine.parseAttribute",ccattr.content.original,ccattr.content.expression);
+			this.debug("@engine.execParse",ccattr.content.original,ccattr.content.expression);
 			return true;
 			
 		} else {
-			this.debug('@engine.parseAttribute','no match');
+			this.debug('@engine.execParse','no match');
 			ccattr.content.expression = '';
-			ccattr.flags.parse		= false; 	// parsing happens here
-			ccattr.flags.evaluate	= false;		// must evaluate
-			ccattr.flags.watch		= false;		// watch any paths
+			ccattr.flags.parse		= false; 	
+			ccattr.flags.evaluate	= false;		
+			ccattr.flags.watch		= false;	
+			ccattr.flags.insert		= false;	
 			if (ccattr.content.paths) ccattr.content.oldpaths = ccattr.content.paths.slice(0);
 			ccattr.content.paths 	= [];
 			
@@ -813,14 +804,14 @@ new CircularModule('engine', {
 		return false;
 	},
 	
-	evalAttribute	: function(node,ccnode,ccattr) {
+	execEvaluate	: function(node,ccnode,ccattr) {
 		
 		//alert('eval '+ccattr.properties.name);
 		
 		// turns the expression into a result, and the
 		// result into a value.
 		
-		this.debug('@engine.evalAttribute',ccattr.properties.name);
+		this.debug('@engine.execEvaluate',ccattr.properties.name);
 	
 		//for (var flag in ccattr.flags) {
 		//	console.log(flag,ccattr.flags[flag]);
@@ -838,7 +829,7 @@ new CircularModule('engine', {
 			if (result!=ccattr.content.result) {
 			
 				ccattr.content.result = result;
-				this.debug('@engine.evalAttribute','result changed',ccattr.properties.name);
+				this.debug('@engine.execEvaluate','result changed',ccattr.properties.name);
 				
 				// try to set a value
 				try {
@@ -857,18 +848,28 @@ new CircularModule('engine', {
 			ccattr.content.value = ccattr.content.original;
 		}
 		
-		var setter = null;
-		if (ccattr.properties.module) {
-			var uname = Circular.modules.unprefix(ccattr.properties.name);
-			var setter = Circular[ccattr.properties.module]['attributes'][uname]['set'];
-		}
-		if (!setter) setter = this.setAttribute;
-		setter(ccattr,ccnode,node);
+		this.execInsert(node,ccnode,ccattr);
+		
 
 	},
 	
-	setAttribute		: function(ccattr,ccnode,node)  {
-		Circular.engine.debug('@engine.setAttribute');
+	execInsert			: function(node,ccnode,ccattr) {
+		Circular.engine.debug('@engine.execInsert');
+		if (ccattr.flags.insert) {
+			var setter = null;
+			if (ccattr.properties.module) {
+				var uname = Circular.modules.unprefix(ccattr.properties.name);
+				var setter = Circular[ccattr.properties.module]['attributes'][uname]['insert'];
+			}
+			if (!setter) setter = this.insertAttribute;
+			setter(ccattr,ccnode,node);
+		} else {
+			Circular.engine.debug('@engine.execInsert','ignored');
+		}
+	},
+	
+	insertAttribute		: function(ccattr,ccnode,node)  {
+		Circular.engine.debug('@engine.insertAttributeValue');
 		var value = ccattr.content.value;		
 		if (node.getAttribute(ccattr.properties.name)!=value) {
 			if (Circular.watchdog  && ccnode.flags.watched ) { // watched was commented ?
@@ -907,7 +908,7 @@ new CircularModule('engine', {
 				if (matches.length==1 && matches[0]==val) {
 					// this is a full match
 					var parent = node.parentNode;
-					if (!parent.hasAttribute('cc-content')) {
+					if (parent.childNodes.length==1 && !parent.hasAttribute('cc-content')) {
 						this.debug('@engine.processTextNode','setting cc-content on the parent');
 						
 						// ugly
@@ -935,7 +936,7 @@ new CircularModule('engine', {
 						// parent.removeChild(node);
 						// ah well lets already put the content in.
 						// cc-content will come again in 2 rounds
-						$(parent).html(Circular.parser.result.call(parent,val,ccnode.properties.outercontext));
+						$(parent).html(Circular.parser.result.call(parent,val,ccnode.properties.outercontext,true,true));
 					
 					} else {					
 				
@@ -960,16 +961,16 @@ new CircularModule('engine', {
 					
 					var vals = Circular.parser.split(val);
 					for (var vc=0; vc<vals.length;vc++) {
-							if (vals[vc].expression) {
-								this.debug('@engine.processTextNode','inserting span '+vals[vc].expression);
-								var span = document.createElement('span');
-								var spanid = this.nodeid(span);
-								span.setAttribute('cc-content',vals[vc].expression);
-								nodes.push(span);
-							} else {
-								this.debug('@engine.processTextNode','inserting text '+vals[vc].text);
-								nodes.push(document.createTextNode(vals[vc].text));
-							}
+						if (vals[vc].expression) {
+							this.debug('@engine.processTextNode','inserting span '+vals[vc].expression);
+							var span = document.createElement('span');
+							var spanid = this.nodeid(span);
+							span.setAttribute('cc-content',vals[vc].expression);
+							nodes.push(span);
+						} else {
+							this.debug('@engine.processTextNode','inserting text '+vals[vc].text);
+							nodes.push(document.createTextNode(vals[vc].text));
+						}
 					}
 					
 					for (var nc=0; nc < nodes.length; nc++) {

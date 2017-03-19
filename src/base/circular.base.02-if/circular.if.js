@@ -39,8 +39,8 @@ new CircularModule('if',{
 					return false;
 				}
 			},
-			set	: function(ccattr,ccnode,node) {
-				Circular.log.debug('@content','attributes.cc-if.set');
+			insert	: function(ccattr,ccnode,node) {
+				Circular.log.debug('@content','attributes.cc-if.insert');
 				var value = (!!ccattr.content.value).toString();	
 				if (node.getAttribute(ccattr.properties.name)!=value) {
 					if (Circular.watchdog  && ccnode.flags.watched ) { // watched was commented ?

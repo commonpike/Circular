@@ -1,7 +1,6 @@
-<!DOCTYPE html>
 <html>
 	<head>
-		<title>@config.modules.attrprefix</title>
+		<title>@eject</title>
 		
 		<!-- build:remove -->
 		<script src="../../../vendor/node_modules/jquery/dist/jquery.min.js"></script>
@@ -40,55 +39,102 @@
 				<link rel="stylesheet" href="http://circularjs.net/<%= release %>/docs/assets/docs.css">	
 			<% } %>
 		/build -->
-		
-		
+			
 		<script>
-		
-			var Model = {
-				message	: 'hello'
-			}
+			new CircularModule('test',{
+				attributes		: {
+					'cc-one' : {
+						in		: function(ccattr,ccnode,node) {
+							this.process('one',ccattr,node,ccnode);
+						}
+					},
+					'cc-two' : {
+						in		: function(ccattr,ccnode,node) {
+							this.process('two',ccattr,node,ccnode);
+						}
+					},
+					'cc-three' : {
+						in		: function(ccattr,ccnode,node) {
+							this.process('three',ccattr,node,ccnode);
+						}
+					}
+				},
+				process	: function(flag,ccattr,node,ccnode) {
+					var ejected = Circular.parser.boolish(ccattr.content.value)
+					if (ejected) Circular.eject.flag(node,ccnode,flag);
+					else Circular.eject.unflag(node,ccnode,flag);
+				}
+			});
 			
 			Circular.init({
-				modules : {
-					attrprefix	: 'square-'
-				}, 
-				log 	: {
+				log : {
 					debug : true
 				}
 			});
-
-				
+			
 		</script>
+		
 	</head>
-	<body square-root square-context="Model">
+	<body cc-root>
 		<!--cc:include("../../assets/header.inc")-->
 		<article>
 
 			<section id="about">
-				You can change the default 'cc-' prefix of all custom attributes to something
-				else (like the html5 compliant 'data-cc-'). Below example uses
-<pre>
-Circular.init({
-	modules : { attrprefix	: 'square-' }
-})
-</pre>
-			If you do this, <b>all</b> attribute names in your html that originally started
-			with <code>cc-</code> need to start with <code>square-</code> instead.
-
+			
+				You can call 'eject' from your own module using 
+				<code>Circular.eject.flag()</code> and <code>Circular.eject.unflag()</code>.<br><br>
+				
+				The reason you 'flag' a node for ejection, instead of ejecting it right away,
+				is because multiple attributes 
+				can operate on the same node, and the node should remain ejected as long
+				as any of the attributes want it to be ejected. This pages defines a module 'test'
+				with three attributes, that all do the same:
+<xmp>
+new CircularModule('test',{
+	attributes		: {
+		'cc-one' : {
+			in		: function(ccattr,ccnode,node) {
+				this.process('one',ccattr,node,ccnode);
+			}
+		},
+		'cc-two' : {
+			in		: function(ccattr,ccnode,node) {
+				this.process('two',ccattr,node,ccnode);
+			}
+		},
+		'cc-three' : {
+			in		: function(ccattr,ccnode,node) {
+				this.process('three',ccattr,node,ccnode);
+			}
+		}
+	},
+	process	: function(flag,ccattr,node,ccnode) {
+		var ejected = Circular.parser.boolish(ccattr.content.value)
+		if (ejected) Circular.eject.flag(node,ccnode,flag);
+		else Circular.eject.unflag(node,ccnode,flag);
+	}
+});
+</xmp>
+				If you want two attributes to operate on the same source, use the same flag.
+				The flag that is printed in the comment is the flag that first ejected 
+				the node - not necessarily the flag that is currently keeping it ejected.
 			</section>
 			
 			<section id="demo">
 			
 				<form id="controls">
-						<input type="radio" name="test" onclick="{{#message='hello'|pi}}" checked>#message='hello'</a> 
-						<input type="radio" name="test" onclick="{{#message='goodbye'|pi}}">#message='goodbye'</a>
+					<input type="checkbox"  onclick="$('#output').attr('cc-one',this.checked)">Eject One
+					<input type="checkbox"  onclick="$('#output').attr('cc-two',this.checked)">Eject Two
+					<input type="checkbox"  onclick="$('#output').attr('cc-three',this.checked)">Eject Three
 				</form>
 				
 				<div id="results">
 				
 <!-- ....... -->		
-<div square-srcbox>
-<h1 square-content="{{#message}}"></h1>
+<div cc-srcbox>
+<p id="output" cc-one="false" cc-two="false" cc-three="false">
+	This should be ejected as soon as any one of the three attributes are boolishy true
+</p>
 </div>
 <!-- ....... -->		
 
