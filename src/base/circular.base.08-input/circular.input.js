@@ -6,8 +6,17 @@
 new CircularModule('input',{
 
 	config	: {
-		events : []
-	
+		events 	: [],
+		types		: {
+			'raw'			: function(val) { return val; },
+			'string'	: function(val) { 
+				if (val===undefined) return '';
+				if (val===null) return '';
+				return String(val); 
+			},
+			'number'	: function(val) { return Number(val); },
+			'boolean'	: function(val) { return Circular.parser.boolish(val); }
+		}
 	},
 	
 	attributes	: {
@@ -63,11 +72,12 @@ new CircularModule('input',{
 		var evdata 	= this.getEventData(ccattr,ccnode,node);
 		var inpval	= this.getInputValue(ccattr,ccnode);
 		var target	= this.getTarget(ccattr,ccnode,node);
+		var type		= this.getInputType(ccattr,ccnode,target);
 		if (target!==false) {
 			if (inpval || $node.is(':input')) {
 			
 				// set the current value
-				this.read($node,target);
+				this.read($node,target,type);
 				
 				// set the event
 				$node.off('.ccinput');
@@ -75,7 +85,7 @@ new CircularModule('input',{
 				$node.on(evdata.event, function(ev) {
 					clearTimeout(evtimer);
 					evtimer = setTimeout(function() {
-						Circular.input.write(target,$node,inpval);
+						Circular.input.write(target,$node,inpval,type);
 					},evdata.timeout);
 				});
 				
@@ -122,6 +132,18 @@ new CircularModule('input',{
 		return inpval;
 	},
 	
+	getInputType	: function(cattr,ccnode,target) {
+		var type;
+		if (ccnode.attributes['cc-input-type']) {
+			type = ccnode.attributes['cc-input-type'].content.value;
+		} else {
+			var tgttype = typeof Circular.parser.eval(target);
+			if (this.config.types[tgttype]) type=tgttype;
+			else type='string';
+		}
+		return type;
+	},
+	
 	getTarget	: function(ccattr,ccnode,node) {
 		var target=false;
 		if (ccattr.content.expression) {
@@ -151,15 +173,20 @@ new CircularModule('input',{
 		return target;
 	},
 	
-	read	: function($node,target) {
+	map		: function(val,type) {
+		return this.config.types[type](val);
+	},
 	
-		var value = Circular.parser.eval(target);
-		Circular.log.debug('@input','read',$node,target,value);
+	read	: function($node,target,type) {
+	
+		var value 	= Circular.parser.eval(target);
+		
+		Circular.log.debug('@input','read',$node,target,value,type);
 		
 		if ($node.is(':input')) {
 			if ($node.is('input[type=checkbox]')) {
 				if (Array.isArray(value)) {
-					if (target.indexOf($node.val())!=-1) {
+					if (value.indexOf(this.map($node.val(),type))!=-1) {
 						$node.attr('checked','');
 					}
 				} else {
@@ -168,12 +195,12 @@ new CircularModule('input',{
 					}
 				}
 			} else if ($node.is('input[type=radio]')) {
-				if ($node.val()==target) {
+				if (this.map($node.val(),type)===value) {
 					$node.attr('checked','');
 				}
 			} else if ($node.is('select[multiple]')) {
 				if (Array.isArray(value)) {
-					$node.val(value);
+					$node.val(value); // should we map stuff ?
 				} else {
 					if (value) {
 						Circular.log.warn('@input','read','multiple select does not refer to an array');
@@ -181,52 +208,48 @@ new CircularModule('input',{
 				}
 			} else {
 				
-				$node.val(value);
+				$node.val(this.map(value,type));
 			}
 		} else {
 			Circular.log.debug('@input','read','not an input, not reading');
 		}
 	},
 	
-	write	: function(target,$node,value) {
-		Circular.log.debug('@input','write',target,$node,value);
+	write	: function(target,$node,value,type) {
+		Circular.log.debug('@input','write',target,$node,value,type);
 		var valexp = '""';
 		if (value!==undefined) {
-			valexp = '"'+value.replace('"','\\"').replace(/\n/g, "\\n")+'"';
+			value = this.map(value,type);
 		} else {
 			if ($node.is(':input')) {
 				
 				if ($node.is('[type=checkbox]')) {
 					var name = $node.attr('name');
 					var $all = $('input[type="checkbox"][cc-input-target="'+target+'"]',$node.get(0).form);
-					var elems = [];
+					var value = [];
 					$all.each(function() {
 						if (this.checked) {
-							elems.push($(this).val().replace('"','\\"'));
+							value.push(Circular.input.map($(this).val(),type));
 						}
 					});
-					valexp = '["'+elems.join('","')+'"]';
 					
 				} else if ($node.is('input[type=radio]')) {
 					if ($node.is(':checked')) {
-						valexp = '"'+$node.val().replace('"','\\"')+'"';
+						value = this.map($node.val(),type);
 					}
 
 				} else if ($node.is('select[multiple]')) {
-					var elems = [];
+					value = [];
 					var arr = $node.val();
 					if (arr) {
 						arr.forEach(function(elm) {
-							elems.push(elm.replace('"','\\"'));
+							value.push(Circular.input.map(elm,type));
 						});
-						valexp = '["'+elems.join('","')+'"]';
-					} else {
-						valexp = '[]';
-					}
+					} 
 				}  else {
-					valexp = '"'+$node.val().replace('"','\\"').replace(/\n/g, "\\n")+'"';
+					value = this.map($node.val(),type);
 				}
-				Circular.log.debug('@input','write',target,valexp);
+				Circular.log.debug('@input','write',target,value);
 				
 			} else {
 				Circular.log.debug('@input','write','no value, no input, not writing');
@@ -234,7 +257,7 @@ new CircularModule('input',{
 			}
 		} 
 		
-		Circular.parser.eval(target+'='+valexp);
+		Circular.parser.eval(target+'='+JSON.stringify(value));
 		return true;
 		
 	}
