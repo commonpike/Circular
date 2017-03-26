@@ -1,0 +1,215 @@
+<html>
+	<head>
+		<title>cc-input-event</title>
+		
+		<!-- build:remove -->
+		<script src="../../../vendor/node_modules/jquery/dist/jquery.min.js"></script>
+		<script src="../../../vendor/node_modules/esprima/dist/esprima.js"></script>
+		<script src="../../../vendor/node_modules/observe-js/src/observe.js"></script>
+		<script src="../../core/circular.core.00/circular.core.js"></script>
+		<script src="../../core/circular.core.01-modules/circular.modules.js"></script>
+		<script src="../../core/circular.core.02-log/circular.log.js"></script>
+		<script src="../../core/circular.core.03-queue/circular.queue.js"></script>
+		<script src="../../core/circular.core.04-parser/circular.parser.js"></script>
+		<script src="../../core/circular.core.05-context/circular.context.js"></script>
+		<script src="../../core/circular.core.06-content/circular.content.js"></script>
+		<script src="../../core/circular.core.07-eject/circular.eject.js"></script>
+		<script src="../../core/circular.core.08-registry/circular.registry.js"></script>
+		<script src="../../core/circular.core.09-engine/circular.engine.js"></script>
+		<script src="../../core/circular.core.10-watchdog/circular.watchdog.js"></script>
+		
+		<script src="../../base/circular.base.02-if/circular.if.js"></script>
+		<script src="../../base/circular.base.08-input/circular.input.js"></script>
+		<script src="../../base/circular.base.04-include/circular.include.js"></script>
+		<script src="../../contrib/circular.srcbox/circular.srcbox.js"></script>
+		
+		<link rel="stylesheet" href="../../assets/docs.css">	
+		
+		<!-- /build -->
+		
+		
+		<!-- build:template
+			<% if (environment === 'dist') { %>
+				<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+				<script src="../../../js/circular.min.js"></script>
+				<script src="../../../js/circular.srcbox.js"></script>
+				<link rel="stylesheet" href="../../assets/docs.css">	
+			<% } else { %>
+				<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+				<script src="http://circularjs.net/<%= release %>/js/circular.min.js"></script>
+				<script src="http://circularjs.net/<%= release %>/js/circular.srcbox.js"></script>
+				<link rel="stylesheet" href="http://circularjs.net/<%= release %>/docs/assets/docs.css">	
+			<% } %>
+		/build -->
+			
+		
+
+		<script>
+		
+			var Control = { 
+				// dynamic stuff
+				load	: function(preset) {
+					for (var key in preset) {
+						this[key]=preset[key];
+					}
+				}
+			};
+			
+			var presets = [
+				{},
+				{
+					mytext 			: 'one too many',
+					mymultisel	: ['one','two'],
+					mytextarea	: 'feliz navidad'
+				},
+				{
+					mytext 			: 'one, two, tree',
+					mycheck 		: ['one'],
+					myradio 		: 'two',
+					mysinglesel	: 'one',
+					mymultisel	: ['one'],
+					mytextarea	: 'ducks in a pond'
+				}
+			];
+				
+			
+			Circular.init({
+				log : {
+					debug : true
+				},
+				input		: {
+					events : 	[{
+						match	: 'a.hoverin', 
+						event	: 'mouseover'
+					}]
+				}
+				
+			});
+
+				
+		</script>
+		<style type="text/css">
+			#form-input { float:left; width:40%; padding:0 1%; border-right:1px solid black; }
+			#form-output { float:left; width:40%; padding:0 1%;  }
+			.form-item {
+				height:3em; padding:.5em 0;
+				border-top:1px solid #ccc;
+			}
+			.form-item label {
+				display:inline-block;
+				min-width:10em;
+			}
+			select[multiple], textarea {
+				vertical-align:top;
+			}
+		</style>
+	</head>
+	<body cc-root>
+		<!--cc:include("../../assets/header.inc")-->
+		<article>
+
+			<section id="about">
+				With <code>cc-input</code> elements, the data from
+				the input element is transfered to the target on
+				certain events from the ui, like 'keyup'. 
+				
+				You can use the <code>cc-input-event</code> attribute to
+				specify which event is used for a single element:
+<xmp>
+<textarea cc-input cc-input-event="blur:1000" name="data">changes 1 second after blur</textarea>
+<textarea cc-input cc-input-event="keyup" name="data">changes on keyup</textarea>
+</xmp>
+
+				The defaults are configured in the @input
+				module, like this:
+<xmp>
+events : [
+  { match : 'input[type=radio]',    event : 'click' },
+  { match : 'input[type=checkbox]', event : 'click' },
+  { match : 'input[type=button]',   event : 'click' },
+  { match : 'input,textarea',       event : 'keyup:500' },
+  { match : 'button',               event : 'click' },
+  { match : 'select',               event : 'change' },
+  { match : '*',                    event : 'click' }
+]
+</xmp>
+				You can prepend your own definitions (or overwrite the default ones)
+				in <code>Circular.init</code>, like
+<xmp>
+Circular.init({
+  input : {
+    events : [
+      { match : 'textarea.slowfeed',  event : 'blur:1000' },
+      { match : 'a.hoverin',          event : 'mouseover' }
+    ]
+  }
+});
+</xmp>				
+			The 'match' property is a css selector. The first selector
+			that matches an element is used, so provide the broadest match ('*') last.
+			The 'event' property is a comma separated list of dom events,
+			optionally appended by a timeout (in milliseconds) after a colon.
+			<br><br>
+			
+			</section>
+			<section id="demo">
+				<form id="controls">
+					<label>some preset values</label>
+					<select onchange="Control.load(presets[this.selectedIndex])">
+						<option selected>none</option>
+						<option>one</option>
+						<option>two</option>
+					</select>
+				</form>
+				<div id="results">
+				
+<!-- ....... -->		
+<div cc-srcbox>
+<div id="form-input" cc-context="Control">
+	<form onsubmit="return false">
+		<div class="form-item">
+			<label>slow textarea<br>1s after blur</label>
+			<textarea name="mytextarea" rows="2"  cc-input 
+				cc-input-event="blur:1000"></textarea>
+		</div>
+		<div class="form-item">
+			<label>quick textarea<br>keydown</label>
+			<textarea name="mytextarea" rows="2"  
+				cc-input cc-input-event="keydown"></textarea>
+		</div>
+		<div class="form-item">
+			<label>mouseover link<br>by attribute</label>
+			<a cc-input="Control.myanything" 
+				cc-input-value="one,two,many" 
+				cc-input-event="mouseover">hover me to set</a><br>
+		</div>
+		<div class="form-item">
+			<label>mouseover link<br>by init</label>
+			<a class="hoverin" cc-input="Control.myanything" 
+				cc-input-value="three times nine">hover me to set</a>
+		</div>
+		
+	</form>
+</div>
+<div id="form-output" cc-context="Control">
+	<div class="form-item">
+		<label>textarea:</label> <pre>{{#mytextarea}}</pre>
+	</div>
+	<div class="form-item">
+		<label>anything:</label><br>
+		{{#myanything}}
+	</div>
+	
+</div>
+</div>
+<!-- ....... -->		
+
+
+				</div>
+				
+			</section>
+		</article>
+		
+		<!--cc:include("../../assets/footer.inc")-->
+	</body>
+</html>

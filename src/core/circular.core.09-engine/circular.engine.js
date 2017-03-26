@@ -528,7 +528,7 @@ new CircularModule('engine', {
 					ccattr.properties.module	= Circular.modules.attr2mod[attrname];
 					ccnode.attributes[attrname] = ccattr;
 					modattrs[attridx] = ccattr;
-				} else if (Circular.parser.isExpression(node.attributes[ac].value)) {
+				} else if (Circular.parser.hasExpression(node.attributes[ac].value)) {
 					this.debug('@engine.indexAttributes','pristine','adding plain',attrname);
 					var ccattr 				= Circular.registry.newCCattribute(attrname);
 					ccattr.content.original 	= node.attributes[ac].value;
@@ -583,7 +583,7 @@ new CircularModule('engine', {
 							ccattr.properties.module	= Circular.modules.attr2mod[attrname];
 							ccnode.attributes[attrname] = ccattr;
 						}
-					} else if (Circular.parser.isExpression(node.attributes[ac].value)) {
+					} else if (Circular.parser.hasExpression(node.attributes[ac].value)) {
 						this.debug('@engine.indexAttributes','attrsetchanged','adding new plain',attrname);
 						var ccattr 				= Circular.registry.newCCattribute(attrname);
 						ccattr.content.original 	= node.attributes[ac].value;
@@ -760,6 +760,7 @@ new CircularModule('engine', {
 				
 			} else {
 			
+				
 				// this is a stringlike thing, "foo {{#bar|pew}} quz"
 				// all expressions must always be evaluated
 				// any watched paths in any expression will watch that path
@@ -773,17 +774,21 @@ new CircularModule('engine', {
 				var watches = [];
 				ccattr.content.expression = Circular.parser.replace(ccattr.content.original,function(match,inner) {
 					var parsed = Circular.parser.parse(inner,ctx,true);
-					if (parsed.watch) watches.push(parsed.expression);
+					if (parsed.flags.watch) watches.push(parsed.processed);
 					return '"+('+parsed.processed+')+"';
 				});
 				// tell eval that this is a stringthing
 				ccattr.content.expression = '"'+ccattr.content.expression+'"';
 				
+				
 				if (ccattr.content.paths) ccattr.content.oldpaths = ccattr.content.paths.slice(0); // copy
 				ccattr.content.paths = [];
+				//console.info(watches);
 				for (var wc=0; wc<watches.length;wc++) {
 					ccattr.content.paths = ccattr.content.paths.concat(Circular.parser.getPaths(watches[wc]));
 				}
+				//console.info(ccattr.content.paths);
+				
 				
 			}			
 			

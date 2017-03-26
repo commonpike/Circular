@@ -36,8 +36,8 @@ new CircularModule('input',{
 	},
 	
 	init	: function() {
-		this.config.events.forEach(function(event) {
-			this.events.unshift(event);
+		this.config.events.reverse().forEach(function(event) {
+			Circular.input.events.unshift(event);
 		});	
 	},
 	

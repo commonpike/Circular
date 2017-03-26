@@ -1,0 +1,246 @@
+<html>
+	<head>
+		<title>cc-input:flower</title>
+		
+		<!-- build:remove -->
+		<script src="../../../vendor/node_modules/jquery/dist/jquery.min.js"></script>
+		<script src="../../../vendor/node_modules/esprima/dist/esprima.js"></script>
+		<script src="../../../vendor/node_modules/observe-js/src/observe.js"></script>
+		<script src="../../core/circular.core.00/circular.core.js"></script>
+		<script src="../../core/circular.core.01-modules/circular.modules.js"></script>
+		<script src="../../core/circular.core.02-log/circular.log.js"></script>
+		<script src="../../core/circular.core.03-queue/circular.queue.js"></script>
+		<script src="../../core/circular.core.04-parser/circular.parser.js"></script>
+		<script src="../../core/circular.core.05-context/circular.context.js"></script>
+		<script src="../../core/circular.core.06-content/circular.content.js"></script>
+		<script src="../../core/circular.core.07-eject/circular.eject.js"></script>
+		<script src="../../core/circular.core.08-registry/circular.registry.js"></script>
+		<script src="../../core/circular.core.09-engine/circular.engine.js"></script>
+		<script src="../../core/circular.core.10-watchdog/circular.watchdog.js"></script>
+		
+		<script src="../../base/circular.base.02-if/circular.if.js"></script>
+		<script src="../../base/circular.base.06-loop/circular.loop.js"></script>
+		<script src="../../base/circular.base.08-input/circular.input.js"></script>
+		<script src="../../base/circular.base.04-include/circular.include.js"></script>
+		<script src="../../contrib/circular.srcbox/circular.srcbox.js"></script>
+		
+		<link rel="stylesheet" href="../../assets/docs.css">	
+		
+		<!-- /build -->
+		
+		
+		<!-- build:template
+			<% if (environment === 'dist') { %>
+				<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+				<script src="../../../js/circular.min.js"></script>
+				<script src="../../../js/circular.srcbox.js"></script>
+				<link rel="stylesheet" href="../../assets/docs.css">	
+			<% } else { %>
+				<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+				<script src="http://circularjs.net/<%= release %>/js/circular.min.js"></script>
+				<script src="http://circularjs.net/<%= release %>/js/circular.srcbox.js"></script>
+				<link rel="stylesheet" href="http://circularjs.net/<%= release %>/docs/assets/docs.css">	
+			<% } %>
+		/build -->
+			
+		
+
+		<script>
+		
+			var Flower = {
+				timer				: null,
+				bgcolor			: '#333',
+				blendmode		: 'screen',
+				speed				: 1000,
+				petals			: [],
+				start	: function() {
+					this.timer = setInterval(function() {
+						Flower.petals.forEach(function(petal) {
+							petal.rotate = (petal.rotate*1+petal.speed*1); // issue
+						});
+					},Flower.speed);
+				},
+				stop	: function() {
+					clearInterval(this.timer);
+					// clean up a bit :-)
+					Flower.petals.forEach(function(petal) {
+						petal.rotate = petal.rotate%360;
+					});
+					console.info(JSON.stringify(Flower.petals));
+				},
+				presets : {
+					'RotatingRed' : [{"show":true,"speed":15,"rotate":180,"color":"yellow","opacity":0.25},{"show":true,"speed":10,"rotate":285,"color":"red","opacity":0.5},{"show":true,"speed":15,"rotate":270,"color":"yellow","opacity":0.25},{"show":true,"speed":10,"rotate":15,"color":"red","opacity":0.5},{"show":true,"speed":15,"rotate":0,"color":"yellow","opacity":0.25},{"show":true,"speed":10,"rotate":105,"color":"red","opacity":0.5},{"show":true,"speed":15,"rotate":90,"color":"yellow","opacity":0.25},{"show":true,"speed":10,"rotate":195,"color":"red","opacity":0.5}],
+					'HippyYippie'	: [{"show":true,"speed":"-15","rotate":180,"color":"green","opacity":".5"},{"show":true,"speed":10,"rotate":285,"color":"red","opacity":0.5},{"show":true,"speed":15,"rotate":270,"color":"yellow","opacity":".25"},{"show":true,"speed":10,"rotate":15,"color":"red","opacity":0.5},{"show":true,"speed":"-15","rotate":0,"color":"green","opacity":".5"},{"show":true,"speed":"10","rotate":105,"color":"red","opacity":"0.5"},{"show":true,"speed":"15","rotate":90,"color":"yellow","opacity":".25"},{"show":true,"speed":10,"rotate":195,"color":"red","opacity":0.5}],
+					'Morphology'	: [{"show":true,"speed":"-15","rotate":-120,"color":"green","opacity":".5"},{"show":true,"speed":"5","rotate":125,"color":"red","opacity":0.5},{"show":true,"speed":15,"rotate":210,"color":"yellow","opacity":".25"},{"show":true,"speed":10,"rotate":215,"color":"red","opacity":0.5},{"show":true,"speed":"-15","rotate":-300,"color":"green","opacity":".5"},{"show":true,"speed":"5","rotate":315,"color":"red","opacity":"0.5"},{"show":true,"speed":"15","rotate":30,"color":"yellow","opacity":".25"},{"show":true,"speed":10,"rotate":35,"color":"red","opacity":0.5}]
+				},
+				select	: function(preset) {
+					this.petals = this.presets[preset];
+				}
+			}
+			
+			$(document).ready(function() {
+				for (var preset in Flower.presets) {
+					Flower.select(preset);
+					break;
+				}
+			});
+			
+			Circular.init({
+				log : {
+					debug : false
+				},
+				engine : {
+					debug : false
+				},
+				registry : {
+					debug : false
+				},
+				watchdog : {
+					debug : false
+				},
+				parser : {
+					debug : false
+				}
+				
+			});
+
+				
+		</script>
+		<style type="text/css">
+		
+			#form-input { float:left; width:40%; padding:0 1%; border-right:1px solid black; }
+			#form-output { float:left; width:40%; height:40%; padding:0 1%;  }
+			.form-item {
+				height:3em; padding:.5em 0;
+				border-top:1px solid #ccc;
+			}
+			.form-item label {
+				display:inline-block;
+				min-width:10em;
+			}
+			select[multiple], textarea {
+				vertical-align:top;
+			}
+			input[type="text"] {
+    		width: 80px;
+			}
+			
+			#flower {
+				width:100%;
+				height:100%;
+				position:relative;
+			}
+			.petal {
+				position:absolute;
+				width:50%;
+				height:50%;
+				left:25%;
+				border-radius:50%;
+				transform-origin:center bottom;
+				border:5px solid rgba(0,0,0,.2);
+				box-sizing:border-box;
+			}
+			
+		</style>
+	</head>
+	<body cc-root>
+		<!--cc:include("../../assets/header.inc")-->
+		<article>
+
+			<section id="about">
+				The <code>cc-input</code> attribute turns an element into
+				a widget that sets a javascript value. This example is a bit
+				more elaborate, with 'live', changing, content.
+			</section>
+			
+			<section id="demo">
+				<form id="controls">
+					<label>Select a flower</label>
+					<select onchange="Flower.select($(this).val())" 
+						cc-loop="{{Flower.presets}}" cc-loop-each="key">
+						<option>{{#this}}</option>
+					</select>
+					<button type="button" onclick="Flower.start()">start</button>
+					<button type="button" onclick="Flower.stop()">stop</button>
+				</form>
+				<div id="results">
+				
+<!-- ....... -->		
+<div cc-srcbox>
+<div id="form-input" cc-context="Flower">
+	<form onsubmit="return false">
+		
+		<div class="form-item">
+			<label>Background color:</label>
+			<input ype="text" name="bgcolor" cc-input>
+		</div>
+		
+		<div class="form-item">
+			<label>Blend mode:</label>
+			<select name="blendmode" cc-input>
+				<option>normal</option>
+				<option>multiply</option>
+				<option>screen</option>
+				<option>overlay</option>
+				<option>darken</option>
+				<option>lighten</option>
+				<option>color-dodge</option>
+				<option>color-burn</option>
+				<option>hard-light</option>
+				<option>soft-light</option>
+				<option>difference</option>
+				<option>exclusion</option>
+				<option>hue</option>
+				<option>saturation</option>
+				<option>color</option>
+				<option>luminosity</option>
+			</select>
+		</div>
+		
+		<div class="form-item" style="height:auto">
+			<label>Petals:</label>
+			<table>
+				<thead>
+					<tr>
+						<th>show</th>
+						<th>speed</th>
+						<th>color</th>
+						<th>opacity</th>
+						<th>rotation</th>
+					</tr>
+				</thead>		
+				<tbody cc-loop="{{#petals}}">
+					<tr>
+						<td><input cc-input type="checkbox" name="show" value="1"></td>
+						<td><input cc-input type="text" name="speed"></td>
+						<td><input cc-input type="text" name="color"></td>
+						<td><input cc-input type="text" name="opacity"></td>
+						<td><input cc-input type="text" name="rotate"></td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+		
+	</form>
+</div>
+
+<div id="form-output" cc-context="Flower">
+	<div id="flower"  cc-loop="{{#petals}}" style="background-color:{{#bgcolor}}">
+		<div class="petal" cc-show="{{#show}}" 
+			style="transform:rotate({{#rotate}}deg); transition:transform {{Flower.speed/1000}}s linear;background-color:{{#color}}; mix-blend-mode:{{Flower.blendmode}}; opacity:{{#opacity}}">
+		</div>
+	</div>
+</div>
+			
+</div>
+<!-- ....... -->		
+
+
+				</div>
+				
+			</section>
+		</article>
+		
+		<!--cc:include("../../assets/footer.inc")-->
+	</body>
+</html>

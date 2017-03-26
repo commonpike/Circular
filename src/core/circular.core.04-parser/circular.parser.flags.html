@@ -1,6 +1,6 @@
 <html>
 	<head>
-		<title>@parser.parse</title>
+		<title>@parser:flags</title>
 		
 		<!-- build:remove -->
 		<script src="../../../vendor/node_modules/jquery/dist/jquery.min.js"></script>
@@ -73,11 +73,20 @@
 
 			<section id="about">
 			
-				When <code>{{expressions}}</code> are processed several steps are taken, 
-				which can be controlled by adding flags after a pipe, like this: 
-				<code>&lt;div class="{{color:@brush.foreground|pi}}"></code>.<br>
-				These are the flags available:
+				Whenever an <code>{{expression}}</code> is processed, several steps are taken 
+				which can be enabled and disabled by using flags, like this: <br>
+				<code>&lt;div style="{{color:@brush.foreground|pi}}"></code>.<br>
+				In the above example, the flags are 'pi'. These are the flags available:
 				<ul>
+					<li>					
+						<b>w:watch</b><br>
+						Watch all variables used in the expression for changes
+					</li>
+					<li>
+						<b>i:insert</b><br>
+						Re-insert the result of the all operations back into
+						the dom attribute where it came from. 
+					</li>
 					<li>
 						<b>p:parse</b><br>
 						Perform string operations on the expression to resolve all references to 
@@ -85,34 +94,35 @@
 					</li>
 					<li>
 						<b>e:evaluate</b><br>
-						Evaluate the resulting expression - much like javascripts <code>eval</code>.
+						Evaluate the (optionally parsed) expression - much like javascripts <code>eval</code>.
 					</li>
-					<li>
-						<b>i:insert</b><br>
-						Re-insert the result of the previous operations back into
-						the dom attribute where it came from. 
-					</li>
-					<li>					
-						<b>w:watch</b><br>
-						Watch all variables used in the expression for changes
-					</li>
+					
+					
 				</ul>
 				The order of the flags is irrelevant. 
 				When no flags are passed, all flags are assumed on, 
 				so <code>{{flush()}}</code> equals <code>{{flush()|wipe}}</code>.
 				<br><br>
 				
-				This may be useful, for example, if you don't want the expression to
+				Leaving the 'e' flag out can be useful if you don't want the expression to
 				be evaluated when parsed, like in event handlers: <br>
 				<code>&lt;a onclick="{{alert('#name')|wip}}">what's my name&lt;/a></code><br>
 				If we would add the flag 'e' in that code, circular would alert #name (or its value)
 				while parsing the expression, not when clicking on the link.
 				<br><br>
 				
-				Even if the 'i' flag is not used,
-				effectively leaving the original expression in the attribute, the parsed, evaluated 
-				and watched result of the expression is still available in the @registry,
-				as 'attribute metadata'.
+				You could leave the 'w' flag out if the expressions result will not change; that 
+				would save performance.<br><br>
+				
+				You could leave the 'p' flag out if there is nothing to parse, or if you get
+				into trouble with, for example, strings that contain # or @<br><br>
+
+				If you leave the 'i' flag out,
+				the original expression will remain in the attribute. Still, the parsed, evaluated 
+				and watched results of the expression are available in the @registry,
+				like 'attribute metadata'. Note that if you define your own attribute,
+				you can also use the 'insert' method in that definition to customize
+				how the result is re-inserted into the dom.
 				
 
 			</section>
@@ -123,7 +133,7 @@
 				
 					<p>
 						watch the 'processed' tab to see attribute content. 
-						change the message to see updated values.
+						change the message to see result values from @registry change.
 					</p>
 					<label>message</label>
 					<input type="text" value="The light of the ashes" onchange="Model.poetry=this.value">

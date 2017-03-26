@@ -204,9 +204,9 @@ new CircularModule('parser', {
 	},
 	
 	
-	isExpression	: function(expr) {
+	hasExpression	: function(expr) {
 		// quick way to check - false pos are ok
-		return (expr.substring(0,2)=="{{");
+		return (expr.indexOf('{{')!=-1 && expr.indexOf('}}')!=-1);
 	},
 	
 	match	: function(expr) {
