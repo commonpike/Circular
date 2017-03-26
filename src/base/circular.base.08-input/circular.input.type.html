@@ -19,6 +19,7 @@
 		<script src="../../core/circular.core.10-watchdog/circular.watchdog.js"></script>
 		
 		<script src="../../base/circular.base.02-if/circular.if.js"></script>
+		<script src="../../base/circular.base.06-loop/circular.loop.js"></script>
 		<script src="../../base/circular.base.08-input/circular.input.js"></script>
 		<script src="../../base/circular.base.04-include/circular.include.js"></script>
 		<script src="../../contrib/circular.srcbox/circular.srcbox.js"></script>
@@ -48,29 +49,29 @@
 		
 			var Control = { 
 				// dynamic stuff
-				load	: function(preset) {
-					for (var key in preset) {
-						this[key]=preset[key];
+				defined 	: {},
+				inferred	: {},
+				load	: function(where,preset) {
+					for (var key in this.presets[preset]) {
+						this[where][key]=this.presets[preset][key];
+					}
+					$('#controls #'+where).val(preset);
+				},
+				presets : {
+					'empty' : {
+						mystring 			: undefined,
+						mynumber 			: null,
+	//				myboolean 		: true,
+	//				myobject			: {oclock:'rock'}
+					},
+					'filled' : {
+						mystring 			: 'one,two,tree',
+						mynumber 			: 123,
+						myboolean 		: false,
+						myobject			: {oclock:'rock'}
 					}
 				}
 			};
-			
-			var presets = [
-				{},
-				{
-					mytext 			: 'one too many',
-					mymultisel	: ['one','two'],
-					mytextarea	: 'feliz navidad'
-				},
-				{
-					mytext 			: 'one, two, tree',
-					mycheck 		: ['one'],
-					myradio 		: 'two',
-					mysinglesel	: 'one',
-					mymultisel	: ['one'],
-					mytextarea	: 'ducks in a pond'
-				}
-			];
 				
 			
 			Circular.init({
@@ -87,6 +88,11 @@
 					debug : false
 				}
 				
+			});
+
+			$(document).ready(function() {
+				Control.load('defined','empty');
+				Control.load('inferred','filled');
 			});
 
 				
@@ -121,12 +127,17 @@
 			
 			<section id="demo">
 				<form id="controls">
-					<label>some preset values</label>
-					<select onchange="Control.load(presets[this.selectedIndex])">
-						<option selected>none</option>
-						<option>one</option>
-						<option>two</option>
-					</select>
+					<label>set inferred values preset</label>
+					<select id="inferred" onchange="Control.load('inferred',$(this).val())" 
+						cc-loop="{{Control.presets}}" cc-loop-each="key">
+						<option>{{#this}}</option>
+					</select><br>
+					<label>set defined values preset</label>
+					<select id="defined" onchange="Control.load('defined',$(this).val())" 
+						cc-loop="{{Control.presets}}" cc-loop-each="key">
+						<option>{{#this}}</option>
+					</select><br>
+					
 				</form>
 				<div id="results">
 				
@@ -134,69 +145,99 @@
 <div cc-srcbox>
 <div id="form-input" cc-context="Control">
 	<form onsubmit="return false">
-		<div class="form-item">
-			<label>text:</label>
-			<input type="text" name="mytext" cc-input>
-		</div>
-		<div class="form-item">
-			<label>checkboxes:</label>
-			<input type="checkbox" value="one" name="mycheck" cc-input>
-			<input type="checkbox" value="two" name="mycheck" cc-input>
-		</div>
-		<div class="form-item">
-			<label>radio buttons:</label>
-			<input type="radio" value="one" name="myradio" cc-input>
-			<input type="radio" value="two" name="myradio" cc-input>
-		</div>
-		<div class="form-item">
-			<label>single select:</label>
-			<select name="mysinglesel" cc-input>
-				<option>one</option>
-				<option>two</option>
-			</select>
-		</div>
-		<div class="form-item">
-			<label>multiple select:</label>
-			<select name="mymultisel" size="2" multiple cc-input>
-				<option>one</option>
-				<option>two</option>
-			</select>
-		</div>
-		<div class="form-item">
-			<label>anything:</label>
-			<a cc-input="Control.myanything" cc-input-value="one,two,many">click me</a>
-		</div>
-		<div class="form-item">
-			<label>textarea:</label>
-			<textarea name="mytextarea" rows="2"  cc-input></textarea>
-		</div>
+	
+		
+		
+		<fieldset cc-context="{{#inferred}}">
+			<caption>inferred (by target value):</caption>
+			<div class="form-item">
+				<label>string:</label>
+				<input type="text" name="mystring" cc-input>
+			</div>
+			<div class="form-item">
+				<label>number:</label>
+				<input type="text" name="mynumber" cc-input>
+			</div>
+			<div class="form-item">
+				<label>boolean:</label>
+				<input type="text" name="myboolean" cc-input>
+			</div>
+			<div class="form-item">
+				<label>object:</label>
+				<input type="text" name="myobject" cc-input>
+			</div>
+		</fieldset>		
+	
+		<fieldset cc-context="{{#defined}}">
+			<caption>defined (using cc-input-type):</caption>
+			<div class="form-item">
+				<label>string:</label>
+				<input type="text" name="mystring" 
+					cc-input cc-input-type="string">
+			</div>
+			<div class="form-item">
+				<label>number:</label>
+				<input type="text" name="mynumber" 
+					cc-input cc-input-type="number">
+			</div>
+			<div class="form-item">
+				<label>boolean:</label>
+				<input type="text" name="myboolean" 
+					cc-input cc-input-type="boolean">
+			</div>
+			<div class="form-item">
+				<label>object:</label>
+				<input type="text" name="myobject" 
+					cc-input cc-input-type="object">
+			</div>
+		</fieldset>		
 		
 	</form>
 </div>
 <div id="form-output" cc-context="Control">
-	<div class="form-item">
-		<label>text:</label> {{#mytext}}
-	</div>
-	<div class="form-item">
-		<label>checkboxes:</label> 
-		<span cc-if="{{#mycheck}}">[{{#mycheck.join(',')}}]</span>
-	</div>
-	<div class="form-item">
-		<label>radio buttons:</label> {{#myradio}}
-	</div>
-	<div class="form-item">
-		<label>single select:</label> {{#mysinglesel}}
-	</div>
-	<div class="form-item">
-		<label>multiple select:</label> 
-		<span cc-if="{{#mymultisel}}">[{{#mymultisel.join(',')}}]</span>
-	</div>
-	<div class="form-item">
-		<label>anything:</label> {{#myanything}}
-	</div>
-	<div class="form-item">
-		<label>textarea:</label> <pre>{{#mytextarea}}</pre>
-	</div>
+	
+	
+	
+	<fieldset cc-context="{{#inferred}}">
+		<caption>inferred (by target value):</caption>
+		<div class="form-item">
+			<label>string:</label> {{#mystring}}<br>
+			<pre>mystring+1={{#mystring+1}}</pre>
+		</div>
+		<div class="form-item">
+			<label>number:</label> {{#mynumber}}<br>
+			<pre>mynumber+1={{#mynumber+1}}</pre>
+		</div>
+		<div class="form-item">
+			<label>boolean:</label> {{#myboolean}}<br>
+			<pre>(myboolean)?1:2={{(#myboolean)?1:2}}</pre>
+		</div>
+		<div class="form-item">
+			<label>object:</label> {{#myobject}}
+			<pre>Object.keys(myobject).join(',')={{Object.keys(#myobject).join(',')}}</pre>
+		</div>
+	</fieldset>
+	
+	<fieldset cc-context="{{#defined}}">
+		<caption>defined (using cc-input-type):</caption>
+		<div class="form-item">
+			<label>string:</label> {{#mystring}}<br>
+			<pre>mystring+1={{#mystring+1}}</pre>
+		</div>
+		<div class="form-item">
+			<label>number:</label> {{#mynumber}}<br>
+			<pre>mynumber+1={{#mynumber+1}}</pre>
+		</div>
+		<div class="form-item">
+			<label>boolean:</label> {{#myboolean}}<br>
+			<pre>(myboolean)?1:2={{(#myboolean)?1:2}}</pre>
+		</div>
+		<div class="form-item">
+			<label>object:</label> {{#myobject}}
+			<pre>myobject.keys.join(',')={{#myobject.keys.join(',')}}</pre>
+		</div>
+	</fieldset>
+	
 </div>
 </div>
 <!-- ....... -->		
