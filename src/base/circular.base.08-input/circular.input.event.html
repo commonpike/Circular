@@ -21,7 +21,9 @@
 		<script src="../../base/circular.base.02-if/circular.if.js"></script>
 		<script src="../../base/circular.base.08-input/circular.input.js"></script>
 		<script src="../../base/circular.base.04-include/circular.include.js"></script>
+		
 		<script src="../../contrib/circular.srcbox/circular.srcbox.js"></script>
+		<script src="../../contrib/circular.vardump/circular.vardump.js"></script>
 		
 		<link rel="stylesheet" href="../../assets/docs.css">	
 		
@@ -79,7 +81,7 @@
 				},
 				input		: {
 					events : 	[{
-						match	: 'a.hoverin', 
+						match	: 'a.example', 
 						event	: 'mouseover'
 					}]
 				}
@@ -120,27 +122,14 @@
 <textarea cc-input cc-input-event="keyup" name="data">changes on keyup</textarea>
 </xmp>
 
-				The defaults are configured in the @input
-				module, like this:
-<xmp>
-events : [
-  { match : 'input[type=radio]',    event : 'click' },
-  { match : 'input[type=checkbox]', event : 'click' },
-  { match : 'input[type=button]',   event : 'click' },
-  { match : 'input,textarea',       event : 'keyup:500' },
-  { match : 'button',               event : 'click' },
-  { match : 'select',               event : 'change' },
-  { match : '*',                    event : 'click' }
-]
-</xmp>
-				You can prepend your own definitions (or overwrite the default ones)
+	You can prepend your own definitions (or overwrite the default ones)
 				in <code>Circular.init</code>, like
 <xmp>
 Circular.init({
   input : {
     events : [
       { match : 'textarea.slowfeed',  event : 'blur:1000' },
-      { match : 'a.hoverin',          event : 'mouseover' }
+      { match : 'a.example',          event : 'mouseover' }
     ]
   }
 });
@@ -150,6 +139,14 @@ Circular.init({
 			The 'event' property is a comma separated list of dom events,
 			optionally appended by a timeout (in milliseconds) after a colon.
 			<br><br>
+
+			<details>
+				<summary>
+					Click here to view the currently configured events, including defaults
+				</summary>
+				<!--cc:vardump({{@input.events}})-->
+			</details>
+			
 			
 			</section>
 			<section id="demo">
@@ -185,7 +182,7 @@ Circular.init({
 		</div>
 		<div class="form-item">
 			<label>mouseover link<br>by init</label>
-			<a class="hoverin" cc-input="Control.myanything" 
+			<a class="example" cc-input="Control.myanything" 
 				cc-input-value="three times nine">hover me to set</a>
 		</div>
 		

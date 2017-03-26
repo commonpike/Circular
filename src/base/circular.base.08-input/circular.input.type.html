@@ -118,11 +118,25 @@
 		<article>
 
 			<section id="about">
-				The <code>cc-input</code> attribute turns an element into
-				a widget that sets a javascript value.
-				The below form shows the simplest way to manipulate values - by only using 
-				a <code>cc-input</code> attribute on input elements inside a form, 
-				or using <code>cc-input-value</code> on any element.
+				HTML input elements by nature just handle strings. We need a way
+				to map these strings to javascript variables. After all, in javascript
+				<code>'1'+1==11</code> while <code>1+1==2</code>. @input recognizes
+				3 data types: <code>string</code>,<code>number</code> and <code>boolean</code>.
+				You can set it on a node using the <code>cc-input-type</code> attribute:
+<xmp><input name="mynumber" cc-input cc-input-type="number"></xmp>
+
+				When a cc-input element tries to read its initial value,
+				if an input-type attribute is available, the value is mapped 
+				to that type before it is converted to a string for use in 
+				the HTML dom.<br><br>
+				
+				Anytime a cc-input element tries to set a target value,
+				it checks the input type again, and converts the HTML dom string
+				to that type. If a <code>cc-input-type</code> attribute
+				is set, that is used. Otherwise, the input type is inferred from
+				the targets (original) value. If that does not resolve to string,
+				number or boolean, <code>string</code> is assumed.<br>
+				
 			</section>
 			
 			<section id="demo">
@@ -162,10 +176,7 @@
 				<label>boolean:</label>
 				<input type="text" name="myboolean" cc-input>
 			</div>
-			<div class="form-item">
-				<label>object:</label>
-				<input type="text" name="myobject" cc-input>
-			</div>
+			
 		</fieldset>		
 	
 		<fieldset cc-context="{{#defined}}">
@@ -185,11 +196,7 @@
 				<input type="text" name="myboolean" 
 					cc-input cc-input-type="boolean">
 			</div>
-			<div class="form-item">
-				<label>object:</label>
-				<input type="text" name="myobject" 
-					cc-input cc-input-type="object">
-			</div>
+			
 		</fieldset>		
 		
 	</form>
@@ -197,9 +204,8 @@
 <div id="form-output" cc-context="Control">
 	
 	
-	
 	<fieldset cc-context="{{#inferred}}">
-		<caption>inferred (by target value):</caption>
+		<caption>result (by target value):</caption>
 		<div class="form-item">
 			<label>string:</label> {{#mystring}}<br>
 			<pre>mystring+1={{#mystring+1}}</pre>
@@ -212,14 +218,11 @@
 			<label>boolean:</label> {{#myboolean}}<br>
 			<pre>(myboolean)?1:2={{(#myboolean)?1:2}}</pre>
 		</div>
-		<div class="form-item">
-			<label>object:</label> {{#myobject}}
-			<pre>Object.keys(myobject).join(',')={{Object.keys(#myobject).join(',')}}</pre>
-		</div>
+		
 	</fieldset>
 	
 	<fieldset cc-context="{{#defined}}">
-		<caption>defined (using cc-input-type):</caption>
+		<caption>result (using cc-input-type):</caption>
 		<div class="form-item">
 			<label>string:</label> {{#mystring}}<br>
 			<pre>mystring+1={{#mystring+1}}</pre>
@@ -232,10 +235,7 @@
 			<label>boolean:</label> {{#myboolean}}<br>
 			<pre>(myboolean)?1:2={{(#myboolean)?1:2}}</pre>
 		</div>
-		<div class="form-item">
-			<label>object:</label> {{#myobject}}
-			<pre>myobject.keys.join(',')={{#myobject.keys.join(',')}}</pre>
-		</div>
+		
 	</fieldset>
 	
 </div>

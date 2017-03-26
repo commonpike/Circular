@@ -357,7 +357,7 @@ new CircularModule('engine', {
 	
 		this.debug('@engine.processElementNode',node.nodeName);
 		
-		if (node.nodeName=='XMP' || node.nodeName=='CODE' || node.hasAttribute('cc-engine-skip')) {
+		if (node.hasAttribute('cc-engine-skip')) {
 			return false;
 		}
 		if (ccnode.flags.pristine) {
@@ -887,6 +887,11 @@ new CircularModule('engine', {
 	processChildren	: function(node,context) {
 		this.debug('@engine.processChildren');
 		
+		if (node.nodeName=='XMP' || node.nodeName=='CODE') {
+			Circular.log.debug('@engine','processChildren','not recursing',node.nodeName);
+			return false;
+		} 
+		
 		// traverse node depth first looking
 		// for modules or expressions,
 		// using the new context
@@ -894,6 +899,8 @@ new CircularModule('engine', {
 		$(contents).each(function() {
 			Circular.engine.process(this,context);
 		});
+		
+		return true;
 		
 	},
 	

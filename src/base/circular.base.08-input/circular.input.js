@@ -31,6 +31,9 @@ new CircularModule('input',{
 		},
 		'cc-input-target'	: {
 			// just for checkboxes; ignore
+		},
+		'cc-input-type'	: {
+			// watch but ignore
 		}
 		
 	},
