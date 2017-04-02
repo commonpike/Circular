@@ -1,6 +1,6 @@
 <html>
 	<head>
-		<title>cc-input</title>
+		<title>cc-input-dir</title>
 		
 		<!-- build:remove -->
 		<script src="../../../vendor/node_modules/jquery/dist/jquery.min.js"></script>
@@ -49,36 +49,36 @@
 		
 			var Control = { 
 				// dynamic stuff
-				values : {},
-				load	: function(preset) {
+				write 	: {},
+				read	: {},
+				load	: function(where,preset) {
 					for (var key in this.presets[preset]) {
-						this.values[key]=this.presets[preset][key];
+						this[where][key]=this.presets[preset][key];
 					}
-					for (var key in this.values) {
-						this.values[key]=this.presets[preset][key];
+					for (var key in this[where]) {
+						this[where][key]=this.presets[preset][key];
 					}
+					$('#controls #'+where).val(preset);
 				},
 				presets : {
-					'empty'	: {},
-					'feliz navidad'	: {
-						mytext 			: 'one too many',
-						mymultisel	: ['one','two'],
-						mytextarea	: 'feliz navidad'
+					'empty' : {},
+					'prefilled' : {
+						mystring 			: 'one,two,tree',
+						mynumber 			: 123,
+						myboolean 		: false
 					},
-					'ducks in a pond' : {
-						mytext 					: 'one, two, tree',
-						mysinglecheck 	: 'one',
-						mymulticheck 		: ['one'],
-						myradio 				: 'two',
-						mysinglesel			: 'one',
-						mymultisel			: ['one'],
-						mytextarea			: 'ducks in a pond',
-						myanything			: 'around the clock'
+					'mixedup' : {
+						mystring 			: undefined,
+						mynumber 			: null,
+						myboolean 		: 'dunno'
+					},
+					'confused' : {
+						mystring 			: 123,
+						mynumber 			: function() {},
+						myboolean 		: 'yes'
 					}
 				}
 			};
-			
-		
 				
 			
 			Circular.init({
@@ -95,6 +95,11 @@
 					debug : false
 				}
 				
+			});
+
+			$(document).ready(function() {
+				Control.load('write','empty');
+				Control.load('read','prefilled');
 			});
 
 				
@@ -120,96 +125,112 @@
 		<article>
 
 			<section id="about">
-				The <code>cc-input</code> attribute turns an element into
-				a widget that sets a javascript value.
-				The below form shows the simplest way to manipulate values - by only using 
-				a <code>cc-input</code> attribute on input elements inside a form, 
-				or using <code>cc-input-value</code> on any element.
+				By default, cc-input elements both read the targets
+				value into the input element and write changes in 
+				the input element back to the target.<br><br>
+				Using <code>cc-input-dir</code>, you can set it 
+				to only <code>read</code> or <code>write</code>.
+				
+				
+				
 			</section>
 			
 			<section id="demo">
 				<form id="controls">
-					<label>select a preset</label>
-					<select onchange="Control.load($(this).val())" cc-loop="{{Control.presets}}" cc-loop-each="key">
+					<label>set read values preset</label>
+					<select id="read" onchange="Control.load('read',$(this).val())" 
+						cc-loop="{{Control.presets}}" cc-loop-each="key">
 						<option>{{#this}}</option>
-					</select>
+					</select><br>
+					<label>set write values preset</label>
+					<select id="write" onchange="Control.load('write',$(this).val())" 
+						cc-loop="{{Control.presets}}" cc-loop-each="key">
+						<option>{{#this}}</option>
+					</select><br>
+					
 				</form>
 				<div id="results">
 				
 <!-- ....... -->		
 <div cc-srcbox>
-<div id="form-input" cc-context="Control.values">
+<div id="form-input" cc-context="Control">
 	<form onsubmit="return false">
-		<div class="form-item">
-			<label>text:</label>
-			<input type="text" name="mytext" cc-input>
-		</div>
-		<div class="form-item">
-			<label>single checkbox:</label>
-			<input type="checkbox" value="one" name="mysinglecheck" cc-input>
-		</div>
-		<div class="form-item">
-			<label>checkboxes:</label>
-			<input type="checkbox" value="one" name="mymulticheck" cc-input>
-			<input type="checkbox" value="two" name="mymulticheck" cc-input>
-		</div>
-		<div class="form-item">
-			<label>radio buttons:</label>
-			<input type="radio" value="one" name="myradio" cc-input>
-			<input type="radio" value="two" name="myradio" cc-input>
-		</div>
-		<div class="form-item">
-			<label>single select:</label>
-			<select name="mysinglesel" cc-input>
-				<option>one</option>
-				<option>two</option>
-			</select>
-		</div>
-		<div class="form-item">
-			<label>multiple select:</label>
-			<select name="mymultisel" size="2" multiple cc-input>
-				<option>one</option>
-				<option>two</option>
-			</select>
-		</div>
-		<div class="form-item">
-			<label>anything:</label>
-			<a cc-input="{{#myanything}}" cc-input-value="one,two,many">click me</a>
-		</div>
-		<div class="form-item">
-			<label>textarea:</label>
-			<textarea name="mytextarea" rows="2"  cc-input></textarea>
-		</div>
+	
+		
+		
+		<fieldset cc-context="{{#read}}">
+			<caption>read only:</caption>
+			<div class="form-item">
+				<label>string:</label>
+				<input type="text" name="mystring" 
+					cc-input cc-input-dir="read">
+			</div>
+			<div class="form-item">
+				<label>number:</label>
+				<input type="text" name="mynumber" 
+					cc-input cc-input-dir="read">
+			</div>
+			<div class="form-item">
+				<label>boolean:</label>
+				<input type="text" name="myboolean" 
+					cc-input cc-input-dir="read">
+			</div>
+			
+		</fieldset>		
+	
+		<fieldset cc-context="{{#write}}">
+			<caption>write only:</caption>
+			<div class="form-item">
+				<label>string:</label>
+				<input type="text" name="mystring" 
+					cc-input cc-input-dir="write">
+			</div>
+			<div class="form-item">
+				<label>number:</label>
+				<input type="text" name="mynumber" 
+					cc-input cc-input-dir="write">
+			</div>
+			<div class="form-item">
+				<label>boolean:</label>
+				<input type="text" name="myboolean" 
+					cc-input cc-input-dir="write">
+			</div>
+			
+		</fieldset>		
 		
 	</form>
 </div>
-<div id="form-output" cc-context="Control.values">
-	<div class="form-item">
-		<label>text:</label> {{#mytext}}
-	</div>
-	<div class="form-item">
-		<label>single checkbox:</label> {{#mysinglecheck}}
-	</div>
-	<div class="form-item">
-		<label>checkboxes:</label> 
-		<span cc-if="{{#mymulticheck}}">[{{#mymulticheck?#mymulticheck.join(','):''}}]</span>
-	</div>
-	<div class="form-item">
-		<label>radio buttons:</label> {{#myradio}}
-	</div>
-	<div class="form-item">
-		<label>single select:</label> {{#mysinglesel}}
-	</div>
-	<div class="form-item">
-		<label>multiple select:</label> 
-		<span cc-if="{{#mymultisel}}">[{{#mymultisel?#mymultisel.join(','):''}}]</span>
-	</div>
-	<div class="form-item">
-		<label>anything:</label> {{#myanything}}
-	</div>
-	<div class="form-item">
-		<label>textarea:</label> <pre>{{#mytextarea}}</pre>
-	</div>
+<div id="form-output" cc-context="Control">
+	
+	
+	<fieldset cc-context="{{#read}}">
+		<caption>values for reading:</caption>
+		<div class="form-item">
+			<label>mystring:</label> {{#mystring}}<br>
+		</div>
+		<div class="form-item">
+			<label>mynumber:</label> {{#mynumber}}<br>
+		</div>
+		<div class="form-item">
+			<label>myboolean:</label> {{#myboolean}}<br>
+		</div>
+		
+	</fieldset>
+	
+	<fieldset cc-context="{{#write}}">
+		<caption>values for writing:</caption>
+		<div class="form-item">
+			<label>mystring:</label> {{#mystring}}<br>
+		</div>
+		<div class="form-item">
+			<label>mynumber:</label> {{#mynumber}}<br>
+		</div>
+		<div class="form-item">
+			<label>myboolean:</label> {{#myboolean}}<br>
+		</div>
+		
+	</fieldset>
+	
 </div>
 </div>
 <!-- ....... -->		

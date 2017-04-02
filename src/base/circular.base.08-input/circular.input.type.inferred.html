@@ -1,6 +1,6 @@
 <html>
 	<head>
-		<title>cc-input</title>
+		<title>cc-input inferred</title>
 		
 		<!-- build:remove -->
 		<script src="../../../vendor/node_modules/jquery/dist/jquery.min.js"></script>
@@ -60,20 +60,35 @@
 				},
 				presets : {
 					'empty'	: {},
-					'feliz navidad'	: {
-						mytext 			: 'one too many',
-						mymultisel	: ['one','two'],
-						mytextarea	: 'feliz navidad'
+					'strings'	: {
+						mytext 						: 'in the land of',
+						mysinglecheck 		: 'the graceful, down',
+						mymulticheck 			: ['the','road'],
+						myradio 					: 'of the fearless,',
+						mysinglesel				: 'come the hordes',
+						mymultisel				: ['of','the'],
+						myanything				: 'gracious',
+						mytextarea				: 'mongolians'
 					},
-					'ducks in a pond' : {
-						mytext 					: 'one, two, tree',
-						mysinglecheck 	: 'one',
-						mymulticheck 		: ['one'],
-						myradio 				: 'two',
-						mysinglesel			: 'one',
-						mymultisel			: ['one'],
-						mytextarea			: 'ducks in a pond',
-						myanything			: 'around the clock'
+					'booleans' : {
+						mytext 						: true,
+						mysinglecheck 		: false,
+						mymulticheck 			: [true,false],
+						myradio 					: false,
+						mysinglesel				: true,
+						mymultisel				: [false,true],
+						myanything				: true,
+						mytextarea				: false
+					},
+					'not a number' : {
+						mytext 						: 91011,
+						mysinglecheck 		: 911,
+						mymulticheck 			: [12,34],
+						myradio 					: 123,
+						mysinglesel				: 456,
+						mymultisel				: [123,456],
+						myanything				: 789,
+						mytextarea				: 123.456
 					}
 				}
 			};
@@ -120,11 +135,12 @@
 		<article>
 
 			<section id="about">
-				The <code>cc-input</code> attribute turns an element into
-				a widget that sets a javascript value.
-				The below form shows the simplest way to manipulate values - by only using 
-				a <code>cc-input</code> attribute on input elements inside a form, 
-				or using <code>cc-input-value</code> on any element.
+				This page checks how input types are inferred for different
+				input elements. None of these elements have a <code>cc-input-type</code> set,
+				so the input type is 'inferred' from the target values type, if a target
+				value is defined - or string otherwise.<br><br>
+				This also illustrates how strange combinations of input elements
+				and targets may yield confusing, but correct, results.
 			</section>
 			
 			<section id="demo">
@@ -146,17 +162,17 @@
 		</div>
 		<div class="form-item">
 			<label>single checkbox:</label>
-			<input type="checkbox" value="one" name="mysinglecheck" cc-input>
+			<input type="checkbox" value="one" name="mysinglecheck" cc-input> one
 		</div>
 		<div class="form-item">
 			<label>checkboxes:</label>
-			<input type="checkbox" value="one" name="mymulticheck" cc-input>
-			<input type="checkbox" value="two" name="mymulticheck" cc-input>
+			<input type="checkbox" value="one" name="mymulticheck" cc-input> one
+			<input type="checkbox" value="two" name="mymulticheck" cc-input> two
 		</div>
 		<div class="form-item">
 			<label>radio buttons:</label>
-			<input type="radio" value="one" name="myradio" cc-input>
-			<input type="radio" value="two" name="myradio" cc-input>
+			<input type="radio" value="one" name="myradio" cc-input> one 
+			<input type="radio" value="two" name="myradio" cc-input> two
 		</div>
 		<div class="form-item">
 			<label>single select:</label>
@@ -185,30 +201,38 @@
 </div>
 <div id="form-output" cc-context="Control.values">
 	<div class="form-item">
-		<label>text:</label> {{#mytext}}
+		<label>text:</label> {{#mytext}}<br>
+		<pre>{{typeof #mytext}}</pre>
 	</div>
 	<div class="form-item">
 		<label>single checkbox:</label> {{#mysinglecheck}}
+		<pre>{{typeof #mysinglecheck}}</pre>
 	</div>
 	<div class="form-item">
 		<label>checkboxes:</label> 
 		<span cc-if="{{#mymulticheck}}">[{{#mymulticheck?#mymulticheck.join(','):''}}]</span>
+		<pre>{{typeof #mymulticheck}}</pre>
 	</div>
 	<div class="form-item">
 		<label>radio buttons:</label> {{#myradio}}
+		<pre>{{typeof #myradio}}</pre>
 	</div>
 	<div class="form-item">
 		<label>single select:</label> {{#mysinglesel}}
+		<pre>{{typeof #mysinglesel}}</pre>
 	</div>
 	<div class="form-item">
 		<label>multiple select:</label> 
 		<span cc-if="{{#mymultisel}}">[{{#mymultisel?#mymultisel.join(','):''}}]</span>
+		<pre>{{typeof #mymultisel}}</pre>
 	</div>
 	<div class="form-item">
 		<label>anything:</label> {{#myanything}}
+		<pre>{{typeof #myanything}}</pre>
 	</div>
 	<div class="form-item">
 		<label>textarea:</label> <pre>{{#mytextarea}}</pre>
+		<pre>{{typeof #mytextarea}}</pre>
 	</div>
 </div>
 </div>

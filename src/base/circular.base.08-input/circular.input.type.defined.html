@@ -1,6 +1,6 @@
 <html>
 	<head>
-		<title>cc-input</title>
+		<title>cc-input defined</title>
 		
 		<!-- build:remove -->
 		<script src="../../../vendor/node_modules/jquery/dist/jquery.min.js"></script>
@@ -66,14 +66,13 @@
 						mytextarea	: 'feliz navidad'
 					},
 					'ducks in a pond' : {
-						mytext 					: 'one, two, tree',
-						mysinglecheck 	: 'one',
-						mymulticheck 		: ['one'],
-						myradio 				: 'two',
-						mysinglesel			: 'one',
-						mymultisel			: ['one'],
-						mytextarea			: 'ducks in a pond',
-						myanything			: 'around the clock'
+						mytext 						: 'one, two, tree',
+						mysinglecheck 		: 'one',
+						mymulticheck 			: ['one'],
+						myradio 					: 'two',
+						mysinglesel				: 'one',
+						mymultisel				: ['one'],
+						mytextarea				: 'ducks in a pond'
 					}
 				}
 			};
@@ -120,15 +119,17 @@
 		<article>
 
 			<section id="about">
-				The <code>cc-input</code> attribute turns an element into
-				a widget that sets a javascript value.
-				The below form shows the simplest way to manipulate values - by only using 
-				a <code>cc-input</code> attribute on input elements inside a form, 
-				or using <code>cc-input-value</code> on any element.
+				This page checks how cc-input-type attributes behave for different
+				input elements. All these elements have a <code>cc-input-type</code> set,
+				so that is used when reading and setting the targets value.
 			</section>
 			
 			<section id="demo">
 				<form id="controls">
+					<label>set cc-input-type</label>
+					<select onchange="$('[cc-input]').attr('cc-input-type',$(this).val())" cc-loop="{{@input.mapping}}" cc-loop-each="key">
+						<option>{{#this}}</option>
+					</select>
 					<label>select a preset</label>
 					<select onchange="Control.load($(this).val())" cc-loop="{{Control.presets}}" cc-loop-each="key">
 						<option>{{#this}}</option>
@@ -142,73 +143,81 @@
 	<form onsubmit="return false">
 		<div class="form-item">
 			<label>text:</label>
-			<input type="text" name="mytext" cc-input>
+			<input type="text" name="mytext" cc-input cc-input-type="raw">
 		</div>
 		<div class="form-item">
 			<label>single checkbox:</label>
-			<input type="checkbox" value="one" name="mysinglecheck" cc-input>
+			<input type="checkbox" value="one" name="mysinglecheck" cc-input cc-input-type="raw">
 		</div>
 		<div class="form-item">
 			<label>checkboxes:</label>
-			<input type="checkbox" value="one" name="mymulticheck" cc-input>
-			<input type="checkbox" value="two" name="mymulticheck" cc-input>
+			<input type="checkbox" value="one" name="mymulticheck" cc-input cc-input-type="raw">
+			<input type="checkbox" value="two" name="mymulticheck" cc-input cc-input-type="raw">
 		</div>
 		<div class="form-item">
 			<label>radio buttons:</label>
-			<input type="radio" value="one" name="myradio" cc-input>
-			<input type="radio" value="two" name="myradio" cc-input>
+			<input type="radio" value="one" name="myradio" cc-input cc-input-type="raw">
+			<input type="radio" value="two" name="myradio" cc-input cc-input-type="raw">
 		</div>
 		<div class="form-item">
 			<label>single select:</label>
-			<select name="mysinglesel" cc-input>
+			<select name="mysinglesel" cc-input cc-input-type="raw">
 				<option>one</option>
 				<option>two</option>
 			</select>
 		</div>
 		<div class="form-item">
 			<label>multiple select:</label>
-			<select name="mymultisel" size="2" multiple cc-input>
+			<select name="mymultisel" size="2" multiple cc-input cc-input-type="raw">
 				<option>one</option>
 				<option>two</option>
 			</select>
 		</div>
 		<div class="form-item">
 			<label>anything:</label>
-			<a cc-input="{{#myanything}}" cc-input-value="one,two,many">click me</a>
+			<a cc-input="{{#myanything}}" cc-input-value="one,two,many" cc-input-type="raw">click me</a>
 		</div>
 		<div class="form-item">
 			<label>textarea:</label>
-			<textarea name="mytextarea" rows="2"  cc-input></textarea>
+			<textarea name="mytextarea" rows="2"  cc-input cc-input-type="raw"></textarea>
 		</div>
 		
 	</form>
 </div>
 <div id="form-output" cc-context="Control.values">
 	<div class="form-item">
-		<label>text:</label> {{#mytext}}
+		<label>text:</label> {{#mytext}}<br>
+		<pre>{{typeof #mytext}}</pre>
 	</div>
 	<div class="form-item">
 		<label>single checkbox:</label> {{#mysinglecheck}}
+		<pre>{{typeof #mysinglecheck}}</pre>
 	</div>
 	<div class="form-item">
 		<label>checkboxes:</label> 
 		<span cc-if="{{#mymulticheck}}">[{{#mymulticheck?#mymulticheck.join(','):''}}]</span>
+		<pre>{{typeof #mymulticheck}}</pre>
 	</div>
 	<div class="form-item">
 		<label>radio buttons:</label> {{#myradio}}
+		<pre>{{typeof #myradio}}</pre>
 	</div>
 	<div class="form-item">
 		<label>single select:</label> {{#mysinglesel}}
+		<pre>{{typeof #mysinglesel}}</pre>
 	</div>
 	<div class="form-item">
 		<label>multiple select:</label> 
 		<span cc-if="{{#mymultisel}}">[{{#mymultisel?#mymultisel.join(','):''}}]</span>
+		<pre>{{typeof #mymultisel}}</pre>
 	</div>
 	<div class="form-item">
 		<label>anything:</label> {{#myanything}}
+		<pre>{{typeof #myanything}}</pre>
 	</div>
 	<div class="form-item">
 		<label>textarea:</label> <pre>{{#mytextarea}}</pre>
+		<pre>{{typeof #mytextarea}}</pre>
 	</div>
 </div>
 </div>
