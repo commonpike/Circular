@@ -83,7 +83,6 @@ new CircularModule('input',{
 		var inpdir 	= this.getInputDir(ccattr,ccnode,node);
 		var evdata 	= this.getEventData(ccattr,ccnode,node);
 		var inpval	= this.getInputValue(ccattr,ccnode);
-		var oldval	= ccattr.content.mapped;
 		var target	= this.getTarget(ccattr,ccnode,node);
 		var type		= this.getInputType(ccattr,ccnode,target);
 		if (target!==false) {
@@ -91,10 +90,7 @@ new CircularModule('input',{
 			
 				if (inpdir.read) {
 					// set the current value
-					var mapped = this.read($node,target,oldval,type);
-					if (mapped) {
-						ccattr.content.mapped = mapped;
-					}
+					this.read($node,target,type);
 				}
 				
 				if (inpdir.write) {
@@ -104,13 +100,7 @@ new CircularModule('input',{
 					$node.on(evdata.event, function(ev) {
 						clearTimeout(evtimer);
 						evtimer = setTimeout(function() {
-							var mapped = Circular.input.write(target,$node,inpval,type);
-							if (mapped) {
-								Circular.queue.add(function() {
-									var ccnode = Circular.registry.get(node);
-									ccnode.attributes[ccattr.properties.name].content.mapped=mapped;
-								});
-							}
+							Circular.input.write(target,$node,inpval,type);
 						},evdata.timeout);
 					});
 				}
@@ -163,7 +153,7 @@ new CircularModule('input',{
 		return evdata;
 	},
 	
-	getInputValue	: function(cattr,ccnode) {
+	getInputValue	: function($node,ccnode) {
 		var inpval;
 		if (ccnode.attributes['cc-input-value']) {
 			inpval = ccnode.attributes['cc-input-value'].content.value;
@@ -227,60 +217,79 @@ new CircularModule('input',{
 			return this.mapping[type](val);
 		}
 	},
+
+	inpEquals	: function($node,elmmapped,tgtmapped,type) {
+		if (this.eqNaN(elmmapped,tgtmapped)) return true;
+		if (!Array.isArray(tgtmapped)) {
+			if ($node.is('input[type=checkbox]')) {
+				if (!$node.is(':checked')) {
+					// try single checkbox
+					var elmval 	= ''; //todo
+					elmmapped 	= this.map(elmval,type);
+				}
+			}
+		}
+		return tgtmapped===elmmapped;
+	},
 	
-	read	: function($node,target,oldval,type) {
+	read	: function($node,target,type) {
 		Circular.log.debug('@input','read',$node,target,type);
 		
 		if ($node.is(':input')) {
-			var value 	= Circular.parser.eval(target);
-			var mapped 	= this.map(value,type);
+			var tgtval 			= Circular.parser.eval(target);
+			var tgtmapped 	= this.map(tgtval,type);
+			var elmval			= $node.val();
+			var elmmapped 	= this.map(elmval,type);
 			
-			if (mapped!==oldval) {
+			if (!this.inpEquals($node,elmmapped,tgtmapped,type)) { 
 				if ($node.is('input[type=checkbox]')) {
-					if (Array.isArray(mapped)) {
-						if (mapped.indexOf(this.map($node.val(),type))!=-1) {
+					if (Array.isArray(tgtmapped)) {
+						console.log('checkr multi',elmmapped,tgtmapped);
+						if (tgtmapped.indexOf(elmmapped)!=-1) {
 							$node.prop('checked',true);
 						} else {
 							$node.prop('checked',false);
 						}
 					} else {
 						// single checkbox can target a scalar
-						if (this.map($node.val(),type)===mapped) {
+						console.log('checkr single',elmmapped,tgtmapped);
+						var checkedval			= $node.val();
+						var checkedmapped 	= this.map(elmval,type);
+						if (checkedmapped===tgtmapped) {
 							$node.prop('checked',true);
 						} else {
 							$node.prop('checked',false);
 						}
 					}
 				} else if ($node.is('input[type=radio]')) {
-					if (this.map($node.val(),type)===mapped) {
+					if (elmmapped===tgtmapped) {
 						$node.prop('checked',true);
 					} else {
 						$node.prop('checked',false);
 					}
 				} else if ($node.is('select[multiple]')) {
-					if (Array.isArray(value)) {
-						$node.val(mapped); 
+					if (Array.isArray(tgtmapped)) {
+						$node.val(tgtmapped); 
 					} else {
 						$node.val([]);
-						if (mapped) {
+						if (tgtmapped) {
 							Circular.log.warn('@input','read','multiple select does not refer to an array');
 						}
 					}
 				} else {
 					
-					$node.val(mapped);
+					$node.val(tgtmapped);
 				}
 				
 				// if the target was yet undefined, set it to
 				// the mapping of undefined instead
-				if (value===undefined) {
-					Circular.parser.eval(target+'='+JSON.stringify(mapped));
+				if (tgtval===undefined) {
+					Circular.parser.eval(target+'='+JSON.stringify(tgtmapped));
 				}
 				
-				return mapped;
 				
 			} else {
-				Circular.log.debug('@input','read','mapped value did not change');
+				Circular.log.debug('@input','read','mapped values are equal');
 			}
 			
 		} else {
@@ -292,13 +301,13 @@ new CircularModule('input',{
 	
 	write	: function(target,$node,inpval,type) {
 	
-		var mapped;
+		var elmmapped;
 		
 		Circular.log.debug('@input','write',target,$node,inpval,type);
 		if (inpval!==undefined) {
 		
 			// the value was given using cc-input-value
-			mapped = this.map(inpval,type);
+			elmmapped = this.map(inpval,type);
 			
 		} else {
 		
@@ -315,21 +324,21 @@ new CircularModule('input',{
 								arr.push($(this).val());
 							}
 						});
-						mapped = this.map(arr,type);
+						elmmapped = this.map(arr,type);
 					} else {
 						// single checkbox should target a scalar
-						mapped = this.map($all.eq(0).val(),type);
+						elmmapped = this.map($all.eq(0).val(),type);
 					}
 					
 				} else if ($node.is('input[type=radio]')) {
 					if ($node.is(':checked')) {
-						mapped = this.map($node.val(),type);
+						elmmapped = this.map($node.val(),type);
 					}
 
 				} else {
-					mapped = this.map($node.val(),type);
+					elmmapped = this.map($node.val(),type);
 				}
-				Circular.log.debug('@input','write',target,mapped);
+				Circular.log.debug('@input','write',target,elmmapped);
 				
 			} else {
 				Circular.log.debug('@input','write','no value, no input, not writing');
@@ -337,14 +346,26 @@ new CircularModule('input',{
 			}
 		} 
 		
-		Circular.parser.eval(target+'='+this.stringify(mapped));
-		return mapped;
+		Circular.parser.eval(target+'='+this.stringify(elmmapped));
 		
 	},
 	
 	stringify	: function(value) {
+		// keywords not supported by json:
+		// NaN
 		if (isNaN(value) && typeof value=='number') return 'NaN';
+		// infinity ?
+		//
 		return JSON.stringify(value)
+	},
+	
+	eqNaN		: function(a,b) {
+		if ( typeof a=='number' && typeof b=='number') {
+			if (isNaN(a) && isNaN(b)) {
+				return true;
+			}
+		}
+		return false;
 	}
 		
 });
