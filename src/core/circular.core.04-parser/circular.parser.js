@@ -16,6 +16,10 @@ new CircularModule('parser', {
 		uriregex				: /(?:^[a-z][a-z0-9+.-]*:|\/\/)/i,
 		evalfail				: undefined,
 		rootscope				: 'window', // bad idea
+		boolish					: {
+			false : ['no','off','false','0'], 
+			true : ['yes','on','true','1','']
+		},
 		defflags				: {
 			parse			: true,
 			evaluate	: true,
@@ -388,16 +392,11 @@ new CircularModule('parser', {
 	},
 	
 	boolish	: function(str) {
-		if (str) {
-			if (str==='no') 		return false;
-			if (str==='off') 		return false;
-			if (str==='false') 	return false;
-			if (str==='0') 			return false;
-			return true;
-		} else {
-			if (str==='') return true;
-			return false;
-		}
+		if (this.config.boolish[false].indexOf(str)!=-1) return false;
+		if (this.config.boolish[true].indexOf(str)!=-1) return true;
+		if (str) return true;
+		else return false;
+		
 	},
 	
 	parseURI	: function(str,base) {

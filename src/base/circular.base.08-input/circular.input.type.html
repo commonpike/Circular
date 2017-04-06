@@ -51,28 +51,29 @@
 				// dynamic stuff
 				defined 	: {},
 				inferred	: {},
-				load	: function(where,preset) {
+				load	: function(preset) {
 					for (var key in this.presets[preset]) {
-						this[where][key]=this.presets[preset][key];
+						this.defined[key]=this.presets[preset][key];
+						this.inferred[key]=this.presets[preset][key];
 					}
-					for (var key in this[where]) {
-						this[where][key]=this.presets[preset][key];
-					}
-					$('#controls #'+where).val(preset);
 				},
 				presets : {
-					'empty' : {},
+					'undefined' : {
+						mystring 			: undefined,
+						mynumber 			: undefined,
+						myboolean 		: undefined
+					},
 					'prefilled' : {
 						mystring 			: 'one,two,tree',
 						mynumber 			: 123,
-						myboolean 		: false
+						myboolean 		: false,
 					},
-					'mixedup' : {
-						mystring 			: undefined,
+					'null' : {
+						mystring 			: null,
 						mynumber 			: null,
-						myboolean 		: 'dunno'
+						myboolean 		: null
 					},
-					'confused' : {
+					'allwrong' : {
 						mystring 			: 123,
 						mynumber 			: function() {},
 						myboolean 		: 'yes'
@@ -98,8 +99,7 @@
 			});
 
 			$(document).ready(function() {
-				Control.load('defined','empty');
-				Control.load('inferred','prefilled');
+				Control.load('empty');
 			});
 
 				
@@ -148,8 +148,10 @@
 				
 				Anytime a cc-input element tries to change a target value,
 				it checks the input type again, and converts the HTML dom string
-				to that type before setting the target. The 'raw' input type
-				does not map anything.
+				to that type before setting the target. <br><br>
+				
+				The 'boolean' conversion assumes the strings 'no','off','false' and '0' are false.
+				The 'raw' mapping doesn't map anything.
 				
 				
 				
@@ -157,16 +159,11 @@
 			
 			<section id="demo">
 				<form id="controls">
-					<label>set inferred values preset</label>
-					<select id="inferred" onchange="Control.load('inferred',$(this).val())" 
+					<label>set  preset</label>
+					<select onchange="Control.load($(this).val())" 
 						cc-loop="{{Control.presets}}" cc-loop-each="key">
 						<option>{{#this}}</option>
-					</select><br>
-					<label>set defined values preset</label>
-					<select id="defined" onchange="Control.load('defined',$(this).val())" 
-						cc-loop="{{Control.presets}}" cc-loop-each="key">
-						<option>{{#this}}</option>
-					</select><br>
+					</select>
 					
 				</form>
 				<div id="results">
@@ -193,6 +190,7 @@
 				<input type="text" name="myboolean" cc-input>
 			</div>
 			
+			
 		</fieldset>		
 	
 		<fieldset cc-context="{{#defined}}">
@@ -212,6 +210,7 @@
 				<input type="text" name="myboolean" 
 					cc-input cc-input-type="boolean">
 			</div>
+			
 			
 		</fieldset>		
 		
@@ -235,6 +234,7 @@
 			<pre>(myboolean)?1:2={{(#myboolean)?1:2}}</pre>
 		</div>
 		
+		
 	</fieldset>
 	
 	<fieldset cc-context="{{#defined}}">
@@ -251,6 +251,7 @@
 			<label>boolean:</label> {{#myboolean}}<br>
 			<pre>(myboolean)?1:2={{(#myboolean)?1:2}}</pre>
 		</div>
+		
 		
 	</fieldset>
 	

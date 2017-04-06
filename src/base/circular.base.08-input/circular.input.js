@@ -59,23 +59,56 @@ new CircularModule('input',{
 		{ match : '*',										event : 'click' }
 	],
 	
-	mapping	: {
-		'raw'			: function(val) { return val; },
-		'string'	: function(val) { 
-			if (val===undefined) return '';
-			if (val===null) return '';
-			return String(val); 
+	types	: {
+		'raw'			: {
+			equals	: function(a,b) { return a === b; },
+			map : function(val) { return val; }
 		},
-		'number'	: function(val) { 
-			return Number(val); 
+		'string'	: {
+			equals	: function(a,b) { return a === b; },
+			map : function(val) { 
+				if (val===undefined) return '';
+				if (val===null) return '';
+				return String(val); 
+			}
 		},
-		'boolean'	: function(val) { 
-			return Circular.parser.boolish(val); 
+		'number'	: {
+			equals	: function(a,b) { 
+				if (isNaN(a) && isNaN(b)) return true;
+				return a === b; 
+			},
+			map : function(val) { 
+				return Number(val); 
+			}
+		},
+		'boolean'	: {
+			config	:{
+				false : ['no','off','false','0'], 
+				true 	: ['yes','on','true','1']
+			},
+			equals	: function(a,b) { return a === b; },
+			map : function(val) { 
+				if (this.config[false].indexOf(val)!=-1) return false;
+				if (this.config[true].indexOf(val)!=-1) return true;
+				return Boolean(val);
+			}
 		}
 	},
 	
-	addType	: function(name,func) {
-		this.mapping[name]=func;
+	addType	: function(name,definition) {
+		this.mapping[name]=definition;
+	},
+	
+	map		: function(val,type) {
+		if (Array.isArray(val)) {
+			var arr = val.slice(0);
+			arr.forEach(function(item,idx) {
+				arr[idx]=Circular.input.map(item,type);
+			});
+			return arr;
+		} else {
+			return this.types[type].map(val);
+		}
 	},
 	
 	processCCInput	: function(ccattr,ccnode,node) {
@@ -168,14 +201,14 @@ new CircularModule('input',{
 			type = ccnode.attributes['cc-input-type'].content.value;
 		} else {
 			var tgttype = typeof Circular.parser.eval(target);
-			if (this.mapping[tgttype]) type=tgttype;
+			if (this.types[tgttype]) type=tgttype;
 			else type='string';
 		}
 		return type;
 	},
 	
 	getTarget	: function(ccattr,ccnode,node) {
-		var target=false;
+		var target;
 		if (ccattr.content.expression) {
 			target = ccattr.content.expression;
 			Circular.log.debug('@input','getTarget','expression',target);
@@ -206,31 +239,7 @@ new CircularModule('input',{
 		return target;
 	},
 	
-	map		: function(val,type) {
-		if (Array.isArray(val)) {
-			var arr = val.slice(0);
-			arr.forEach(function(item,idx) {
-				arr[idx]=Circular.input.map(item,type);
-			});
-			return arr;
-		} else {
-			return this.mapping[type](val);
-		}
-	},
-
-	inpEquals	: function($node,elmmapped,tgtmapped,type) {
-		if (this.eqNaN(elmmapped,tgtmapped)) return true;
-		if (!Array.isArray(tgtmapped)) {
-			if ($node.is('input[type=checkbox]')) {
-				if (!$node.is(':checked')) {
-					// try single checkbox
-					var elmval 	= ''; //todo
-					elmmapped 	= this.map(elmval,type);
-				}
-			}
-		}
-		return tgtmapped===elmmapped;
-	},
+	
 	
 	read	: function($node,target,type) {
 		Circular.log.debug('@input','read',$node,target,type);
@@ -241,10 +250,10 @@ new CircularModule('input',{
 			var elmval			= $node.val();
 			var elmmapped 	= this.map(elmval,type);
 			
-			if (!this.inpEquals($node,elmmapped,tgtmapped,type)) { 
+			if (!this.types[type].equals(tgtmapped,elmmapped)) { 
 				if ($node.is('input[type=checkbox]')) {
 					if (Array.isArray(tgtmapped)) {
-						console.log('checkr multi',elmmapped,tgtmapped);
+						//console.log('checkr multi',elmmapped,tgtmapped);
 						if (tgtmapped.indexOf(elmmapped)!=-1) {
 							$node.prop('checked',true);
 						} else {
@@ -252,10 +261,8 @@ new CircularModule('input',{
 						}
 					} else {
 						// single checkbox can target a scalar
-						console.log('checkr single',elmmapped,tgtmapped);
-						var checkedval			= $node.val();
-						var checkedmapped 	= this.map(elmval,type);
-						if (checkedmapped===tgtmapped) {
+						// console.log('checkr single',elmmapped,tgtmapped);
+						if (elmmapped===tgtmapped) {
 							$node.prop('checked',true);
 						} else {
 							$node.prop('checked',false);
@@ -276,27 +283,40 @@ new CircularModule('input',{
 							Circular.log.warn('@input','read','multiple select does not refer to an array');
 						}
 					}
-				} else {
+				} else if ($node.is('select')) {
+				
+					$node.val(tgtmapped);
+					// here is a mac issue
+					if ($node.get(0).selectedIndex==-1) {
+						$node.prepend('<option disabled selected value="'+tgtmapped+'"></option>');
+					}
 					
+				} else {
+				
 					$node.val(tgtmapped);
 				}
 				
-				// if the target was yet undefined, set it to
-				// the mapping of undefined instead
-				if (tgtval===undefined) {
-					Circular.parser.eval(target+'='+JSON.stringify(tgtmapped));
-				}
 				
 				
 			} else {
 				Circular.log.debug('@input','read','mapped values are equal');
+			}
+
+			// now that you figured out the types,
+			// if the target was yet undefined, set it to
+			// the mapping of undefined instead
+			
+			if (tgtval===undefined) {
+				console.log('tgtmapped',tgtval,tgtmapped);
+				Circular.parser.eval(target+'='+this.stringify(tgtmapped));
 			}
 			
 		} else {
 			Circular.log.debug('@input','read','not an input, not reading');
 		}
 		
-		return false;
+		
+		
 	},
 	
 	write	: function(target,$node,inpval,type) {
@@ -304,6 +324,8 @@ new CircularModule('input',{
 		var elmmapped;
 		
 		Circular.log.debug('@input','write',target,$node,inpval,type);
+
+
 		if (inpval!==undefined) {
 		
 			// the value was given using cc-input-value
@@ -314,25 +336,32 @@ new CircularModule('input',{
 			// read the value from the element
 			if ($node.is(':input')) {
 				
+
 				if ($node.is('[type=checkbox]')) {
+					// treat it like an array
 					var name = $node.attr('name');
 					var $all = $('input[type="checkbox"][cc-input="'+target+'"]',$node.get(0).form);
-					if ($all.length>1) {
+					if ($all.size()>1) {
+						// treat it like an array
 						var arr = [];
 						$all.each(function() {
-							if (this.checked) {
-								arr.push($(this).val());
-							}
+							if (this.checked) arr.push($(this).val());
 						});
 						elmmapped = this.map(arr,type);
 					} else {
 						// single checkbox should target a scalar
-						elmmapped = this.map($all.eq(0).val(),type);
+						if ($node.is(':checked')) {
+							elmmapped = this.map($node.val(),type);
+						} else {
+							elmmapped = this.map(undefined,type);
+						}
 					}
 					
 				} else if ($node.is('input[type=radio]')) {
 					if ($node.is(':checked')) {
 						elmmapped = this.map($node.val(),type);
+					} else {
+						elmmapped = this.map(undefined,type);
 					}
 
 				} else {
@@ -357,16 +386,9 @@ new CircularModule('input',{
 		// infinity ?
 		//
 		return JSON.stringify(value)
-	},
-	
-	eqNaN		: function(a,b) {
-		if ( typeof a=='number' && typeof b=='number') {
-			if (isNaN(a) && isNaN(b)) {
-				return true;
-			}
-		}
-		return false;
 	}
+	
+	
 		
 });
 
