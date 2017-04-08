@@ -280,7 +280,15 @@ new CircularModule('input',{
 					}
 				} else if ($node.is('select[multiple]')) {
 					if (Array.isArray(tgtmapped)) {
-						$node.val(tgtmapped); 
+						$('option',$node).each(function() {
+							var $this = $(this);
+							var elmmapped = Circular.input.map($this.val(),type);
+							if (tgtmapped.indexOf(elmmapped)!=-1) {
+								$this.prop('selected',true);
+							} else {
+								$this.prop('selected',false);
+							}
+						});
 					} else {
 						$node.val([]);
 						if (tgtmapped) {
@@ -362,7 +370,7 @@ new CircularModule('input',{
 
 				} else if ($node.is('select[multiple]')) {
 				
-					elmmapped = this.map(this.unique($node.val()),type);
+					elmmapped = this.unique(this.map($node.val(),type));
 				
 				} else {
 				
