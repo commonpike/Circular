@@ -40,7 +40,7 @@ new CircularModule('input',{
 	
 	init	: function() {
 		this.config.events.reverse().forEach(function(event) {
-			Circular.input.events.unshift(event);
+			Circular.input.addEvent(event);
 		});	
 		for (var type in this.config.types) {
 			this.addType(type,this.config.types[type]);
@@ -58,6 +58,10 @@ new CircularModule('input',{
 		{ match : 'select', 							event : 'change' },
 		{ match : '*',										event : 'click' }
 	],
+	
+	addEvent	: function(definition) {
+		Circular.input.events.unshift(definition);
+	},
 	
 	types	: {
 		'raw'			: {
@@ -283,14 +287,6 @@ new CircularModule('input',{
 							Circular.log.warn('@input','read','multiple select does not refer to an array');
 						}
 					}
-				} else if ($node.is('select')) {
-				
-					$node.val(tgtmapped);
-					// here is a mac issue
-					if ($node.get(0).selectedIndex==-1) {
-						$node.prepend('<option disabled selected value="'+tgtmapped+'"></option>');
-					}
-					
 				} else {
 				
 					$node.val(tgtmapped);
@@ -307,7 +303,7 @@ new CircularModule('input',{
 			// the mapping of undefined instead
 			
 			if (tgtval===undefined) {
-				console.log('tgtmapped',tgtval,tgtmapped);
+				// console.log('tgtmapped',tgtval,tgtmapped);
 				Circular.parser.eval(target+'='+this.stringify(tgtmapped));
 			}
 			
@@ -347,7 +343,7 @@ new CircularModule('input',{
 						$all.each(function() {
 							if (this.checked) arr.push($(this).val());
 						});
-						elmmapped = this.map(arr,type);
+						elmmapped = this.unique(this.map(arr,type));
 					} else {
 						// single checkbox should target a scalar
 						if ($node.is(':checked')) {
@@ -364,8 +360,14 @@ new CircularModule('input',{
 						elmmapped = this.map(undefined,type);
 					}
 
+				} else if ($node.is('select[multiple]')) {
+				
+					elmmapped = this.map(this.unique($node.val()),type);
+				
 				} else {
+				
 					elmmapped = this.map($node.val(),type);
+					
 				}
 				Circular.log.debug('@input','write',target,elmmapped);
 				
@@ -386,6 +388,12 @@ new CircularModule('input',{
 		// infinity ?
 		//
 		return JSON.stringify(value)
+	},
+	
+	unique	: function(arr) {
+		 return arr.filter(function (e, i, a) {
+    		return a.lastIndexOf(e) === i;
+		});
 	}
 	
 	

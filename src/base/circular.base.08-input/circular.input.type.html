@@ -118,6 +118,9 @@
 			select[multiple], textarea {
 				vertical-align:top;
 			}
+			fieldset {
+				margin-bottom:1em;
+			}
 		</style>
 	</head>
 	<body cc-root>
@@ -151,7 +154,9 @@
 				to that type before setting the target. <br><br>
 				
 				The 'boolean' conversion assumes the strings 'no','off','false' and '0' are false.
-				The 'raw' mapping doesn't map anything.
+				The 'raw' mapping doesn't map anything, but if the value
+				passes an html attribute, it will likely turn into a string
+				at some point.
 				
 				
 				
@@ -159,7 +164,7 @@
 			
 			<section id="demo">
 				<form id="controls">
-					<label>set  preset</label>
+					<label>load some preset values</label>
 					<select onchange="Control.load($(this).val())" 
 						cc-loop="{{Control.presets}}" cc-loop-each="key">
 						<option>{{#this}}</option>

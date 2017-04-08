@@ -831,7 +831,7 @@ new CircularModule('engine', {
 			} else {
 				result = ccattr.content.expression;
 			}
-			if (result!=ccattr.content.result) {
+			if (result!==ccattr.content.result) {
 			
 				ccattr.content.result = result;
 				this.debug('@engine.execEvaluate','result changed',ccattr.properties.name);

@@ -10,7 +10,6 @@ new CircularModule('content',{
 	},
 	
 	settings 			: {
-		requiremods	: ['log'],
 		insertcss		: ['.cc-content-generated {  }']
 	},
 

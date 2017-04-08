@@ -49,36 +49,69 @@
 		
 			var Control = { 
 				// dynamic stuff
+				
 				values : {},
 				load	: function(preset) {
 					for (var key in this.presets[preset]) {
 						this.values[key]=this.presets[preset][key];
 					}
-					for (var key in this.values) {
-						this.values[key]=this.presets[preset][key];
-					}
 				},
 				presets : {
-					'empty'	: {},
-					'feliz navidad'	: {
-						mytext 			: 'one too many',
-						mymultisel	: ['one','two'],
-						mytextarea	: 'feliz navidad'
+					'empty'	: {
+						mytext 						: undefined,
+						mysinglecheck 		: undefined,
+						mymulticheck 			: undefined,
+						myradio 					: undefined,
+						mysinglesel				: undefined,
+						mymultisel				: undefined,
+						myanything				: undefined,
+						mytextarea				: undefined
 					},
-					'ducks in a pond' : {
-						mytext 						: 'one, two, tree',
-						mysinglecheck 		: 'one',
-						mymulticheck 			: ['one'],
-						myradio 					: 'two',
-						mysinglesel				: 'one',
-						mymultisel				: ['one'],
-						mytextarea				: 'ducks in a pond'
+					'strings'	: {
+						mytext 						: 'in the land of',
+						mysinglecheck 		: 'the graceful, down',
+						mymulticheck 			: ['the','road'],
+						myradio 					: 'of the fearless,',
+						mysinglesel				: 'come the hordes',
+						mymultisel				: ['of','the'],
+						myanything				: 'gracious',
+						mytextarea				: 'mongolians'
+					},
+					'booleans' : {
+						mytext 						: true,
+						mysinglecheck 		: false,
+						mymulticheck 			: [true,false],
+						myradio 					: false,
+						mysinglesel				: true,
+						mymultisel				: [false,true],
+						myanything				: false,
+						mytextarea				: false
+					},
+					'numbers' : {
+						mytext 						: 91011,
+						mysinglecheck 		: 911,
+						mymulticheck 			: [12,34],
+						myradio 					: 123,
+						mysinglesel				: 456,
+						mymultisel				: [123,456],
+						myanything				: 789,
+						mytextarea				: 123.456
 					}
+				},
+				
+				type		: 'raw',
+				select	: function(type) {
+					this.type = type;
+					$('[cc-input]').attr('cc-input-type',type)
 				}
+				
 			};
 			
 		
-				
+			$(document).ready(function() {
+				Control.load('empty');
+				Control.select('raw');
+			});
 			
 			Circular.init({
 				log : {
@@ -102,15 +135,22 @@
 			#form-input { float:left; width:40%; padding:0 1%; border-right:1px solid black; }
 			#form-output { float:left; width:40%; padding:0 1%;  }
 			.form-item {
-				height:3em; padding:.5em 0;
+				padding:.5em 0 1em;
 				border-top:1px solid #ccc;
 			}
 			.form-item label {
-				display:inline-block;
-				min-width:10em;
+				display:block;
+				min-width:50%;
+				min-height:2em;
+			}
+			.form-item fieldset {
+				min-height:4em;
+				border:0;
+				padding:0;
 			}
 			select[multiple], textarea {
 				vertical-align:top;
+				min-width:8em;
 			}
 		</style>
 	</head>
@@ -126,11 +166,11 @@
 			
 			<section id="demo">
 				<form id="controls">
-					<label>set cc-input-type</label>
-					<select onchange="$('[cc-input]').attr('cc-input-type',$(this).val())" cc-loop="{{@input.mapping}}" cc-loop-each="key">
+					<label>set a source cc-input-type</label>
+					<select onchange="Control.select($(this).val());" cc-loop="{{@input.types}}" cc-loop-each="key">
 						<option>{{#this}}</option>
-					</select>
-					<label>select a preset</label>
+					</select><br>
+					<label>select some target values</label>
 					<select onchange="Control.load($(this).val())" cc-loop="{{Control.presets}}" cc-loop-each="key">
 						<option>{{#this}}</option>
 					</select>
@@ -142,82 +182,136 @@
 <div id="form-input" cc-context="Control.values">
 	<form onsubmit="return false">
 		<div class="form-item">
-			<label>text:</label>
-			<input type="text" name="mytext" cc-input cc-input-type="raw">
+			<label>text ({{Control.type}}):</label>
+			<fieldset>
+				<input type="text" name="mytext" cc-input>
+			</fieldset>
 		</div>
 		<div class="form-item">
-			<label>single checkbox:</label>
-			<input type="checkbox" value="one" name="mysinglecheck" cc-input cc-input-type="raw">
+			<label>single checkbox ({{Control.type}}):</label>
+			<fieldset>
+				<input type="checkbox" value="one" name="mysinglecheck" cc-input> one
+			</fieldset>
 		</div>
 		<div class="form-item">
-			<label>checkboxes:</label>
-			<input type="checkbox" value="one" name="mymulticheck" cc-input cc-input-type="raw">
-			<input type="checkbox" value="two" name="mymulticheck" cc-input cc-input-type="raw">
+			<label>checkboxes ({{Control.type}}):</label>
+			<fieldset>
+				<input type="checkbox" value="" name="mymulticheck" cc-input> ''
+				<input type="checkbox" value="0" name="mymulticheck" cc-input> 0
+				<input type="checkbox" value="one" name="mymulticheck" cc-input> one
+				<input type="checkbox" value="two" name="mymulticheck" cc-input> two<br>
+				<input type="checkbox" value="3" name="mymulticheck" cc-input> 3
+				<input type="checkbox" value="3" name="mymulticheck" cc-input> 3
+				<input type="checkbox" value="false" name="mymulticheck" cc-input> false
+				<input type="checkbox" value="true" name="mymulticheck" cc-input> true
+			</fieldset>
 		</div>
 		<div class="form-item">
-			<label>radio buttons:</label>
-			<input type="radio" value="one" name="myradio" cc-input cc-input-type="raw">
-			<input type="radio" value="two" name="myradio" cc-input cc-input-type="raw">
+			<label>radio buttons ({{Control.type}}):</label>
+			<fieldset>
+				<input type="radio" value="" name="myradio" cc-input> ''
+				<input type="radio" value="0" name="myradio" cc-input> 0
+				<input type="radio" value="one" name="myradio" cc-input> one 
+				<input type="radio" value="two" name="myradio" cc-input> two<br>
+				<input type="radio" value="3" name="myradio" cc-input> 3 
+				<input type="radio" value="3" name="myradio" cc-input> 3
+				<input type="radio" value="false" name="myradio" cc-input> false
+				<input type="radio" value="true" name="myradio" cc-input> true
+			</fieldset>
 		</div>
 		<div class="form-item">
-			<label>single select:</label>
-			<select name="mysinglesel" cc-input cc-input-type="raw">
-				<option>one</option>
-				<option>two</option>
-			</select>
+			<label>single select ({{Control.type}}):</label>
+			<fieldset>
+				<select name="mysinglesel" cc-input>
+					<option></option>
+					<option>0</option>
+					<option>one</option>
+					<option>two</option>
+					<option>3</option>
+					<option>3</option>
+					<option>false</option>
+					<option>true</option>
+				</select>
+			</fieldset>
 		</div>
 		<div class="form-item">
-			<label>multiple select:</label>
-			<select name="mymultisel" size="2" multiple cc-input cc-input-type="raw">
-				<option>one</option>
-				<option>two</option>
-			</select>
+			<label>multiple select ({{Control.type}}):</label>
+			<fieldset>
+				<select name="mymultisel" size="4" multiple cc-input>
+					<option></option>
+					<option>0</option>
+					<option>one</option>
+					<option>two</option>
+					<option>3</option>
+					<option>3</option>
+					<option>false</option>
+					<option>true</option>
+				</select>
+			</fieldset>
 		</div>
 		<div class="form-item">
-			<label>anything:</label>
-			<a cc-input="{{#myanything}}" cc-input-value="one,two,many" cc-input-type="raw">click me</a>
+			<label>anything ({{Control.type}}):</label>
+			<fieldset>
+				<a cc-input="{{#myanything}}" cc-input-value="one,two,many">click me</a>
+			</fieldset>
 		</div>
 		<div class="form-item">
-			<label>textarea:</label>
-			<textarea name="mytextarea" rows="2"  cc-input cc-input-type="raw"></textarea>
+			<label>textarea ({{Control.type}}):</label>
+			<fieldset>
+				<textarea name="mytextarea" rows="2"  cc-input></textarea>
+			</fieldset>
 		</div>
 		
 	</form>
 </div>
 <div id="form-output" cc-context="Control.values">
 	<div class="form-item">
-		<label>text:</label> {{#mytext}}<br>
-		<pre>{{typeof #mytext}}</pre>
+		<label>text ({{typeof #mytext}}):</label> 
+		<fieldset>
+			{{#mytext}}
+		</fieldset>
 	</div>
 	<div class="form-item">
-		<label>single checkbox:</label> {{#mysinglecheck}}
-		<pre>{{typeof #mysinglecheck}}</pre>
+		<label>single checkbox ({{typeof #mysinglecheck}}):</label> 
+		<fieldset>
+			{{#mysinglecheck}}
+		</fieldset>
 	</div>
 	<div class="form-item">
-		<label>checkboxes:</label> 
-		<span cc-if="{{#mymulticheck}}">[{{#mymulticheck?#mymulticheck.join(','):''}}]</span>
-		<pre>{{typeof #mymulticheck}}</pre>
+		<label>checkboxes ({{typeof #mymulticheck}}):</label> 
+		<fieldset>
+			<span cc-if="{{#mymulticheck}}">[{{#mymulticheck?#mymulticheck.join(','):''}}]</span>
+		</fieldset>
 	</div>
 	<div class="form-item">
-		<label>radio buttons:</label> {{#myradio}}
-		<pre>{{typeof #myradio}}</pre>
+		<label>radio buttons ({{typeof #myradio}}):</label> 
+		<fieldset>
+			{{#myradio}}
+		</fieldset>
 	</div>
 	<div class="form-item">
-		<label>single select:</label> {{#mysinglesel}}
-		<pre>{{typeof #mysinglesel}}</pre>
+		<label>single select ({{typeof #mysinglesel}}):</label> 
+		<fieldset>
+			{{#mysinglesel}}
+		</fieldset>
 	</div>
 	<div class="form-item">
-		<label>multiple select:</label> 
-		<span cc-if="{{#mymultisel}}">[{{#mymultisel?#mymultisel.join(','):''}}]</span>
-		<pre>{{typeof #mymultisel}}</pre>
+		<label>multiple select ({{typeof #mymultisel}}):</label> 
+		<fieldset>
+			<span cc-if="{{#mymultisel}}">[{{#mymultisel?#mymultisel.join(','):''}}]</span>
+		</fieldset>
 	</div>
 	<div class="form-item">
-		<label>anything:</label> {{#myanything}}
-		<pre>{{typeof #myanything}}</pre>
+		<label>anything ({{typeof #myanything}}):</label> 
+		<fieldset>
+			{{#myanything}}
+		</fieldset>
 	</div>
 	<div class="form-item">
-		<label>textarea:</label> <pre>{{#mytextarea}}</pre>
-		<pre>{{typeof #mytextarea}}</pre>
+		<label>textarea ({{typeof #mytextarea}}):</label> 
+		<fieldset>
+			<pre>{{#mytextarea}}</pre>
+		</fieldset>
 	</div>
 </div>
 </div>
