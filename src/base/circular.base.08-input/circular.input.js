@@ -234,9 +234,9 @@ new CircularModule('input',{
 		}
 		if ($(node).is('input[type=checkbox]')) {
 			// make sure this has the right formatting
-			// to find this later with css
-			if ($(node).attr('cc-input')!=target) {
-				$(node).attr('cc-input',target);
+			// right away to find this later with css
+			if ($(node).attr('cc-input')!='{{'+target+'}}') {
+				$(node).attr('cc-input','{{'+target+'}}');
 			}
 		}
 		// may be undefined;
@@ -255,6 +255,9 @@ new CircularModule('input',{
 			var elmmapped 	= this.map(elmval,type);
 			
 			if (!this.types[type].equals(tgtmapped,elmmapped)) { 
+				
+				Circular.log.debug('@input','read','mapped values differ');
+				
 				if ($node.is('input[type=checkbox]')) {
 					if (Array.isArray(tgtmapped)) {
 						//console.log('checkr multi',elmmapped,tgtmapped);
@@ -266,18 +269,13 @@ new CircularModule('input',{
 					} else {
 						// single checkbox can target a scalar
 						// console.log('checkr single',elmmapped,tgtmapped);
-						if (elmmapped===tgtmapped) {
-							$node.prop('checked',true);
-						} else {
-							$node.prop('checked',false);
-						}
+						$node.prop('checked',false);
+						
 					}
 				} else if ($node.is('input[type=radio]')) {
-					if (elmmapped===tgtmapped) {
-						$node.prop('checked',true);
-					} else {
-						$node.prop('checked',false);
-					}
+					
+					$node.prop('checked',false);
+					
 				} else if ($node.is('select[multiple]')) {
 					if (Array.isArray(tgtmapped)) {
 						$('option',$node).each(function() {
@@ -303,7 +301,21 @@ new CircularModule('input',{
 				
 				
 			} else {
+			
 				Circular.log.debug('@input','read','mapped values are equal');
+				
+				if ($node.is('input[type=checkbox]')) {
+					
+					// single checkbox can target a scalar
+					// console.log('checkr single',elmmapped,tgtmapped);
+					$node.prop('checked',true);
+					
+				} else if ($node.is('input[type=radio]')) {
+					
+					$node.prop('checked',true);
+					
+				} 
+				
 			}
 
 			// now that you figured out the types,
@@ -344,7 +356,7 @@ new CircularModule('input',{
 				if ($node.is('[type=checkbox]')) {
 					// treat it like an array
 					var name = $node.attr('name');
-					var $all = $('input[type="checkbox"][cc-input="'+target+'"]',$node.get(0).form);
+					var $all = $('input[type="checkbox"][cc-input="{{'+target+'}}"]',$node.get(0).form);
 					if ($all.size()>1) {
 						// treat it like an array
 						var arr = [];

@@ -60,15 +60,16 @@
 				},
 				presets : {
 					'empty'	: {},
-					'feliz navidad'	: {
+					'somevalues'	: {
 						mytext 			: 'one too many',
 						mymultisel	: ['one','two'],
 						mytextarea	: 'feliz navidad'
 					},
-					'ducks in a pond' : {
+					'allvalues' : {
 						mytext 					: 'one, two, tree',
 						mysinglecheck 	: 'one',
 						mymulticheck 		: ['one'],
+						myindexcheck 		: ['one'],
 						myradio 				: 'two',
 						mysinglesel			: 'one',
 						mymultisel			: ['one'],
@@ -156,6 +157,13 @@
 			<input type="checkbox" value="two" name="mymulticheck" cc-input>
 			two
 		</div>
+		<div class="form-item" cc-if="{{#myindexcheck}}">
+			<label>index checkboxes:</label>
+			<input type="checkbox" value="one" name="myindexcheck[0]" cc-input>
+			one
+			<input type="checkbox" value="two" name="myindexcheck[1]" cc-input>
+			two
+		</div>
 		<div class="form-item">
 			<label>radio buttons:</label>
 			<input type="radio" value="one" name="myradio" cc-input>
@@ -200,6 +208,12 @@
 		<label>checkboxes:</label> 
 		[{{#mymulticheck?#mymulticheck.join(','):''}}]
 	</div>
+	
+	<div class="form-item" cc-if="{{#myindexcheck}}">
+		<label>index checkboxes:</label> 
+		[{{#myindexcheck[0]}},{{#myindexcheck[1]}}]
+	</div>
+	
 	<div class="form-item">
 		<label>radio buttons:</label> {{#myradio}}
 	</div>
