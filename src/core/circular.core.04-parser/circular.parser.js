@@ -48,7 +48,7 @@ new CircularModule('parser', {
 	
 	
 	getPaths :	function(expression,silent) {
-		this.debug('@parser.getPaths',expression);
+		this.debug('@parser','getPaths',expression);
 		var ast = null;
 		try {
 			ast = esprima.parse(expression);
@@ -58,30 +58,33 @@ new CircularModule('parser', {
         ast = esprima.parse('var foo='+expression);
     	} catch (e) {
         // its not json either
+        Circular.log.debug('@parser','getPaths',expression,'not ecmascript, not an object def');
         if (!silent) {
-        	Circular.log.error('@parser.getPaths',expression,'not ecmascript, not an object def');
         	throw(e);
         } 
     	}
 		}
 		
 		if (ast) {
-			this.debug('@parser.getPaths',ast);
+			this.debug('@parser','getPaths','tree',ast);
 			var paths = new Array();
 			this.recursePaths(ast,paths);
 			return paths;
-		} else return false;
+		} else {
+			this.debug('@parser','getPaths','no tree',ast);
+			return false;
+		}
 	},
 	
 	recursePaths	: function(tree,paths,path) {
 	
-		this.debug('@parser.recursePaths',paths,path);
+		this.debug('@parser','recursePaths',paths,path);
 		
 		if (!tree || !paths) return false;
 		if (tree.type =='Identifier') {
 
 			// some sort of global
-			this.debug('@parser.recursePaths','adding identifier '+tree.name);
+			this.debug('@parser','recursePaths','adding identifier '+tree.name);
 			paths.push(this.config.rootscope+'.'+tree.name);
 
 		} else if (tree.type=="ThisExpression") {
@@ -108,7 +111,7 @@ new CircularModule('parser', {
 				if (tree.object.type=='Identifier') {
 					
 					// like foo.bar ; were done with this path - push !
-					this.debug('@parser.recursePaths','adding path '+tree.object.name+path);
+					this.debug('@parser','recursePaths','adding path '+tree.object.name+path);
 					
 					if (path.indexOf('.')===0) {
 						paths.push(tree.object.name+'.'+path.substring(1));
@@ -127,7 +130,7 @@ new CircularModule('parser', {
 					if (tree.object.type=='MemberExpression') {
 						
 						// like foo.bar.quz ; recurse the object
-						this.debug('@parser.recursePaths','recursing member expression ..');
+						this.debug('@parser','recursePaths','recursing member expression ..');
 						this.recursePaths(tree.object,paths,path);						
 					
 					} else {
@@ -145,7 +148,7 @@ new CircularModule('parser', {
 				if (tree.object.type=='Identifier') {
 					
 					// like foo[bar.quz] - push the object, recurse the property
-					this.debug('@parser.recursePaths','adding identifier '+tree.object.name);
+					this.debug('@parser','recursePaths','adding identifier '+tree.object.name);
 					paths.push(this.config.rootscope+'.'+tree.object.name);
 					this.recursePaths(tree.property);	
 					
@@ -158,7 +161,7 @@ new CircularModule('parser', {
 				} else {
 				
 					// like foo.bar[quz(raz)] ; recurse both
-					this.debug('@parser.recursePaths','recursing member expression ..');
+					this.debug('@parser','recursePaths','recursing member expression ..');
 					this.recursePaths(tree.object,paths);	
 					this.recursePaths(tree.property,paths);	
 				
@@ -184,7 +187,7 @@ new CircularModule('parser', {
 			
 		} else {
 		
-			this.debug('@parser.recursePaths','other tree.type ',tree.type);
+			this.debug('@parser','recursePaths','other tree.type ',tree.type);
 		
 			// unknown garbage. dig deeper.
 			var ccnode = Object.getOwnPropertyNames(tree);
@@ -193,16 +196,16 @@ new CircularModule('parser', {
 				if (typeof tree[key] == 'object') {
 					if (Array.isArray(tree[key])) {
 						for (var kc=0;kc<tree[key].length;kc++) {
-							this.debug('@parser.recursePaths','recursing '+key+':'+kc);
+							this.debug('@parser','recursePaths','recursing '+key+':'+kc);
 							this.recursePaths(tree[key][kc],paths);
 						}
 					} else {
-						this.debug('@parser.recursePaths','recursing '+key,tree[key]);
+						this.debug('@parser','recursePaths','recursing '+key,tree[key]);
 						this.recursePaths(tree[key],paths);
 						
 					}
 				} else {
-					this.debug('@parser.recursePaths','ignoring '+key);
+					this.debug('@parser','recursePaths','ignoring '+key);
 				}
 				
 			}
@@ -218,13 +221,13 @@ new CircularModule('parser', {
 	
 	match	: function(expr) {
 		// returns an array of matches or false
-		this.debug('@parser.match',expr);
+		this.debug('@parser','match',expr);
 		return expr.match(this.config.exprregex);
 	},
 	
 	replace	: function(expr,func) {
 		// opertes func replace on combined expressions
-		this.debug('@parser.replace',expr);
+		this.debug('@parser','replace',expr);
 		return expr.replace(this.config.exprregex,func);
 	},
 	
@@ -233,7 +236,7 @@ new CircularModule('parser', {
 	// split a text into an array
 	// of plain text string and {{expressions}}
 	split	: function(text) {
-		this.debug('@parser.split',text);
+		this.debug('@parser','split',text);
 		var exec; var result = []; 
 		var cursor = 0;
 		while (exec = this.config.exprregex.exec(text)) {
@@ -255,10 +258,10 @@ new CircularModule('parser', {
 	result	: function(expr,ctx,checkflags,stripbrackets) {
 		// parse a single expression
 		var parsed = Circular.parser.parse(expr,ctx,checkflags,stripbrackets);
-		var silent = this.config.defflags.silent;
+		var silent = Circular.parser.config.defflags.silent;
 		if (checkflags) {
-			parsed = parsed.processed;
 			silent = parsed.flags.silent;
+			parsed = parsed.processed;
 		}
 		return Circular.parser.eval.call(this,parsed,silent);
 	},
@@ -336,8 +339,8 @@ new CircularModule('parser', {
 				var value = eval(expr);
 				Circular.parser.debug("@parser.eval",expr,value);
 			} catch (err) {
+				Circular.log.debug("@parser.eval",expr,'fail',err);
 				if (!silent) {
-					Circular.log.error("@parser.eval",expr,'fail',err);
 					throw(err);
 				}
 			}
@@ -346,7 +349,7 @@ new CircularModule('parser', {
 	},
 	
 	parseval	: function(original,ctx,silent) {
-		this.debug('@parser.parseval',original);
+		this.debug('@parser','parseval',original);
 		
 		// parses *and* evaluates the original into a result:
 		
@@ -396,7 +399,7 @@ new CircularModule('parser', {
 			
 			
 		} else {
-			this.debug('@parser.parseval','not an expression');
+			this.debug('@parser','parseval','not an expression');
 			result = this.eval(original,silent);
 		}
 		

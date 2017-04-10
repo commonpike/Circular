@@ -789,9 +789,10 @@ new CircularModule('engine', {
 				ccattr.content.paths = [];
 				//console.info(watches);
 				for (var wc=0; wc<watches.length;wc++) {
-					ccattr.content.paths = ccattr.content.paths.concat(Circular.parser.getPaths(watches[wc]),ccattr.flags.silent);
+					ccattr.content.paths = ccattr.content.paths.concat(Circular.parser.getPaths(watches[wc],ccattr.flags.silent));
+					//console.info(ccattr.content.paths);
 				}
-				//console.info(ccattr.content.paths);
+				
 				
 				
 			}			

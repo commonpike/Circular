@@ -205,6 +205,7 @@ new CircularModule('watchdog', {
 						} 
 						
 						// add new content.paths
+						// console.log(ccattr.content.paths);
 						ccattr.content.paths.forEach(function(path) {
 							if (ccattr.content.oldpaths.indexOf(path)==-1) {
 								this.debug('@watchdog.watchdata','adding path',path);

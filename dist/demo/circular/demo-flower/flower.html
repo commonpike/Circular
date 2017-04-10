@@ -18,6 +18,7 @@
 		<script src="../../../../src/core/circular.core.09-engine/circular.engine.js"></script>
 		<script src="../../../../src/core/circular.core.10-watchdog/circular.watchdog.js"></script>
 		
+		<script src="../../../../src/base/circular.base.01-hide/circular.hide.js"></script>
 		<script src="../../../../src/base/circular.base.02-if/circular.if.js"></script>
 		<script src="../../../../src/base/circular.base.06-loop/circular.loop.js"></script>
 		<script src="../../../../src/base/circular.base.08-input/circular.input.js"></script>
@@ -57,6 +58,12 @@
 			Circular.init({
 				watchdog : {
 					muinterval : 50
+				}, 
+				log : {
+					debug : false
+				},
+				parser : {
+					debug : false
 				}
 			});
 				
