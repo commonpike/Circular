@@ -1,0 +1,78 @@
+body {
+	font-family:sans-serif;
+}
+#output { 
+	position:absolute;
+	width:100%; height:100%;
+	left:0; top:0;
+	overflow:hidden;
+	background-color:black;
+}
+	#flower {
+		width:100%;
+		height:100%;
+		position:relative;
+	}
+		.petal {
+			position:absolute;
+			width:40vh;
+			height:40vh;
+			top:10vh;
+			left:50%;
+			margin-left:-20vh;
+			border-radius:50%;
+			transform-origin:center bottom;
+			border-style:solid;
+			box-sizing:border-box;
+		}
+	
+#controls { 
+	opacity:.75;
+	position:absolute;
+	top:0; right:0;
+	width:440px;
+	height:auto;
+	max-height:0;
+	overflow:hidden;
+	background-color:white;
+	transition:max-height 1s;
+}
+	#controls.open {
+		max-height:100%;
+	}
+	#controls form {
+		margin:2em;
+	}
+	
+		.form-item {
+			height:3em; padding:.5em 0;
+			border-top:1px solid #ccc;
+		}
+			.form-item label {
+				display:inline-block;
+				min-width:10em;
+			}
+			.form-item select[multiple], 
+			.form-item textarea {
+				vertical-align:top;
+			}
+			.form-item input[type="text"] {
+				width: 80px;
+			}
+		
+#cogwheel {
+	position:absolute;
+	top:0; right:0;
+	font-size:64px;
+	color:#ddd;
+}
+	#cogwheel img {
+		width:40px;
+		height:40px;
+		margin:20px;
+		opacity:.75;
+		cursor:pointer;
+	}
+
+
+

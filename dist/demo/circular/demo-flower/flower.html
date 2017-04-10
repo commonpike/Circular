@@ -1,0 +1,179 @@
+<html>
+	<head>
+		<title>Circular Flower</title>
+		
+		<!-- build:remove -->
+		<script src="../../../../vendor/node_modules/jquery/dist/jquery.min.js"></script>
+		<script src="../../../../vendor/node_modules/esprima/dist/esprima.js"></script>
+		<script src="../../../../vendor/node_modules/observe-js/src/observe.js"></script>
+		<script src="../../../../src/core/circular.core.00/circular.core.js"></script>
+		<script src="../../../../src/core/circular.core.01-modules/circular.modules.js"></script>
+		<script src="../../../../src/core/circular.core.02-log/circular.log.js"></script>
+		<script src="../../../../src/core/circular.core.03-queue/circular.queue.js"></script>
+		<script src="../../../../src/core/circular.core.04-parser/circular.parser.js"></script>
+		<script src="../../../../src/core/circular.core.05-context/circular.context.js"></script>
+		<script src="../../../../src/core/circular.core.06-content/circular.content.js"></script>
+		<script src="../../../../src/core/circular.core.07-eject/circular.eject.js"></script>
+		<script src="../../../../src/core/circular.core.08-registry/circular.registry.js"></script>
+		<script src="../../../../src/core/circular.core.09-engine/circular.engine.js"></script>
+		<script src="../../../../src/core/circular.core.10-watchdog/circular.watchdog.js"></script>
+		
+		<script src="../../../../src/base/circular.base.02-if/circular.if.js"></script>
+		<script src="../../../../src/base/circular.base.06-loop/circular.loop.js"></script>
+		<script src="../../../../src/base/circular.base.08-input/circular.input.js"></script>
+		<script src="../../../../src/base/circular.base.04-include/circular.include.js"></script>
+		
+		
+		<!-- /build -->
+		
+		
+		<!-- build:template
+			<% if (environment === 'dist') { %>
+				<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+				<script src="../../../js/circular.min.js"></script>
+				<script src="../../../js/circular.srcbox.js"></script>
+				<link rel="stylesheet" href="../../assets/docs.css">	
+			<% } else { %>
+				<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+				<script src="http://circularjs.net/<%= release %>/js/circular.min.js"></script>
+				<script src="http://circularjs.net/<%= release %>/js/circular.srcbox.js"></script>
+				<link rel="stylesheet" href="http://circularjs.net/<%= release %>/docs/assets/docs.css">	
+			<% } %>
+		/build -->
+			
+		<script src="Flower.js"></script>
+		<script>
+		
+			
+			
+			$(document).ready(function() {
+				for (var preset in Flower.presets) {
+					Flower.select(preset);
+					break;
+				}
+				Flower.start();
+			});
+			
+			Circular.init({
+				watchdog : {
+					muinterval : 50
+				}
+			});
+				
+		</script>
+		<link rel="stylesheet" type="text/css" href="flower.css">
+		
+	</head>
+	<body cc-root>
+	
+
+		
+		<div id="output" cc-context="Flower.preset">
+		
+			<div id="flower"  cc-loop="{{#petals}}" style="background-color:{{#bgcolor}}">
+				<div class="petal" cc-show="{{#show}}" 
+					style="transform:rotate({{#rotate}}deg); transition:transform {{Flower.preset.speed/1000}}s linear;background-color:{{#color}};border-color:{{Flower.preset.bordercolor}}; border-width:{{Flower.preset.borderwidth}}px; mix-blend-mode:{{Flower.preset.blendmode}}; opacity:{{#opacity}}">
+				</div>
+			</div>
+			
+		</div>
+		
+		
+		<div id="controls" cc-context="Flower.preset">
+			
+			<form onsubmit="return false">
+
+					<h1>Settings</h1>
+					
+					<div class="form-item">
+						<label>Select preset</label>
+						<select onchange="Flower.select($(this).val())"
+							cc-loop="{{Flower.presets}}" cc-loop-each="key">
+							<option>{{#this}}</option>
+						</select>
+						<button type="button" onclick="Flower.start()">start</button>
+						<button type="button" onclick="Flower.stop()">stop</button><br>
+						<label>Manage preset</label>
+						<button type="button" onclick="Flower.cleanup()">cleanup</button>
+						<button type="button" onclick="Flower.align()">align</button>
+						<button type="button" onclick="Flower.save()">save</button>
+						<button type="button" onclick="Flower.export()">export</button>
+					</div>
+						
+					<div class="form-item">
+						<label>Speed:</label>
+						<input type="text" name="speed" cc-input>
+					</div>
+					
+					<div class="form-item">
+						<label>Background color:</label>
+						<input type="text" name="bgcolor" cc-input>
+					</div>
+					
+					<div class="form-item">
+						<label>Blend mode:</label>
+						<select name="blendmode" cc-input>
+							<option>normal</option>
+							<option>multiply</option>
+							<option>screen</option>
+							<option>overlay</option>
+							<option>darken</option>
+							<option>lighten</option>
+							<option>color-dodge</option>
+							<option>color-burn</option>
+							<option>hard-light</option>
+							<option>soft-light</option>
+							<option>difference</option>
+							<option>exclusion</option>
+							<option>hue</option>
+							<option>saturation</option>
+							<option>color</option>
+							<option>luminosity</option>
+						</select>
+					</div>
+					
+					<div class="form-item">
+						<label>Border color:</label>
+						<input type="text" name="bordercolor" cc-input>
+					</div>
+					
+					<div class="form-item">
+						<label>Border width:</label>
+						<input type="text" name="borderwidth" cc-input>
+					</div>
+					
+					<div class="form-item" style="height:auto">
+						<label>Petals:</label>
+						<table>
+							<thead>
+								<tr>
+									<th>show</th>
+									<th>speed</th>
+									<th>color</th>
+									<th>opacity</th>
+									<th>rotation</th>
+								</tr>
+							</thead>		
+							<tbody cc-loop="{{#petals}}">
+								<tr>
+									<td><input cc-input type="checkbox" name="show"></td>
+									<td><input cc-input type="text" name="speed"></td>
+									<td><input cc-input type="text" name="color"></td>
+									<td><input cc-input type="text" name="opacity"></td>
+									<td><input cc-input type="text" name="rotate"></td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+					
+				</form>
+
+		</div>
+		
+		<div id="cogwheel" onclick="$('#controls').toggleClass('open')">
+			<img src="cogwheel.svg" alt="settings" title="settings">
+		</div>
+
+
+	</body>
+</html>
