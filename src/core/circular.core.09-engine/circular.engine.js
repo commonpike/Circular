@@ -746,6 +746,7 @@ new CircularModule('engine', {
 				// this is a single full expression "{{#foo|we}}"
 
 				var parsed 	= Circular.parser.parse(ccattr.content.original,ctx,true,true);
+				ccattr.flags.silent		= parsed.flags.silent; 
 				ccattr.flags.parse		= parsed.flags.parse; 	
 				ccattr.flags.evaluate	= parsed.flags.evaluate;		
 				ccattr.flags.watch		= parsed.flags.watch;		
@@ -754,7 +755,7 @@ new CircularModule('engine', {
 				
 				if (ccattr.flags.watch) {
 					if (ccattr.content.paths) ccattr.content.oldpaths = ccattr.content.paths.slice(0); // copy
-					ccattr.content.paths 	= Circular.parser.getPaths(ccattr.content.expression);
+					ccattr.content.paths 	= Circular.parser.getPaths(ccattr.content.expression,ccattr.flags.silent);
 				}	
 				
 				
@@ -765,7 +766,9 @@ new CircularModule('engine', {
 				// all expressions must always be evaluated
 				// any watched paths in any expression will watch that path
 				// for the whole attribute.
+				// if any subexpression is not silent, not are silent
 				
+				ccattr.flags.silent		= true; 	// parsing happens on inner
 				ccattr.flags.parse		= false; 	// parsing happens on inner
 				ccattr.flags.evaluate	= true;		// must evaluate all
 				ccattr.flags.watch		= true;		// watch any paths marked |w
@@ -775,6 +778,7 @@ new CircularModule('engine', {
 				ccattr.content.expression = Circular.parser.replace(ccattr.content.original,function(match,inner) {
 					var parsed = Circular.parser.parse(inner,ctx,true);
 					if (parsed.flags.watch) watches.push(parsed.processed);
+					if (!parsed.flags.silent) ccattr.flags.silent=false;
 					return '"+('+parsed.processed+')+"';
 				});
 				// tell eval that this is a stringthing
@@ -785,7 +789,7 @@ new CircularModule('engine', {
 				ccattr.content.paths = [];
 				//console.info(watches);
 				for (var wc=0; wc<watches.length;wc++) {
-					ccattr.content.paths = ccattr.content.paths.concat(Circular.parser.getPaths(watches[wc]));
+					ccattr.content.paths = ccattr.content.paths.concat(Circular.parser.getPaths(watches[wc]),ccattr.flags.silent);
 				}
 				//console.info(ccattr.content.paths);
 				
@@ -798,6 +802,7 @@ new CircularModule('engine', {
 		} else {
 			this.debug('@engine.execParse','no match');
 			ccattr.content.expression = '';
+			ccattr.flags.silent		= false; 	
 			ccattr.flags.parse		= false; 	
 			ccattr.flags.evaluate	= false;		
 			ccattr.flags.watch		= false;	

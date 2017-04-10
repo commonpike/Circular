@@ -12,7 +12,7 @@ new CircularModule('parser', {
 		// exprregex 		: /{({|\[)(.*?(?=[}\]]}))(}|\])}/g,
 		// exprregex		: /{[{\[]([\s\S]*?(?=[}\]]}))[}\]]+}/g,
 		exprregex				: /{{([\s\S]*?(?=}}))}}/g,
-		flagregex				: /\|[pewi]+$/,
+		flagregex				: /\|[spewi]+$/,
 		uriregex				: /(?:^[a-z][a-z0-9+.-]*:|\/\/)/i,
 		evalfail				: undefined,
 		rootscope				: 'window', // bad idea
@@ -21,6 +21,7 @@ new CircularModule('parser', {
 			true : ['yes','on','true','1','']
 		},
 		defflags				: {
+			silent		: true,
 			parse			: true,
 			evaluate	: true,
 			watch			: true,
@@ -46,7 +47,7 @@ new CircularModule('parser', {
 	// @see http://esprima.org/demo/parse.html
 	
 	
-	getPaths :	function(expression) {
+	getPaths :	function(expression,silent) {
 		this.debug('@parser.getPaths',expression);
 		var ast = null;
 		try {
@@ -57,8 +58,10 @@ new CircularModule('parser', {
         ast = esprima.parse('var foo='+expression);
     	} catch (e) {
         // its not json either
-        Circular.log.error('@parser.getPaths',expression,'not ecmascript, not an object def');
-        return false;
+        if (!silent) {
+        	Circular.log.error('@parser.getPaths',expression,'not ecmascript, not an object def');
+        	throw(e);
+        } 
     	}
 		}
 		
@@ -252,8 +255,12 @@ new CircularModule('parser', {
 	result	: function(expr,ctx,checkflags,stripbrackets) {
 		// parse a single expression
 		var parsed = Circular.parser.parse(expr,ctx,checkflags,stripbrackets);
-		if (checkflags) parsed = parsed.processed;
-		return Circular.parser.eval.call(this,parsed);
+		var silent = this.config.defflags.silent;
+		if (checkflags) {
+			parsed = parsed.processed;
+			silent = parsed.flags.silent;
+		}
+		return Circular.parser.eval.call(this,parsed,silent);
 	},
 	
 	
@@ -289,6 +296,7 @@ new CircularModule('parser', {
 			return {
 				processed: expr.substring(0,expr.length-matches[0].length),
 				flags: {
+					silent		: (matches[0].indexOf('s')!=-1),
 					parse			: (matches[0].indexOf('p')!=-1),
 					evaluate	: (matches[0].indexOf('e')!=-1),
 					watch			: (matches[0].indexOf('w')!=-1),
@@ -299,6 +307,7 @@ new CircularModule('parser', {
 		return {
 			processed	: expr,
 			flags	: {
+				silent		: this.config.defflags.silent,
 				parse			: this.config.defflags.parse,
 				evaluate	: this.config.defflags.evaluate,
 				watch			: this.config.defflags.watch,
@@ -309,7 +318,7 @@ new CircularModule('parser', {
 	
 	
 	
-	eval	: function(expr) {
+	eval	: function(expr,silent) {
 		Circular.parser.debug('@parser.eval');
 		// evaluates a qualified expression.
 		// this does nothing special, but try,catch.
@@ -327,13 +336,16 @@ new CircularModule('parser', {
 				var value = eval(expr);
 				Circular.parser.debug("@parser.eval",expr,value);
 			} catch (err) {
-				Circular.log.error("@parser.eval",expr,'fail',err);
+				if (!silent) {
+					Circular.log.error("@parser.eval",expr,'fail',err);
+					throw(err);
+				}
 			}
 		}
 		return value;
 	},
 	
-	parseval	: function(original,ctx) {
+	parseval	: function(original,ctx,silent) {
 		this.debug('@parser.parseval',original);
 		
 		// parses *and* evaluates the original into a result:
@@ -377,7 +389,7 @@ new CircularModule('parser', {
 
 			}			
 			
-			if (evaluate) result = this.eval(expression);
+			if (evaluate) result = this.eval(expression,silent);
 			else result = expression;
 			
 			this.debug("@parser.parseval",original,expression,result);
@@ -385,7 +397,7 @@ new CircularModule('parser', {
 			
 		} else {
 			this.debug('@parser.parseval','not an expression');
-			result = this.eval(original);
+			result = this.eval(original,silent);
 		}
 		
 		return result;

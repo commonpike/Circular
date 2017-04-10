@@ -74,18 +74,15 @@
 			<section id="about">
 			
 				Whenever an <code>{{expression}}</code> is processed, several steps are taken 
-				which can be enabled and disabled by using flags, like this: <br>
+				which can be configured using flags, like this: <br>
 				<code>&lt;div style="{{color:@brush.foreground|pi}}"></code>.<br>
-				In the above example, the flags are 'pi'. These are the flags available:
+				In the above example, the flags are 'pi'. When no flags are passed, all flags are on.
+				These are the flags available:
 				<ul>
-					<li>					
-						<b>w:watch</b><br>
-						Watch all variables used in the expression for changes
-					</li>
 					<li>
-						<b>i:insert</b><br>
-						Re-insert the result of the all operations back into
-						the dom attribute where it came from. 
+						<b>s:silent</b><br>
+						If evaluating or parsing the expression throws an error,
+						fail silent. Otherwise, rethrow the error.
 					</li>
 					<li>
 						<b>p:parse</b><br>
@@ -96,32 +93,46 @@
 						<b>e:evaluate</b><br>
 						Evaluate the (optionally parsed) expression - much like javascripts <code>eval</code>.
 					</li>
+					<li>					
+						<b>w:watch</b><br>
+						Watch all variables used in the expression for changes
+					</li>
+					<li>
+						<b>i:insert</b><br>
+						Re-insert the result of the all operations back into
+						the dom attribute where it came from. 
+					</li>
+					
 					
 					
 				</ul>
 				The order of the flags is irrelevant. 
-				When no flags are passed, all flags are assumed on, 
-				so <code>{{flush()}}</code> equals <code>{{flush()|wipe}}</code>.
+				When no flags are passed, all flags are assumed enabled, 
+				so <code>{{gurgle()}}</code> equals <code>{{gurgle()|spewi}}</code>.
 				<br><br>
+				
+				Leave the 's' flag out if the expression isn't behaving the way
+				you expect. Maybe you made a typo, or a variable hasn't been
+				defined yet, so try have it throw errors.<br><br>
+				
+				You could leave the 'p' flag out if there is nothing to parse, or if you get
+				into trouble with, for example, strings that contain # or @<br><br>
 				
 				Leaving the 'e' flag out can be useful if you don't want the expression to
 				be evaluated when parsed, like in event handlers: <br>
-				<code>&lt;a onclick="{{alert('#name')|wip}}">what's my name&lt;/a></code><br>
+				<code>&lt;a onclick="{{alert('#name')|swip}}">what's my name&lt;/a></code><br>
 				If we would add the flag 'e' in that code, circular would alert #name (or its value)
 				while parsing the expression, not when clicking on the link.
 				<br><br>
 				
 				You could leave the 'w' flag out if the expressions result will not change; that 
-				would save performance.<br><br>
+				will save performance and memory overhead.<br><br>
 				
-				You could leave the 'p' flag out if there is nothing to parse, or if you get
-				into trouble with, for example, strings that contain # or @<br><br>
-
 				If you leave the 'i' flag out,
-				the original expression will remain in the attribute. Still, the parsed, evaluated 
-				and watched results of the expression are available in the @registry,
-				like 'attribute metadata'. Note that if you define your own attribute,
-				you can also use the 'insert' method in that definition to customize
+				the original expression will remain in the attribute. The parsed, evaluated 
+				and watched results of the expression are still available in the @registry,
+				as 'ccattribute metadata'. Note that if you define your own attribute,
+				you can also use the 'insert' method in your definition to customize
 				how the result is re-inserted into the dom.
 				
 
@@ -151,19 +162,26 @@
 <p>
 	<b>parse:</b>
 	<i data-message="{{#poetry|p}}"></i><br>
+	<br>
 	<b>parse,insert:</b>
 	<i data-message="{{#poetry|pi}}"></i><br>
 	<b>parse,insert,watch:</b>
 	<i data-message="{{#poetry|piw}}"></i><br>
+	<b>silent,parse,insert,watch:</b>
+	<i data-message="{{#poetry|spiw}}"></i><br>
 	<br>
 	<b>parse,evaluate:</b>
 	<i data-message="{{#poetry|pe}}"></i><br>
 	<b>parse,evaluate,watch:</b>
 	<i data-message="{{#poetry|pew}}"></i><br>
+	<b>silent,parse,evaluate,watch:</b>
+	<i data-message="{{#poetry|spew}}"></i><br>
 	<br>
 	<b>parse,evaluate,insert:</b>
 	<i data-message="{{#poetry|pei}}"></i><br>
 	<b>parse,evaluate,insert,watch:</b>
+	<i data-message="{{#poetry|pewi}}"></i><br>
+	<b>silent,parse,evaluate,insert,watch:</b>
 	<i data-message="{{#poetry}}"></i><br>
 </p>
 </div>

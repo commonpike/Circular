@@ -86,8 +86,7 @@
 				<code>@parser.parse</code> parses an <code>{{expression}}</code>
 				in a context.
 				This is just text manipulation - it doesn't check if 
-				it's valid code, and it doesn't evaluate anything either.
-				
+				it's valid code, and it doesn't evaluate anything either. 
 
 			</section>
 			
@@ -96,7 +95,7 @@
 				<form id="controls">
 				
 					<label>expression</label>
-					{{<input type="text" name="expression" value="@sing(#this,#song)|wip">}}
+					{{<input type="text" name="expression" value="@sing(#this,#song)|wip" size="30">}}
 					
 					<label>context</label>
 					<input type="text" name="context" value="Happy">
@@ -112,15 +111,16 @@
 				<div id="results">
 				
 <!-- ....... -->		
-<div cc-srcbox cc-context="Model">
+<div cc-srcbox cc-context="Model.result">
 <p>
 	<b>processed:</b><br>
-	{{#result.processed}}<br><br>
+	{{#processed}}<br><br>
 	<b>flags:</b><br>
-	parse: {{#result.flags.parse}}<br>
-	evaluate: {{#result.flags.evaluate}}<br>
-	watch: {{#result.flags.watch}}<br>
-	insert: {{#result.flags.insert}}<br>
+	silent: {{#flags.silent}}<br>
+	parse: {{#flags.parse}}<br>
+	evaluate: {{#flags.evaluate}}<br>
+	watch: {{#flags.watch}}<br>
+	insert: {{#flags.insert}}<br>
 </p>
 </div>
 <!-- ....... -->		
