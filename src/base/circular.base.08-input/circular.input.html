@@ -62,7 +62,9 @@
 					'empty'	: {},
 					'somevalues'	: {
 						mytext 			: 'one too many',
+						myindexcheck: [],
 						mymultisel	: ['one','two'],
+						myoptions		: ['one'],
 						mytextarea	: 'feliz navidad'
 					},
 					'allvalues' : {
@@ -73,6 +75,7 @@
 						myradio 				: 'two',
 						mysinglesel			: 'one',
 						mymultisel			: ['one'],
+						myoptions				: ['one','two'],
 						mytextarea			: 'ducks in a pond',
 						myanything			: 'around the clock'
 					}
@@ -157,7 +160,7 @@
 			<input type="checkbox" value="two" name="mymulticheck" cc-input>
 			two
 		</div>
-		<div class="form-item" cc-if="{{#myindexcheck}}">
+		<div class="form-item">
 			<label>index checkboxes:</label>
 			<input type="checkbox" value="one" name="myindexcheck[0]" cc-input>
 			one
@@ -187,6 +190,13 @@
 			</select>
 		</div>
 		<div class="form-item">
+			<label>options:</label>
+			<select name="myoptions" size="2" multiple>
+				<option cc-input>one</option>
+				<option cc-input>two</option>
+			</select>
+		</div>
+		<div class="form-item">
 			<label>anything:</label>
 			<a cc-input="{{#myanything}}" cc-input-value="one,two,many">click me</a>
 		</div>
@@ -209,7 +219,7 @@
 		[{{#mymulticheck?#mymulticheck.join(','):''}}]
 	</div>
 	
-	<div class="form-item" cc-if="{{#myindexcheck}}">
+	<div class="form-item">
 		<label>index checkboxes:</label> 
 		[{{#myindexcheck[0]}},{{#myindexcheck[1]}}]
 	</div>
@@ -223,6 +233,10 @@
 	<div class="form-item">
 		<label>multiple select:</label> 
 		[{{#mymultisel?#mymultisel.join(','):''}}]
+	</div>
+	<div class="form-item">
+		<label>options:</label> 
+		[{{#myoptions[0]}},{{#myoptions[1]}}]
 	</div>
 	<div class="form-item">
 		<label>anything:</label> {{#myanything}}

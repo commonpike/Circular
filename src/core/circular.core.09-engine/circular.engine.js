@@ -833,7 +833,7 @@ new CircularModule('engine', {
 		
 			var result = null;	
 			if (ccattr.flags.evaluate) {
-				result = Circular.parser.eval.call(node,ccattr.content.expression);
+				result = Circular.parser.eval.call(node,ccattr.content.expression,ccattr.flags.silent);
 			} else {
 				result = ccattr.content.expression;
 			}

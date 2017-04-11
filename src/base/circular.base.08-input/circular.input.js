@@ -6,8 +6,9 @@
 new CircularModule('input',{
 
 	config	: {
-		events 	: [],
-		types		: {}
+		events 			: [],
+		types				: {},
+		failsilent	: true
 	},
 	
 	attributes	: {
@@ -142,9 +143,31 @@ new CircularModule('input',{
 					});
 				}
 				
+			} else if ($node.is('option')) {
+			
+				if (inpdir.read) {
+					// set the current value
+					this.read($node,target,type);
+				}
+				
+				if (inpdir.write) {
+					// set the event
+					var $selnode = $node.parents('select').eq(0);
+					var idx = $('option',$selnode).index($node);
+					$selnode.off('.ccinput'+idx);
+					var evtimer = null;
+					$selnode.on(evdata.event+idx, function(ev) {
+						clearTimeout(evtimer);
+						evtimer = setTimeout(function() {
+							Circular.input.write(target,$node,inpval,type);
+						},evdata.timeout);
+					});
+				}
+				
 			} else {
-				Circular.log.error('@input','processCCInput','node is not a form element, and no cc-input-value set',node);
+				Circular.log.error('@input','processCCInput','node is not an input or option, and no cc-input-value set',node);
 			}
+			
 		} else {
 			Circular.log.error('@input','processCCInput','target is not defined by cc-input, name or id',node);
 		}
@@ -175,8 +198,9 @@ new CircularModule('input',{
 			};
 		} else {
 			var $node = $(node);
+			var $refnode = $node.is('option')?$node.parents('select').eq(0):$node;
 			for (var mc=0; mc < this.events.length; mc++ ) {
-				if ($node.is(this.events[mc].match)) {
+				if ($refnode.is(this.events[mc].match)) {
 					var edarr = this.events[mc].event.split(':');
 					evdata = { 
 						event: edarr[0]+'.ccinput', 
@@ -204,7 +228,7 @@ new CircularModule('input',{
 		if (ccnode.attributes['cc-input-type']) {
 			type = ccnode.attributes['cc-input-type'].content.value;
 		} else {
-			var tgttype = typeof Circular.parser.eval(target);
+			var tgttype = typeof Circular.parser.eval(target,this.config.failsilent);
 			if (this.types[tgttype]) type=tgttype;
 			else type='string';
 		}
@@ -213,14 +237,31 @@ new CircularModule('input',{
 	
 	getTarget	: function(ccattr,ccnode,node) {
 		var target;
+		var $node = $(node);
 		if (ccattr.content.expression) {
 			target = ccattr.content.expression;
 			Circular.log.debug('@input','getTarget','expression',target);
 		} else if (ccattr.content.value) {
 			target = ccattr.content.value;
 			Circular.log.debug('@input','getTarget','value',target);
+		} else if ($node.is('option')) {
+			var $selnode = $node.parents('select').eq(0);
+			if ($selnode.length) {
+				part = $selnode.attr('name');
+				if (!part) part = $selnode.attr('id');
+				if (part) {
+					target = Circular.context.get()+'.'+part;
+					var idx = $('option',$selnode).index($node);
+					target += '['+idx+']';
+					Circular.log.debug('@input','getTarget','option induced',target);
+					Circular.queue.add(function() {
+						$node.attr('cc-input','{{'+target+'}}');
+					});
+				}
+			} else {
+				Circular.log.error('@input','getTarget','option not within select',node);
+			}
 		} else {
-			var $node = $(node);
 			part = $node.attr('name');
 			if (!part) part = $node.attr('id');
 			if (part) {
@@ -232,11 +273,11 @@ new CircularModule('input',{
 				});
 			}
 		}
-		if ($(node).is('input[type=checkbox]')) {
+		if ($node.is('input[type=checkbox]')) {
 			// make sure this has the right formatting
-			// right away to find this later with css
-			if ($(node).attr('cc-input')!='{{'+target+'}}') {
-				$(node).attr('cc-input','{{'+target+'}}');
+			// right away to group this later with css
+			if ($node.attr('cc-input')!='{{'+target+'}}') {
+				$node.attr('cc-input','{{'+target+'}}');
 			}
 		}
 		// may be undefined;
@@ -248,8 +289,8 @@ new CircularModule('input',{
 	read	: function($node,target,type) {
 		Circular.log.debug('@input','read',$node,target,type);
 		
-		if ($node.is(':input')) {
-			var tgtval 			= Circular.parser.eval(target);
+		if ($node.is(':input') || $node.is('option')) {
+			var tgtval 			= Circular.parser.eval(target,this.config.failsilent);
 			var tgtmapped 	= this.map(tgtval,type);
 			var elmval			= $node.val();
 			var elmmapped 	= this.map(elmval,type);
@@ -293,6 +334,10 @@ new CircularModule('input',{
 							Circular.log.warn('@input','read','multiple select does not refer to an array');
 						}
 					}
+				} else if ($node.is('option')) {
+					
+					$node.prop('selected',false);
+						
 				} else {
 				
 					$node.val(tgtmapped);
@@ -314,7 +359,11 @@ new CircularModule('input',{
 					
 					$node.prop('checked',true);
 					
-				} 
+				} else if ($node.is('option')) {
+					
+					$node.prop('selected',true);
+						
+				}
 				
 			}
 
@@ -324,7 +373,7 @@ new CircularModule('input',{
 			
 			if (tgtval===undefined) {
 				// console.log('tgtmapped',tgtval,tgtmapped);
-				Circular.parser.eval(target+'='+this.stringify(tgtmapped));
+				Circular.parser.eval(target+'='+this.stringify(tgtmapped),this.config.failsilent);
 			}
 			
 		} else {
@@ -350,7 +399,7 @@ new CircularModule('input',{
 		} else {
 		
 			// read the value from the element
-			if ($node.is(':input')) {
+			if ($node.is(':input') || $node.is('option')) {
 				
 
 				if ($node.is('[type=checkbox]')) {
@@ -384,6 +433,14 @@ new CircularModule('input',{
 				
 					elmmapped = this.unique(this.map($node.val(),type));
 				
+				} else if ($node.is('option')) {
+				
+					if ($node.is(':selected')) {
+						elmmapped = this.map($node.val(),type);
+					} else {
+						elmmapped = this.map(undefined,type);
+					}
+				
 				} else {
 				
 					elmmapped = this.map($node.val(),type);
@@ -397,7 +454,7 @@ new CircularModule('input',{
 			}
 		} 
 		
-		Circular.parser.eval(target+'='+this.stringify(elmmapped));
+		Circular.parser.eval(target+'='+this.stringify(elmmapped),this.config.failsilent);
 		
 	},
 	
